@@ -74,3 +74,10 @@ export interface Credentials {
     accessToken: string;
     idToken: string;
 }
+export interface Transaction {
+    toAddress: string;
+    chain: SupportedChains;
+    symbol: string;
+    amount: number;
+    tokenAddress: string;
+}

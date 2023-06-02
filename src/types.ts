@@ -45,8 +45,8 @@ export interface WalletDoc {
 }
 
 export enum WalletTypes {
-  EOA = "EOA",
-  SMART_WALLET = "SmartWallet",
+  EOA = 'EOA',
+  SMART_WALLET = 'SmartWallet',
 }
 
 export interface iWebSDK {
@@ -73,10 +73,10 @@ export interface Info {
   name?: string;
   username?: string;
   countryCode?: string;
-  blockFundsUntil : {
+  blockFundsUntil: {
     _seconds: number;
     _nanoseconds: number;
-  }
+  };
 }
 
 export interface Credentials {
@@ -84,3 +84,10 @@ export interface Credentials {
   idToken: string;
 }
 
+export interface Transaction {
+  toAddress: string;
+  chain: SupportedChains;
+  symbol: string;
+  amount: number;
+  tokenAddress: string;
+}

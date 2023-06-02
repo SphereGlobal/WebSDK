@@ -1,5 +1,5 @@
 import auth0 from 'auth0-js';
-import { Credentials, User, iWebSDK } from './src/types';
+import { Credentials, Transaction, User, iWebSDK } from './src/types';
 
 class WebSDK implements iWebSDK {
   static instance: any;
@@ -13,7 +13,8 @@ class WebSDK implements iWebSDK {
   credentials?: Credentials | null;
   auth0Client?: any;
   #_PROJECT_ID: string = '<PROJECT_ID>';
-  #_domain: string = '<AUTH0_DOMAIN>';
+  #_domain: string = '<DOMAIN_AUTH0>';
+  #_wrappedDek: string = '';
 
   constructor({ providerId, clientId, redirectUri, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
@@ -58,25 +59,36 @@ class WebSDK implements iWebSDK {
     });
   }
 
+  #_createRequest = async (body: any = {}, headers: any = {}, method = 'POST') => {
+    const myHeaders = new Headers();
+    myHeaders.append('Content-Type', 'application/json');
+
+    if (Object.keys(headers).length) {
+      for (const [key, value] of Object.entries(headers)) {
+        myHeaders.append(key, value as string);
+      }
+    }
+
+    const raw = JSON.stringify({
+      data: {
+        providerId: this.providerId,
+        providerUid: this.providerUid,
+        ...body,
+      },
+    });
+
+    const requestOptions = {
+      method,
+      headers: myHeaders,
+      body: raw,
+    };
+
+    return requestOptions;
+  };
+
   #_fetchUserBalances = async () => {
     try {
-      const myHeaders = new Headers();
-      myHeaders.append('Content-Type', 'application/json');
-
-      const raw = JSON.stringify({
-        data: {
-          providerId: this.providerId,
-          providerUid: this.providerUid,
-          refreshCache: false,
-        },
-      });
-
-      const requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow' as RequestRedirect,
-      };
+      const requestOptions = await this.#_createRequest({ refreshCache: true });
 
       const response = await fetch(
         `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/getFundsAvailable`,
@@ -93,21 +105,7 @@ class WebSDK implements iWebSDK {
 
   #_fetchUserInfo = async () => {
     try {
-      const myHeaders = new Headers();
-      myHeaders.append('Content-Type', 'application/json');
-
-      const raw = JSON.stringify({
-        providerId: this.providerId,
-        providerUserUid: this.providerUid,
-        apiKey: this.apiKey,
-      });
-
-      const requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow' as RequestRedirect,
-      };
+      const requestOptions = await this.#_createRequest({ apiKey: this.apiKey });
 
       const response = await fetch(
         `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/user`,
@@ -118,6 +116,60 @@ class WebSDK implements iWebSDK {
       this.user!.info = data.data.userInfo;
       this.user!.wallets = data.data.wallets;
       return data;
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  #_getWrappedDek = async () => {
+    try {
+      const requestOptions = await this.#_createRequest();
+
+      const response = await fetch(
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/createOrRecoverAccount`,
+        requestOptions
+      );
+
+      const data = await response.json();
+      this.#_wrappedDek = data.result.data;
+      return data.result.data;
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  pay = async ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => {
+    try {
+      let wrappedDek = this.#_wrappedDek;
+      if (!wrappedDek) wrappedDek = await this.#_getWrappedDek();
+
+      const requestOptions = await this.#_createRequest({
+        wrappedDek,
+        toAddress,
+        chain,
+        symbol,
+        amount,
+        tokenAddress,
+      });
+
+      const response = await fetch('https://pay-g2eggt3ika-uc.a.run.app', requestOptions);
+      const data = await response.json();
+      return data.result.data;
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  payCharge = async (transactionId: string) => {
+    try {
+      let wrappedDek = this.#_wrappedDek;
+      if (!wrappedDek) wrappedDek = await this.#_getWrappedDek();
+
+      const requestOptions = await this.#_createRequest({wrappedDek, transactionId});
+
+      const response = await fetch('https://pay-g2eggt3ika-uc.a.run.app', requestOptions);
+      const data = await response.json();
+      return data.result.data;
     } catch (error: any) {
       console.log(error);
     }

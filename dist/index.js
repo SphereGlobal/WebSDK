@@ -13,10 +13,16 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
     return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
 };
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _WebSDK__PROJECT_ID, _WebSDK__domain, _WebSDK__fetchUserBalances, _WebSDK__fetchUserInfo;
+var _WebSDK__PROJECT_ID, _WebSDK__domain, _WebSDK__wrappedDek, _WebSDK__createRequest, _WebSDK__fetchUserBalances, _WebSDK__fetchUserInfo, _WebSDK__getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createIframe = void 0;
 const auth0_js_1 = __importDefault(require("auth0-js"));
@@ -25,6 +31,7 @@ class WebSDK {
         this.providerId = '';
         _WebSDK__PROJECT_ID.set(this, 'sphereone-testing');
         _WebSDK__domain.set(this, 'dev-7mz527mzl0k6ccnp.us.auth0.com');
+        _WebSDK__wrappedDek.set(this, '');
         this.handleCallback = () => {
             if (this.auth0Client && !this.providerUid) {
                 this.auth0Client.parseHash((err, authResult) => {
@@ -41,23 +48,27 @@ class WebSDK {
                 });
             }
         };
+        _WebSDK__createRequest.set(this, (body = {}, headers = {}, method = 'POST') => __awaiter(this, void 0, void 0, function* () {
+            const myHeaders = new Headers();
+            myHeaders.append('Content-Type', 'application/json');
+            if (Object.keys(headers).length) {
+                for (const [key, value] of Object.entries(headers)) {
+                    myHeaders.append(key, value);
+                }
+            }
+            const raw = JSON.stringify({
+                data: Object.assign({ providerId: this.providerId, providerUid: this.providerUid }, body),
+            });
+            const requestOptions = {
+                method,
+                headers: myHeaders,
+                body: raw,
+            };
+            return requestOptions;
+        }));
         _WebSDK__fetchUserBalances.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const myHeaders = new Headers();
-                myHeaders.append('Content-Type', 'application/json');
-                const raw = JSON.stringify({
-                    data: {
-                        providerId: this.providerId,
-                        providerUid: this.providerUid,
-                        refreshCache: false,
-                    },
-                });
-                const requestOptions = {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: raw,
-                    redirect: 'follow',
-                };
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, { refreshCache: true });
                 const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/getFundsAvailable`, requestOptions);
                 const data = yield response.json();
                 this.user.balances = data.result.data.balances;
@@ -69,19 +80,7 @@ class WebSDK {
         }));
         _WebSDK__fetchUserInfo.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const myHeaders = new Headers();
-                myHeaders.append('Content-Type', 'application/json');
-                const raw = JSON.stringify({
-                    providerId: this.providerId,
-                    providerUserUid: this.providerUid,
-                    apiKey: this.apiKey,
-                });
-                const requestOptions = {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: raw,
-                    redirect: 'follow',
-                };
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, { apiKey: this.apiKey });
                 const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/user`, requestOptions);
                 const data = yield response.json();
                 this.user.info = data.data.userInfo;
@@ -92,6 +91,53 @@ class WebSDK {
                 console.log(error);
             }
         }));
+        _WebSDK__getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this);
+                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/createOrRecoverAccount`, requestOptions);
+                const data = yield response.json();
+                __classPrivateFieldSet(this, _WebSDK__wrappedDek, data.result.data, "f");
+                return data.result.data;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }));
+        this.pay = ({ toAddress, chain, symbol, amount, tokenAddress }) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                let wrappedDek = __classPrivateFieldGet(this, _WebSDK__wrappedDek, "f");
+                if (!wrappedDek)
+                    wrappedDek = yield __classPrivateFieldGet(this, _WebSDK__getWrappedDek, "f").call(this);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, {
+                    wrappedDek,
+                    toAddress,
+                    chain,
+                    symbol,
+                    amount,
+                    tokenAddress,
+                });
+                const response = yield fetch('https://pay-g2eggt3ika-uc.a.run.app', requestOptions);
+                const data = yield response.json();
+                return data.result.data;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
+        this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                let wrappedDek = __classPrivateFieldGet(this, _WebSDK__wrappedDek, "f");
+                if (!wrappedDek)
+                    wrappedDek = yield __classPrivateFieldGet(this, _WebSDK__getWrappedDek, "f").call(this);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, { wrappedDek, transactionId });
+                const response = yield fetch('https://pay-g2eggt3ika-uc.a.run.app', requestOptions);
+                const data = yield response.json();
+                return data.result.data;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
             var _a;
             if ((_a = this.user) === null || _a === void 0 ? void 0 : _a.wallets)
@@ -137,7 +183,7 @@ class WebSDK {
         });
     }
 }
-_WebSDK__PROJECT_ID = new WeakMap(), _WebSDK__domain = new WeakMap(), _WebSDK__fetchUserBalances = new WeakMap(), _WebSDK__fetchUserInfo = new WeakMap();
+_WebSDK__PROJECT_ID = new WeakMap(), _WebSDK__domain = new WeakMap(), _WebSDK__wrappedDek = new WeakMap(), _WebSDK__createRequest = new WeakMap(), _WebSDK__fetchUserBalances = new WeakMap(), _WebSDK__fetchUserInfo = new WeakMap(), _WebSDK__getWrappedDek = new WeakMap();
 function createIframe(width, height) {
     const iframe = document.createElement('iframe');
     iframe.src = 'http://localhost:19006/';

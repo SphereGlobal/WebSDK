@@ -1,4 +1,4 @@
-import { Credentials, User, iWebSDK } from './src/types';
+import { Credentials, Transaction, User, iWebSDK } from './src/types';
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: any;
@@ -13,6 +13,8 @@ declare class WebSDK implements iWebSDK {
     constructor({ providerId, clientId, redirectUri, apiKey }: iWebSDK);
     handleCallback: () => void;
     login(): void;
+    pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
+    payCharge: (transactionId: string) => Promise<any>;
     getWallets: () => Promise<any>;
     getUserInfo: () => Promise<any>;
     getBalances: () => Promise<any>;
