@@ -16,7 +16,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _WebSDK__PROJECT_ID, _WebSDK__domain;
+var _WebSDK__PROJECT_ID, _WebSDK__domain, _WebSDK__fetchUserBalances, _WebSDK__fetchUserInfo;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createIframe = void 0;
 const auth0_js_1 = __importDefault(require("auth0-js"));
@@ -25,16 +25,13 @@ class WebSDK {
         this.providerId = '';
         _WebSDK__PROJECT_ID.set(this, 'sphereone-testing');
         _WebSDK__domain.set(this, 'dev-7mz527mzl0k6ccnp.us.auth0.com');
-        this.handleAuth0Callback = () => {
+        this.handleCallback = () => {
             if (this.auth0Client && !this.providerUid) {
                 this.auth0Client.parseHash((err, authResult) => {
                     if (err) {
                         console.error('Error login:', err);
                     }
                     else if (authResult && authResult.accessToken && authResult.idToken) {
-                        console.log('AccessToken:', authResult.accessToken);
-                        console.log('IDToken:', authResult.idToken);
-                        console.log(authResult);
                         this.credentials = {
                             accessToken: authResult.accessToken,
                             idToken: authResult.idToken,
@@ -44,7 +41,7 @@ class WebSDK {
                 });
             }
         };
-        this.fetchUserBalances = () => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK__fetchUserBalances.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const myHeaders = new Headers();
                 myHeaders.append('Content-Type', 'application/json');
@@ -69,8 +66,8 @@ class WebSDK {
             catch (error) {
                 console.log(error);
             }
-        });
-        this.fetchUserInfo = () => __awaiter(this, void 0, void 0, function* () {
+        }));
+        _WebSDK__fetchUserInfo.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const myHeaders = new Headers();
                 myHeaders.append('Content-Type', 'application/json');
@@ -94,26 +91,26 @@ class WebSDK {
             catch (error) {
                 console.log(error);
             }
-        });
+        }));
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
             var _a;
             if ((_a = this.user) === null || _a === void 0 ? void 0 : _a.wallets)
                 return this.user.wallets;
-            const wallets = yield this.fetchUserInfo();
+            const wallets = yield __classPrivateFieldGet(this, _WebSDK__fetchUserInfo, "f").call(this);
             return wallets.data.wallets;
         });
         this.getUserInfo = () => __awaiter(this, void 0, void 0, function* () {
             var _b;
             if ((_b = this.user) === null || _b === void 0 ? void 0 : _b.info)
                 return this.user.info;
-            const userInfo = yield this.fetchUserInfo();
+            const userInfo = yield __classPrivateFieldGet(this, _WebSDK__fetchUserInfo, "f").call(this);
             return userInfo.data.userInfo;
         });
         this.getBalances = () => __awaiter(this, void 0, void 0, function* () {
             var _c;
             if ((_c = this.user) === null || _c === void 0 ? void 0 : _c.balances)
                 return this.user.balances;
-            const balances = yield this.fetchUserBalances();
+            const balances = yield __classPrivateFieldGet(this, _WebSDK__fetchUserBalances, "f").call(this);
             return balances;
         });
         if (WebSDK.instance)
@@ -133,14 +130,14 @@ class WebSDK {
             responseType: 'token id_token',
         });
     }
-    loginWithAuth0() {
+    login() {
         this.auth0Client.authorize({
             domain: __classPrivateFieldGet(this, _WebSDK__domain, "f"),
             responseType: 'token id_token',
         });
     }
 }
-_WebSDK__PROJECT_ID = new WeakMap(), _WebSDK__domain = new WeakMap();
+_WebSDK__PROJECT_ID = new WeakMap(), _WebSDK__domain = new WeakMap(), _WebSDK__fetchUserBalances = new WeakMap(), _WebSDK__fetchUserInfo = new WeakMap();
 function createIframe(width, height) {
     const iframe = document.createElement('iframe');
     iframe.src = 'http://localhost:19006/';

@@ -11,10 +11,8 @@ declare class WebSDK implements iWebSDK {
     credentials?: Credentials | null;
     auth0Client?: any;
     constructor({ providerId, clientId, redirectUri, apiKey }: iWebSDK);
-    handleAuth0Callback: () => void;
-    loginWithAuth0(): void;
-    fetchUserBalances: () => Promise<any>;
-    fetchUserInfo: () => Promise<any>;
+    handleCallback: () => void;
+    login(): void;
     getWallets: () => Promise<any>;
     getUserInfo: () => Promise<any>;
     getBalances: () => Promise<any>;

@@ -12,8 +12,8 @@ class WebSDK implements iWebSDK {
   user?: User;
   credentials?: Credentials | null;
   auth0Client?: any;
-  #_PROJECT_ID: string = 'sphereone-testing';
-  #_domain: string = 'dev-7mz527mzl0k6ccnp.us.auth0.com';
+  #_PROJECT_ID: string = '<PROJECT_ID>';
+  #_domain: string = '<AUTH0_DOMAIN>';
 
   constructor({ providerId, clientId, redirectUri, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
@@ -35,15 +35,12 @@ class WebSDK implements iWebSDK {
     });
   }
 
-  handleAuth0Callback = () => {
+  handleCallback = () => {
     if (this.auth0Client && !this.providerUid) {
       this.auth0Client.parseHash((err: any, authResult: any) => {
         if (err) {
           console.error('Error login:', err);
         } else if (authResult && authResult.accessToken && authResult.idToken) {
-          console.log('AccessToken:', authResult.accessToken);
-          console.log('IDToken:', authResult.idToken);
-          console.log(authResult);
           this.credentials = {
             accessToken: authResult.accessToken,
             idToken: authResult.idToken,
@@ -54,14 +51,14 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  loginWithAuth0() {
+  login() {
     this.auth0Client.authorize({
       domain: this.#_domain as string,
       responseType: 'token id_token',
     });
   }
 
-  fetchUserBalances = async () => {
+  #_fetchUserBalances = async () => {
     try {
       const myHeaders = new Headers();
       myHeaders.append('Content-Type', 'application/json');
@@ -94,7 +91,7 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  fetchUserInfo = async () => {
+  #_fetchUserInfo = async () => {
     try {
       const myHeaders = new Headers();
       myHeaders.append('Content-Type', 'application/json');
@@ -128,26 +125,26 @@ class WebSDK implements iWebSDK {
 
   getWallets = async () => {
     if (this.user?.wallets) return this.user.wallets;
-    const wallets = await this.fetchUserInfo();
+    const wallets = await this.#_fetchUserInfo();
     return wallets.data.wallets;
   };
 
   getUserInfo = async () => {
     if (this.user?.info) return this.user.info;
-    const userInfo = await this.fetchUserInfo();
+    const userInfo = await this.#_fetchUserInfo();
     return userInfo.data.userInfo;
   };
 
   getBalances = async () => {
     if (this.user?.balances) return this.user.balances;
-    const balances = await this.fetchUserBalances();
+    const balances = await this.#_fetchUserBalances();
     return balances;
   };
 }
 
 function createIframe(width: number, height: number) {
   const iframe = document.createElement('iframe');
-  iframe.src = 'http://localhost:19006/';
+  iframe.src = 'https://<PWA_URL>/';
   iframe.width = width.toString();
   iframe.height = height.toString();
   return iframe;
