@@ -29,9 +29,9 @@ const auth0_js_1 = __importDefault(require("auth0-js"));
 class WebSDK {
     constructor({ clientId, redirectUri, apiKey }) {
         _WebSDK__auth0Client.set(this, void 0);
-        _WebSDK__PROJECT_ID.set(this, 'sphereone-testing');
-        _WebSDK__domain.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
-        _WebSDK__audience.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
+        _WebSDK__PROJECT_ID.set(this, '<FIREBASE_PROJECT_ID>');
+        _WebSDK__domain.set(this, '<DOMAIN_AUTH0>');
+        _WebSDK__audience.set(this, '<AUDIENCE_AUTH0_API>');
         _WebSDK__wrappedDek.set(this, '');
         this.handleCallback = () => {
             // This checks if there is a previous Auth0 session initialized
@@ -105,7 +105,7 @@ class WebSDK {
         _WebSDK__fetchUserWallets.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, {}, 'GET');
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/getWallets`, requestOptions);
+                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/user/wallets`, requestOptions);
                 const data = yield response.json();
                 this.user.wallets = data.data;
                 return data.data;

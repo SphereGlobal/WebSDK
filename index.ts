@@ -126,7 +126,7 @@ class WebSDK implements iWebSDK {
     try{
       const requestOptions = await this.#_createRequest({}, 'GET');
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/getWallets`,
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/user/wallets`,
         requestOptions
       );
 
