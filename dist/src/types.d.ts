@@ -44,7 +44,6 @@ export declare enum WalletTypes {
     SMART_WALLET = "SmartWallet"
 }
 export interface iWebSDK {
-    providerId: string;
     providerUid?: string;
     clientId?: string;
     redirectUri?: string;
@@ -59,6 +58,8 @@ export interface User {
     info?: Info;
     wallets?: WalletDoc[];
     balances?: WalletBalance[];
+    nfts?: NftsInfo[];
+    uid?: string;
 }
 export interface Info {
     email?: string;
@@ -81,3 +82,9 @@ export interface Transaction {
     amount: number;
     tokenAddress: string;
 }
+export type NftsInfo = {
+    img: string | undefined;
+    name: string | undefined;
+    address: string | undefined;
+    tokenType?: string;
+};

@@ -4,64 +4,78 @@ import { Credentials, Transaction, User, iWebSDK } from './src/types';
 class WebSDK implements iWebSDK {
   static instance: any;
 
-  providerId: string = '';
-  providerUid?: string;
   clientId?: string;
   redirectUri?: string;
   apiKey?: string;
   user?: User;
   credentials?: Credentials | null;
-  auth0Client?: any;
-  #_PROJECT_ID: string = '<PROJECT_ID>';
+  #_auth0Client?: any;
+  #_PROJECT_ID: string = '<FIREBASE_PROJECT_ID>';
   #_domain: string = '<DOMAIN_AUTH0>';
+  #_audience: string = '<AUDIENCE_AUTH0_API>';
   #_wrappedDek: string = '';
 
-  constructor({ providerId, clientId, redirectUri, apiKey }: iWebSDK) {
+  constructor({ clientId, redirectUri, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
     WebSDK.instance = this;
 
-    this.providerId = providerId;
     this.clientId = clientId;
     this.redirectUri = redirectUri;
     this.apiKey = apiKey;
-    this.providerUid = '';
     this.user = {};
     this.credentials = null;
 
-    this.auth0Client = new auth0.WebAuth({
+    this.#_auth0Client = new auth0.WebAuth({
       domain: this.#_domain as string,
       clientID: this.clientId as string,
       redirectUri: this.redirectUri as string,
+      audience: this.#_audience as string,
       responseType: 'token id_token',
     });
   }
 
   handleCallback = () => {
-    if (this.auth0Client && !this.providerUid) {
-      this.auth0Client.parseHash((err: any, authResult: any) => {
-        if (err) {
-          console.error('Error login:', err);
-        } else if (authResult && authResult.accessToken && authResult.idToken) {
-          this.credentials = {
-            accessToken: authResult.accessToken,
-            idToken: authResult.idToken,
-          };
-          this.providerUid = authResult.idTokenPayload.sub;
-        }
-      });
-    }
+    // This checks if there is a previous Auth0 session initialized
+    this.#_auth0Client.checkSession({}, (err: any, authResult: any) => {
+      if (err) {
+        // Here falls if there is NO previous session stored
+        this.#_auth0Client.parseHash((err: any, authResult: any) => {
+          if (err) {
+            // Error handling
+            console.error('Error login:', err);
+          } else if (authResult && authResult.accessToken && authResult.idToken) {
+            // Successfull login
+            this.credentials = {
+              accessToken: authResult.accessToken,
+              idToken: authResult.idToken,
+            };
+            this.user!.uid = authResult.idTokenPayload.sub;
+          }
+        });
+      } else if (authResult) {
+        // Here falls if there is a previous session stored
+        this.credentials = {
+          accessToken: authResult.accessToken,
+          idToken: authResult.idToken,
+        };
+        this.user!.uid = authResult.idTokenPayload.sub;
+      }
+    });
   };
 
   login() {
-    this.auth0Client.authorize({
-      domain: this.#_domain as string,
-      responseType: 'token id_token',
-    });
+    this.#_auth0Client.authorize();
   }
 
-  #_createRequest = async (body: any = {}, headers: any = {}, method = 'POST') => {
+  logout() {
+    this.#_auth0Client.logout({
+      redirectUri: this.redirectUri,
+    })
+  }
+  #_createRequest = async (body: any = {}, method: string = 'POST', headers: any = {}) => {
     const myHeaders = new Headers();
     myHeaders.append('Content-Type', 'application/json');
+    myHeaders.append('Authorization', `Bearer ${this.credentials?.accessToken}`);
 
     if (Object.keys(headers).length) {
       for (const [key, value] of Object.entries(headers)) {
@@ -69,19 +83,24 @@ class WebSDK implements iWebSDK {
       }
     }
 
-    const raw = JSON.stringify({
-      data: {
-        providerId: this.providerId,
-        providerUid: this.providerUid,
-        ...body,
-      },
-    });
+    let requestOptions: any = {};
 
-    const requestOptions = {
-      method,
-      headers: myHeaders,
-      body: raw,
-    };
+    if (method === 'GET') {
+      requestOptions = {
+        method,
+        headers: myHeaders,
+      };
+    } else {
+      const raw = JSON.stringify({
+        ...body,
+      });
+
+      requestOptions = {
+        method,
+        headers: myHeaders,
+        body: raw,
+      };
+    }
 
     return requestOptions;
   };
@@ -91,48 +110,79 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#_createRequest({ refreshCache: true });
 
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/getFundsAvailable`,
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/getFundsAvailable`,
         requestOptions
       );
 
       const data = await response.json();
-      this.user!.balances = data.result.data.balances;
-      return data.result.data;
+      this.user!.balances = data.data.balances;
+      return data.data.balances;
     } catch (error: any) {
       console.log(error);
     }
   };
 
-  #_fetchUserInfo = async () => {
-    try {
-      const requestOptions = await this.#_createRequest({ apiKey: this.apiKey });
-
+  #_fetchUserWallets = async () => {
+    try{
+      const requestOptions = await this.#_createRequest({}, 'GET');
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/user`,
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/getWallets`,
         requestOptions
       );
 
       const data = await response.json();
-      this.user!.info = data.data.userInfo;
-      this.user!.wallets = data.data.wallets;
-      return data;
+      this.user!.wallets = data.data;
+      return data.data;
+    } catch (error: any){
+      console.log(error)
+    }
+  }
+
+  #_fetchUserInfo = async () => {
+    try {
+      const requestOptions = await this.#_createRequest({}, 'GET');
+      const response = await fetch(
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/user`,
+        requestOptions
+      );
+
+      const data = await response.json();
+      this.user!.info = data.data;
+      return data.data;
+    } catch (error: any) {
+      console.log(error);
+    }
+  };
+
+  #_fetchUserNfts = async () => {
+    try {
+      const requestOptions = await this.#_createRequest({}, 'GET');
+      const response = await fetch(
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/getNftsAvailable`,
+        requestOptions
+      );
+
+      const data = await response.json();
+      this.user!.nfts = data.data;
+      return data.data;
     } catch (error: any) {
       console.log(error);
     }
   };
 
   #_getWrappedDek = async () => {
+    if (this.#_wrappedDek) return this.#_wrappedDek;
     try {
       const requestOptions = await this.#_createRequest();
 
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/createOrRecoverAccount`,
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/createOrRecoverAccount`,
         requestOptions
       );
 
       const data = await response.json();
-      this.#_wrappedDek = data.result.data;
-      return data.result.data;
+      this.#_wrappedDek = data.data;
+      return data.data;
     } catch (error: any) {
       console.log(error);
     }
@@ -140,8 +190,7 @@ class WebSDK implements iWebSDK {
 
   pay = async ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => {
     try {
-      let wrappedDek = this.#_wrappedDek;
-      if (!wrappedDek) wrappedDek = await this.#_getWrappedDek();
+      const wrappedDek = await this.#_getWrappedDek();
 
       const requestOptions = await this.#_createRequest({
         wrappedDek,
@@ -152,9 +201,12 @@ class WebSDK implements iWebSDK {
         tokenAddress,
       });
 
-      const response = await fetch('https://pay-g2eggt3ika-uc.a.run.app', requestOptions);
+      const response = await fetch(
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/pay`,
+        requestOptions
+      );
       const data = await response.json();
-      return data.result.data;
+      return data.data;
     } catch (error: any) {
       console.log(error);
     }
@@ -162,12 +214,14 @@ class WebSDK implements iWebSDK {
 
   payCharge = async (transactionId: string) => {
     try {
-      let wrappedDek = this.#_wrappedDek;
-      if (!wrappedDek) wrappedDek = await this.#_getWrappedDek();
+      const wrappedDek = await this.#_getWrappedDek();
 
-      const requestOptions = await this.#_createRequest({wrappedDek, transactionId});
+      const requestOptions = await this.#_createRequest({ wrappedDek, transactionId });
 
-      const response = await fetch('https://pay-g2eggt3ika-uc.a.run.app', requestOptions);
+      const response = await fetch(
+        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/pay`,
+        requestOptions
+      );
       const data = await response.json();
       return data.result.data;
     } catch (error: any) {
@@ -177,20 +231,26 @@ class WebSDK implements iWebSDK {
 
   getWallets = async () => {
     if (this.user?.wallets) return this.user.wallets;
-    const wallets = await this.#_fetchUserInfo();
-    return wallets.data.wallets;
+    const wallets = await this.#_fetchUserWallets();
+    return wallets;
   };
 
   getUserInfo = async () => {
     if (this.user?.info) return this.user.info;
     const userInfo = await this.#_fetchUserInfo();
-    return userInfo.data.userInfo;
+    return userInfo;
   };
 
   getBalances = async () => {
     if (this.user?.balances) return this.user.balances;
     const balances = await this.#_fetchUserBalances();
     return balances;
+  };
+
+  getNfts = async () => {
+    if (this.user?.nfts) return this.user.nfts;
+    const nfts = await this.#_fetchUserNfts();
+    return nfts;
   };
 }
 
