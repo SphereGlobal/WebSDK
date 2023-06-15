@@ -14,6 +14,7 @@ class WebSDK implements iWebSDK {
   #_domain: string = '<DOMAIN_AUTH0>';
   #_audience: string = '<AUDIENCE_AUTH0_API>';
   #_wrappedDek: string = '';
+  #_baseUrl: string = `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api`;
 
   constructor({ clientId, redirectUri, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
@@ -49,7 +50,7 @@ class WebSDK implements iWebSDK {
               accessToken: authResult.accessToken,
               idToken: authResult.idToken,
             };
-            this.user!.uid = authResult.idTokenPayload.sub;
+            if (this.user) this.user.uid = authResult.idTokenPayload.sub;
           }
         });
       } else if (authResult) {
@@ -58,7 +59,7 @@ class WebSDK implements iWebSDK {
           accessToken: authResult.accessToken,
           idToken: authResult.idToken,
         };
-        this.user!.uid = authResult.idTokenPayload.sub;
+        if (this.user) this.user.uid = authResult.idTokenPayload.sub;
       }
     });
   };
@@ -70,8 +71,9 @@ class WebSDK implements iWebSDK {
   logout() {
     this.#_auth0Client.logout({
       redirectUri: this.redirectUri,
-    })
+    });
   }
+
   #_createRequest = async (body: any = {}, method: string = 'POST', headers: any = {}) => {
     const myHeaders = new Headers();
     myHeaders.append('Content-Type', 'application/json');
@@ -110,12 +112,12 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#_createRequest({ refreshCache: true });
 
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/getFundsAvailable`,
+        `${this.#_baseUrl}/getFundsAvailable`,
         requestOptions
       );
 
       const data = await response.json();
-      this.user!.balances = data.data.balances;
+      if (this.user) this.user.balances = data.data.balances;
       return data.data.balances;
     } catch (error: any) {
       console.log(error);
@@ -123,31 +125,31 @@ class WebSDK implements iWebSDK {
   };
 
   #_fetchUserWallets = async () => {
-    try{
+    try {
       const requestOptions = await this.#_createRequest({}, 'GET');
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/user/wallets`,
+        `${this.#_baseUrl}/user/wallets`,
         requestOptions
       );
 
       const data = await response.json();
-      this.user!.wallets = data.data;
+      if (this.user)  this.user.wallets = data.data;
       return data.data;
-    } catch (error: any){
-      console.log(error)
+    } catch (error: any) {
+      console.log(error);
     }
-  }
+  };
 
   #_fetchUserInfo = async () => {
     try {
       const requestOptions = await this.#_createRequest({}, 'GET');
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/user`,
+        `${this.#_baseUrl}/user`,
         requestOptions
       );
 
       const data = await response.json();
-      this.user!.info = data.data;
+      if (this.user) this.user.info = data.data;
       return data.data;
     } catch (error: any) {
       console.log(error);
@@ -158,12 +160,12 @@ class WebSDK implements iWebSDK {
     try {
       const requestOptions = await this.#_createRequest({}, 'GET');
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/getNftsAvailable`,
+        `${this.#_baseUrl}/getNftsAvailable`,
         requestOptions
       );
 
       const data = await response.json();
-      this.user!.nfts = data.data;
+      if (this.user) this.user.nfts = data.data;
       return data.data;
     } catch (error: any) {
       console.log(error);
@@ -176,7 +178,7 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#_createRequest();
 
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/createOrRecoverAccount`,
+        `${this.#_baseUrl}/createOrRecoverAccount`,
         requestOptions
       );
 
@@ -202,7 +204,7 @@ class WebSDK implements iWebSDK {
       });
 
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/pay`,
+        `${this.#_baseUrl}/pay`,
         requestOptions
       );
       const data = await response.json();
@@ -219,7 +221,7 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#_createRequest({ wrappedDek, transactionId });
 
       const response = await fetch(
-        `https://us-central1-${this.#_PROJECT_ID}.cloudfunctions.net/api/pay`,
+        `${this.#_baseUrl}/pay`,
         requestOptions
       );
       const data = await response.json();
