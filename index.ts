@@ -13,7 +13,7 @@ class WebSDK implements iWebSDK {
   #wrappedDek: string = '';
   #domain: string = '<DOMAIN_AUTH0>';
   #audience: string = '<AUDIENCE_AUTH0_API>';
-  #baseUrl: string = '<API_BASE_URL>';
+  #baseUrl: string = '<API_V2_BASE_URL>';
 
   constructor({ clientId, redirectUri, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
