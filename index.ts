@@ -1,9 +1,10 @@
-import auth0 from 'auth0-js';
+import auth0, { Auth0DecodedHash } from 'auth0-js';
 import { Credentials, Transaction, User, iWebSDK } from './src/types';
 
 class WebSDK implements iWebSDK {
   static instance: any;
 
+  loginType: 'REDIRECT' | 'POPUP' = 'REDIRECT';
   clientId?: string;
   redirectUri?: string;
   apiKey?: string;
@@ -11,14 +12,16 @@ class WebSDK implements iWebSDK {
   credentials?: Credentials | null;
   #auth0Client?: any;
   #wrappedDek: string = '';
-  #domain: string = '<DOMAIN_AUTH0>';
-  #audience: string = '<AUDIENCE_AUTH0_API>';
-  #baseUrl: string = '<API_V2_BASE_URL>';
+  #domain: string = 'dev-4fb2r65g1bnesuyt.us.auth0.com';
+  #audience: string = 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/';
+  // #baseUrl: string = 'https://api-g2eggt3ika-uc.a.run.app';
+  #baseUrl: string = 'http://127.0.0.1:5001/sphereone-testing/us-central1/api';
 
-  constructor({ clientId, redirectUri, apiKey }: iWebSDK) {
+  constructor({ clientId, redirectUri, loginType, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
     WebSDK.instance = this;
 
+    this.loginType = loginType;
     this.clientId = clientId;
     this.redirectUri = redirectUri;
     this.apiKey = apiKey;
@@ -34,45 +37,95 @@ class WebSDK implements iWebSDK {
     });
   }
 
-  handleCallback = () => {
-    // This checks if there is a previous Auth0 session initialized
-    this.#auth0Client.checkSession({}, (err: any, authResult: any) => {
-      if (err) {
-        // Here falls if there is NO previous session stored
-        this.#auth0Client.parseHash((err: any, authResult: any) => {
-          if (err) {
-            // Error handling
-            console.error('Error login:', err);
-          } else if (authResult && authResult.accessToken && authResult.idToken) {
-            // Successfull login
-            this.credentials = {
-              accessToken: authResult.accessToken,
-              idToken: authResult.idToken,
-            };
-            if (this.user) this.user.uid = authResult.idTokenPayload.sub;
-          }
-        });
-      } else if (authResult) {
-        // Here falls if there is a previous session stored
-        this.credentials = {
-          accessToken: authResult.accessToken,
-          idToken: authResult.idToken,
-        };
-        if (this.user) this.user.uid = authResult.idTokenPayload.sub;
-      }
+  handleAuth = async () => {
+    const authResult: Auth0DecodedHash = await new Promise((resolve, reject) => {
+      this.#auth0Client.parseHash((err: any, result: any) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
     });
+    if (authResult) {
+      this.credentials = {
+        accessToken: authResult.accessToken as string,
+        idToken: authResult.idToken as string,
+      };
+      if (this.user) this.user.uid = authResult.idTokenPayload.sub;
+
+      return authResult;
+    } else return null;
   };
 
-  login() {
-    this.#auth0Client.authorize();
+  handleCallback = async () => {
+    try {
+      // This checks if there is a previous Auth0 session initialized
+      return await this.#auth0Client.checkSession(
+        {},
+        async (err: any, result: Auth0DecodedHash) => {
+          if (err) {
+            // Here falls if there is NO previous session stored
+            this.#auth0Client.parseHash((err: any, result: Auth0DecodedHash) => {
+              if (err) {
+                // Error handling
+                console.error('Error login:', err);
+              } else if (result && result.accessToken && result.idToken) {
+                // Successfull login
+                this.credentials = {
+                  accessToken: result.accessToken,
+                  idToken: result.idToken,
+                };
+                if (this.user) this.user.uid = result.idTokenPayload.sub;
+              }
+            });
+          } else if (result) {
+            // Here falls if there is a previous session stored
+            this.credentials = {
+              accessToken: result.accessToken as string,
+              idToken: result.idToken as string,
+            };
+            if (this.user) this.user.uid = result.idTokenPayload.sub;
+          }
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      if (this.loginType === 'POPUP')
+        this.#auth0Client.popup.callback({ hash: window.location.hash });
+    }
+  };
+
+  login = async () => {
+    if (this.loginType === 'REDIRECT') {
+      this.#auth0Client.authorize();
+    } else {
+      await new Promise((resolve, reject) => {
+        this.#auth0Client.popup.authorize(
+          {
+            domain: this.#domain,
+            redirectUri: this.redirectUri,
+            responseType: 'token id_token',
+          },
+          async (err: any, authResult: any) => {
+            if (err) reject(err);
+            else {
+              this.credentials = {
+                accessToken: authResult.accessToken,
+                idToken: authResult.idToken,
+              };
+              resolve(authResult);
+            }
+          }
+        );
+      });
+    }
   }
 
-  logout() {
+  logout = () => {
     this.#auth0Client.logout({
       redirectUri: this.redirectUri,
       returnTo: this.redirectUri,
     });
-  }
+  };
 
   #createRequest = async (method: string = 'GET', body: any = {}, headers: any = {}) => {
     const myHeaders = new Headers();
@@ -117,8 +170,8 @@ class WebSDK implements iWebSDK {
       );
 
       const data = await response.json();
-      if (this.user) this.user.balances = data.data.balances;
-      return data.data.balances;
+      if (this.user) this.user.balances = data.data;
+      return data.data;
     } catch (error: any) {
       console.log(error);
     }
@@ -166,7 +219,7 @@ class WebSDK implements iWebSDK {
   #getWrappedDek = async () => {
     if (this.#wrappedDek) return this.#wrappedDek;
     try {
-      const requestOptions = await this.#createRequest();
+      const requestOptions = await this.#createRequest('POST');
 
       const response = await fetch(`${this.#baseUrl}/createOrRecoverAccount`, requestOptions);
 
@@ -240,7 +293,7 @@ class WebSDK implements iWebSDK {
 
 function createIframe(width: number, height: number) {
   const iframe = document.createElement('iframe');
-  iframe.src = 'https://<PWA_URL>/';
+  iframe.src = 'https://wallet.sphereone.xyz/';
   iframe.width = width.toString();
   iframe.height = height.toString();
   return iframe;

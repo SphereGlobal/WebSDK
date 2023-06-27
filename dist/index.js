@@ -22,48 +22,92 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _WebSDK__auth0Client, _WebSDK__PROJECT_ID, _WebSDK__domain, _WebSDK__audience, _WebSDK__wrappedDek, _WebSDK__createRequest, _WebSDK__fetchUserBalances, _WebSDK__fetchUserWallets, _WebSDK__fetchUserInfo, _WebSDK__fetchUserNfts, _WebSDK__getWrappedDek;
+var _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domain, _WebSDK_audience, _WebSDK_baseUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createIframe = void 0;
 const auth0_js_1 = __importDefault(require("auth0-js"));
 class WebSDK {
-    constructor({ clientId, redirectUri, apiKey }) {
-        _WebSDK__auth0Client.set(this, void 0);
-        _WebSDK__PROJECT_ID.set(this, '<FIREBASE_PROJECT_ID>');
-        _WebSDK__domain.set(this, '<DOMAIN_AUTH0>');
-        _WebSDK__audience.set(this, '<AUDIENCE_AUTH0_API>');
-        _WebSDK__wrappedDek.set(this, '');
-        this.handleCallback = () => {
-            // This checks if there is a previous Auth0 session initialized
-            __classPrivateFieldGet(this, _WebSDK__auth0Client, "f").checkSession({}, (err, authResult) => {
-                if (err) {
-                    // Here falls if there is NO previous session stored
-                    __classPrivateFieldGet(this, _WebSDK__auth0Client, "f").parseHash((err, authResult) => {
-                        if (err) {
-                            // Error handling
-                            console.error('Error login:', err);
-                        }
-                        else if (authResult && authResult.accessToken && authResult.idToken) {
-                            // Successfull login
-                            this.credentials = {
-                                accessToken: authResult.accessToken,
-                                idToken: authResult.idToken,
-                            };
-                            this.user.uid = authResult.idTokenPayload.sub;
-                        }
-                    });
-                }
-                else if (authResult) {
-                    // Here falls if there is a previous session stored
-                    this.credentials = {
-                        accessToken: authResult.accessToken,
-                        idToken: authResult.idToken,
-                    };
+    constructor({ clientId, redirectUri, loginType, apiKey }) {
+        this.loginType = 'REDIRECT';
+        _WebSDK_auth0Client.set(this, void 0);
+        _WebSDK_wrappedDek.set(this, '');
+        _WebSDK_domain.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
+        _WebSDK_audience.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
+        // #baseUrl: string = 'https://api-g2eggt3ika-uc.a.run.app';
+        _WebSDK_baseUrl.set(this, 'http://127.0.0.1:5001/sphereone-testing/us-central1/api');
+        this.handleAuth = () => __awaiter(this, void 0, void 0, function* () {
+            const authResult = yield new Promise((resolve, reject) => {
+                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").parseHash((err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
+            if (authResult) {
+                console.log('ASDSADASDASDA', authResult);
+                this.credentials = {
+                    accessToken: authResult.accessToken,
+                    idToken: authResult.idToken,
+                };
+                if (this.user)
                     this.user.uid = authResult.idTokenPayload.sub;
-                }
+                return authResult;
+            }
+            else
+                return null;
+        });
+        this.handleCallback = () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                // This checks if there is a previous Auth0 session initialized
+                return yield __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").checkSession({}, (err, result) => __awaiter(this, void 0, void 0, function* () {
+                    if (err) {
+                        // Here falls if there is NO previous session stored
+                        __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").parseHash((err, result) => {
+                            if (err) {
+                                // Error handling
+                                console.error('Error login:', err);
+                            }
+                            else if (result && result.accessToken && result.idToken) {
+                                // Successfull login
+                                this.credentials = {
+                                    accessToken: result.accessToken,
+                                    idToken: result.idToken,
+                                };
+                                if (this.user)
+                                    this.user.uid = result.idTokenPayload.sub;
+                            }
+                        });
+                    }
+                    else if (result) {
+                        // Here falls if there is a previous session stored
+                        this.credentials = {
+                            accessToken: result.accessToken,
+                            idToken: result.idToken,
+                        };
+                        if (this.user)
+                            this.user.uid = result.idTokenPayload.sub;
+                    }
+                }));
+            }
+            catch (error) {
+                console.log(error);
+            }
+            finally {
+                if (this.loginType === 'POPUP')
+                    __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
+            }
+        });
+        this.handlePopup = () => __awaiter(this, void 0, void 0, function* () {
+            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
+        });
+        this.logout = () => {
+            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").logout({
+                redirectUri: this.redirectUri,
+                returnTo: this.redirectUri,
             });
         };
-        _WebSDK__createRequest.set(this, (body = {}, method = 'POST', headers = {}) => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK_createRequest.set(this, (method = 'GET', body = {}, headers = {}) => __awaiter(this, void 0, void 0, function* () {
             var _a;
             const myHeaders = new Headers();
             myHeaders.append('Content-Type', 'application/json');
@@ -90,62 +134,66 @@ class WebSDK {
             }
             return requestOptions;
         }));
-        _WebSDK__fetchUserBalances.set(this, () => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK_fetchUserBalances.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, { refreshCache: true });
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/getFundsAvailable`, requestOptions);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/getFundsAvailable?refreshCache=true`, requestOptions);
                 const data = yield response.json();
-                this.user.balances = data.data.balances;
-                return data.data.balances;
-            }
-            catch (error) {
-                console.log(error);
-            }
-        }));
-        _WebSDK__fetchUserWallets.set(this, () => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, {}, 'GET');
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/user/wallets`, requestOptions);
-                const data = yield response.json();
-                this.user.wallets = data.data;
+                if (this.user)
+                    this.user.balances = data.data;
                 return data.data;
             }
             catch (error) {
                 console.log(error);
             }
         }));
-        _WebSDK__fetchUserInfo.set(this, () => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK_fetchUserWallets.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, {}, 'GET');
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/user`, requestOptions);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/user/wallets`, requestOptions);
                 const data = yield response.json();
-                this.user.info = data.data;
+                if (this.user)
+                    this.user.wallets = data.data;
                 return data.data;
             }
             catch (error) {
                 console.log(error);
             }
         }));
-        _WebSDK__fetchUserNfts.set(this, () => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK_fetchUserInfo.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, {}, 'GET');
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/getNftsAvailable`, requestOptions);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/user`, requestOptions);
                 const data = yield response.json();
-                this.user.nfts = data.data;
+                if (this.user)
+                    this.user.info = data.data;
                 return data.data;
             }
             catch (error) {
                 console.log(error);
             }
         }));
-        _WebSDK__getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
-            if (__classPrivateFieldGet(this, _WebSDK__wrappedDek, "f"))
-                return __classPrivateFieldGet(this, _WebSDK__wrappedDek, "f");
+        _WebSDK_fetchUserNfts.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this);
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/createOrRecoverAccount`, requestOptions);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/getNftsAvailable`, requestOptions);
                 const data = yield response.json();
-                __classPrivateFieldSet(this, _WebSDK__wrappedDek, data.data, "f");
+                if (this.user)
+                    this.user.nfts = data.data;
+                return data.data;
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }));
+        _WebSDK_getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
+            if (__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f"))
+                return __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
+            try {
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST');
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/createOrRecoverAccount`, requestOptions);
+                const data = yield response.json();
+                __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data, "f");
                 return data.data;
             }
             catch (error) {
@@ -154,8 +202,8 @@ class WebSDK {
         }));
         this.pay = ({ toAddress, chain, symbol, amount, tokenAddress }) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK__getWrappedDek, "f").call(this);
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, {
+                const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', {
                     wrappedDek,
                     toAddress,
                     chain,
@@ -163,7 +211,7 @@ class WebSDK {
                     amount,
                     tokenAddress,
                 });
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/pay`, requestOptions);
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/pay`, requestOptions);
                 const data = yield response.json();
                 return data.data;
             }
@@ -173,9 +221,9 @@ class WebSDK {
         });
         this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
             try {
-                const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK__getWrappedDek, "f").call(this);
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK__createRequest, "f").call(this, { wrappedDek, transactionId });
-                const response = yield fetch(`https://us-central1-${__classPrivateFieldGet(this, _WebSDK__PROJECT_ID, "f")}.cloudfunctions.net/api/pay`, requestOptions);
+                const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek, transactionId });
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/pay`, requestOptions);
                 const data = yield response.json();
                 return data.result.data;
             }
@@ -187,59 +235,78 @@ class WebSDK {
             var _b;
             if ((_b = this.user) === null || _b === void 0 ? void 0 : _b.wallets)
                 return this.user.wallets;
-            const wallets = yield __classPrivateFieldGet(this, _WebSDK__fetchUserWallets, "f").call(this);
+            const wallets = yield __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f").call(this);
             return wallets;
         });
         this.getUserInfo = () => __awaiter(this, void 0, void 0, function* () {
             var _c;
             if ((_c = this.user) === null || _c === void 0 ? void 0 : _c.info)
                 return this.user.info;
-            const userInfo = yield __classPrivateFieldGet(this, _WebSDK__fetchUserInfo, "f").call(this);
+            const userInfo = yield __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f").call(this);
             return userInfo;
         });
         this.getBalances = () => __awaiter(this, void 0, void 0, function* () {
             var _d;
             if ((_d = this.user) === null || _d === void 0 ? void 0 : _d.balances)
                 return this.user.balances;
-            const balances = yield __classPrivateFieldGet(this, _WebSDK__fetchUserBalances, "f").call(this);
+            const balances = yield __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f").call(this);
             return balances;
         });
         this.getNfts = () => __awaiter(this, void 0, void 0, function* () {
             var _e;
             if ((_e = this.user) === null || _e === void 0 ? void 0 : _e.nfts)
                 return this.user.nfts;
-            const nfts = yield __classPrivateFieldGet(this, _WebSDK__fetchUserNfts, "f").call(this);
+            const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
         });
         if (WebSDK.instance)
             return WebSDK.instance;
         WebSDK.instance = this;
+        this.loginType = loginType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.apiKey = apiKey;
         this.user = {};
         this.credentials = null;
-        __classPrivateFieldSet(this, _WebSDK__auth0Client, new auth0_js_1.default.WebAuth({
-            domain: __classPrivateFieldGet(this, _WebSDK__domain, "f"),
+        __classPrivateFieldSet(this, _WebSDK_auth0Client, new auth0_js_1.default.WebAuth({
+            domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
             clientID: this.clientId,
             redirectUri: this.redirectUri,
-            audience: __classPrivateFieldGet(this, _WebSDK__audience, "f"),
+            audience: __classPrivateFieldGet(this, _WebSDK_audience, "f"),
             responseType: 'token id_token',
         }), "f");
     }
     login() {
-        __classPrivateFieldGet(this, _WebSDK__auth0Client, "f").authorize();
-    }
-    logout() {
-        __classPrivateFieldGet(this, _WebSDK__auth0Client, "f").logout({
-            redirectUri: this.redirectUri,
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.loginType === 'REDIRECT') {
+                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").authorize();
+            }
+            else {
+                yield new Promise((resolve, reject) => {
+                    __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.authorize({
+                        domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
+                        redirectUri: this.redirectUri,
+                        responseType: 'token id_token',
+                    }, (err, authResult) => __awaiter(this, void 0, void 0, function* () {
+                        if (err)
+                            reject(err);
+                        else {
+                            this.credentials = {
+                                accessToken: authResult.accessToken,
+                                idToken: authResult.idToken,
+                            };
+                            resolve(authResult);
+                        }
+                    }));
+                });
+            }
         });
     }
 }
-_WebSDK__auth0Client = new WeakMap(), _WebSDK__PROJECT_ID = new WeakMap(), _WebSDK__domain = new WeakMap(), _WebSDK__audience = new WeakMap(), _WebSDK__wrappedDek = new WeakMap(), _WebSDK__createRequest = new WeakMap(), _WebSDK__fetchUserBalances = new WeakMap(), _WebSDK__fetchUserWallets = new WeakMap(), _WebSDK__fetchUserInfo = new WeakMap(), _WebSDK__fetchUserNfts = new WeakMap(), _WebSDK__getWrappedDek = new WeakMap();
+_WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
 function createIframe(width, height) {
     const iframe = document.createElement('iframe');
-    iframe.src = 'https://<PWA_URL>/';
+    iframe.src = 'https://wallet.sphereone.xyz/';
     iframe.width = width.toString();
     iframe.height = height.toString();
     return iframe;
