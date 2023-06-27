@@ -45,7 +45,6 @@ class WebSDK {
                 });
             });
             if (authResult) {
-                console.log('ASDSADASDASDA', authResult);
                 this.credentials = {
                     accessToken: authResult.accessToken,
                     idToken: authResult.idToken,
@@ -98,8 +97,29 @@ class WebSDK {
                     __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
             }
         });
-        this.handlePopup = () => __awaiter(this, void 0, void 0, function* () {
-            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
+        this.login = () => __awaiter(this, void 0, void 0, function* () {
+            if (this.loginType === 'REDIRECT') {
+                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").authorize();
+            }
+            else {
+                yield new Promise((resolve, reject) => {
+                    __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.authorize({
+                        domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
+                        redirectUri: this.redirectUri,
+                        responseType: 'token id_token',
+                    }, (err, authResult) => __awaiter(this, void 0, void 0, function* () {
+                        if (err)
+                            reject(err);
+                        else {
+                            this.credentials = {
+                                accessToken: authResult.accessToken,
+                                idToken: authResult.idToken,
+                            };
+                            resolve(authResult);
+                        }
+                    }));
+                });
+            }
         });
         this.logout = () => {
             __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").logout({
@@ -275,32 +295,6 @@ class WebSDK {
             audience: __classPrivateFieldGet(this, _WebSDK_audience, "f"),
             responseType: 'token id_token',
         }), "f");
-    }
-    login() {
-        return __awaiter(this, void 0, void 0, function* () {
-            if (this.loginType === 'REDIRECT') {
-                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").authorize();
-            }
-            else {
-                yield new Promise((resolve, reject) => {
-                    __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.authorize({
-                        domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
-                        redirectUri: this.redirectUri,
-                        responseType: 'token id_token',
-                    }, (err, authResult) => __awaiter(this, void 0, void 0, function* () {
-                        if (err)
-                            reject(err);
-                        else {
-                            this.credentials = {
-                                accessToken: authResult.accessToken,
-                                idToken: authResult.idToken,
-                            };
-                            resolve(authResult);
-                        }
-                    }));
-                });
-            }
-        });
     }
 }
 _WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();

@@ -118,7 +118,7 @@ class WebSDK implements iWebSDK {
         );
       });
     }
-  }
+  };
 
   logout = () => {
     this.#auth0Client.logout({

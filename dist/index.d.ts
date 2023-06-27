@@ -12,8 +12,7 @@ declare class WebSDK implements iWebSDK {
     constructor({ clientId, redirectUri, loginType, apiKey }: iWebSDK);
     handleAuth: () => Promise<auth0.Auth0DecodedHash | null>;
     handleCallback: () => Promise<any>;
-    handlePopup: () => Promise<void>;
-    login(): Promise<void>;
+    login: () => Promise<void>;
     logout: () => void;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
     payCharge: (transactionId: string) => Promise<any>;
