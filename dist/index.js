@@ -277,7 +277,7 @@ class WebSDK {
         if (WebSDK.instance)
             return WebSDK.instance;
         WebSDK.instance = this;
-        this.loginType = loginType || 'REDIRECT';
+        this.loginType = loginType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.apiKey = apiKey;
