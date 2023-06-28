@@ -58,36 +58,11 @@ class WebSDK {
         });
         this.handleCallback = () => __awaiter(this, void 0, void 0, function* () {
             try {
-                // This checks if there is a previous Auth0 session initialized
-                return yield __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").checkSession({}, (err, result) => __awaiter(this, void 0, void 0, function* () {
-                    if (err) {
-                        // Here falls if there is NO previous session stored
-                        __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").parseHash((err, result) => {
-                            if (err) {
-                                // Error handling
-                                console.error('Error login:', err);
-                            }
-                            else if (result && result.accessToken && result.idToken) {
-                                // Successfull login
-                                this.credentials = {
-                                    accessToken: result.accessToken,
-                                    idToken: result.idToken,
-                                };
-                                if (this.user)
-                                    this.user.uid = result.idTokenPayload.sub;
-                            }
-                        });
-                    }
-                    else if (result) {
-                        // Here falls if there is a previous session stored
-                        this.credentials = {
-                            accessToken: result.accessToken,
-                            idToken: result.idToken,
-                        };
-                        if (this.user)
-                            this.user.uid = result.idTokenPayload.sub;
-                    }
-                }));
+                const persistence = yield this.handlePersistence();
+                if (persistence)
+                    return persistence;
+                const handleAuth = yield this.handleAuth();
+                return handleAuth;
             }
             catch (error) {
                 console.log(error);
@@ -97,6 +72,53 @@ class WebSDK {
                     __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
             }
         });
+        // handleCallback = async () => {
+        //   try {
+        //     // This checks if there is a previous Auth0 session initialized
+        //     return await this.#auth0Client.checkSession(
+        //       {},
+        //       async (err: any, result: Auth0DecodedHash) => {
+        //         if (result) {
+        //           // Here falls if there is a previous session stored
+        //           this.credentials = {
+        //             accessToken: result.accessToken as string,
+        //             idToken: result.idToken as string,
+        //           };
+        //           if (this.user) this.user.uid = result.idTokenPayload.sub;
+        //         }
+        //       }
+        //     );
+        //   } catch (error) {
+        //     console.log(error);
+        //   } finally {
+        //     if (this.loginType === 'POPUP')
+        //       this.#auth0Client.popup.callback({ hash: window.location.hash });
+        //   }
+        // };
+        this.handlePersistence = () => __awaiter(this, void 0, void 0, function* () {
+            const persistance = yield new Promise((resolve, reject) => {
+                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").checkSession({}, (err, result) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(result);
+                });
+            });
+            if (persistance) {
+                this.credentials = {
+                    accessToken: persistance.accessToken,
+                    idToken: persistance.idToken,
+                };
+                if (this.user)
+                    this.user.uid = persistance.idTokenPayload.sub;
+                return persistance;
+            }
+            else
+                return null;
+        });
+        this.closePopup = () => {
+            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
+        };
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             if (this.loginType === 'REDIRECT') {
                 __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").authorize();

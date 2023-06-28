@@ -57,41 +57,34 @@ class WebSDK implements iWebSDK {
 
   handleCallback = async () => {
     try {
-      // This checks if there is a previous Auth0 session initialized
-      return await this.#auth0Client.checkSession(
-        {},
-        async (err: any, result: Auth0DecodedHash) => {
-          if (err) {
-            // Here falls if there is NO previous session stored
-            this.#auth0Client.parseHash((err: any, result: Auth0DecodedHash) => {
-              if (err) {
-                // Error handling
-                console.error('Error login:', err);
-              } else if (result && result.accessToken && result.idToken) {
-                // Successfull login
-                this.credentials = {
-                  accessToken: result.accessToken,
-                  idToken: result.idToken,
-                };
-                if (this.user) this.user.uid = result.idTokenPayload.sub;
-              }
-            });
-          } else if (result) {
-            // Here falls if there is a previous session stored
-            this.credentials = {
-              accessToken: result.accessToken as string,
-              idToken: result.idToken as string,
-            };
-            if (this.user) this.user.uid = result.idTokenPayload.sub;
-          }
-        }
-      );
+      const persistence = await this.handlePersistence();
+      if (persistence) return persistence;
+
+      const handleAuth = await this.handleAuth();
+      return handleAuth;
     } catch (error) {
       console.log(error);
     } finally {
       if (this.loginType === 'POPUP')
         this.#auth0Client.popup.callback({ hash: window.location.hash });
     }
+  };
+
+  handlePersistence = async () => {
+    const persistance: Auth0DecodedHash = await new Promise((resolve, reject) => {
+      this.#auth0Client.checkSession({}, (err: any, result: Auth0DecodedHash) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
+    if (persistance) {
+      this.credentials = {
+        accessToken: persistance.accessToken as string,
+        idToken: persistance.idToken as string,
+      };
+      if (this.user) this.user.uid = persistance.idTokenPayload.sub;
+      return persistance;
+    } else return null;
   };
 
   login = async () => {
