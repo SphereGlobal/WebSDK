@@ -33,8 +33,7 @@ class WebSDK {
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domain.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
         _WebSDK_audience.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
-        // #baseUrl: string = 'https://api-g2eggt3ika-uc.a.run.app';
-        _WebSDK_baseUrl.set(this, 'http://127.0.0.1:5001/sphereone-testing/us-central1/api');
+        _WebSDK_baseUrl.set(this, 'https://api-g2eggt3ika-uc.a.run.app');
         this.handleAuth = () => __awaiter(this, void 0, void 0, function* () {
             const authResult = yield new Promise((resolve, reject) => {
                 __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").parseHash((err, result) => {
@@ -72,29 +71,6 @@ class WebSDK {
                     __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
             }
         });
-        // handleCallback = async () => {
-        //   try {
-        //     // This checks if there is a previous Auth0 session initialized
-        //     return await this.#auth0Client.checkSession(
-        //       {},
-        //       async (err: any, result: Auth0DecodedHash) => {
-        //         if (result) {
-        //           // Here falls if there is a previous session stored
-        //           this.credentials = {
-        //             accessToken: result.accessToken as string,
-        //             idToken: result.idToken as string,
-        //           };
-        //           if (this.user) this.user.uid = result.idTokenPayload.sub;
-        //         }
-        //       }
-        //     );
-        //   } catch (error) {
-        //     console.log(error);
-        //   } finally {
-        //     if (this.loginType === 'POPUP')
-        //       this.#auth0Client.popup.callback({ hash: window.location.hash });
-        //   }
-        // };
         this.handlePersistence = () => __awaiter(this, void 0, void 0, function* () {
             const persistance = yield new Promise((resolve, reject) => {
                 __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").checkSession({}, (err, result) => {
@@ -116,9 +92,6 @@ class WebSDK {
             else
                 return null;
         });
-        this.closePopup = () => {
-            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
-        };
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             if (this.loginType === 'REDIRECT') {
                 __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").authorize();
@@ -304,7 +277,7 @@ class WebSDK {
         if (WebSDK.instance)
             return WebSDK.instance;
         WebSDK.instance = this;
-        this.loginType = loginType;
+        this.loginType = loginType || 'REDIRECT';
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.apiKey = apiKey;

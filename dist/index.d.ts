@@ -13,7 +13,6 @@ declare class WebSDK implements iWebSDK {
     handleAuth: () => Promise<auth0.Auth0DecodedHash | null>;
     handleCallback: () => Promise<auth0.Auth0DecodedHash | null | undefined>;
     handlePersistence: () => Promise<auth0.Auth0DecodedHash | null>;
-    closePopup: () => void;
     login: () => Promise<void>;
     logout: () => void;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
