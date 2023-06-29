@@ -8,18 +8,20 @@ class WebSDK implements iWebSDK {
   clientId?: string;
   redirectUri?: string;
   apiKey?: string;
+  baseUrl?: string;
   user?: User;
   credentials?: Credentials | null;
+  #environment: string = 'DEVELOPMENT';
   #auth0Client?: any;
   #wrappedDek: string = '';
   #domain: string = 'dev-4fb2r65g1bnesuyt.us.auth0.com';
   #audience: string = 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/';
-  #baseUrl: string = 'https://api-g2eggt3ika-uc.a.run.app';
 
-  constructor({ clientId, redirectUri, loginType, apiKey }: iWebSDK) {
+  constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
     WebSDK.instance = this;
 
+    this.baseUrl = baseUrl;
     this.loginType = loginType;
     this.clientId = clientId;
     this.redirectUri = redirectUri;
@@ -62,7 +64,8 @@ class WebSDK implements iWebSDK {
       const handleAuth = await this.handleAuth();
       return handleAuth;
     } catch (error) {
-      console.log(error);
+      console.error('There was an error logging in , error: ', error);
+      return error;
     } finally {
       if (this.loginType === 'POPUP')
         this.#auth0Client.popup.callback({ hash: window.location.hash });
@@ -157,7 +160,7 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#createRequest();
 
       const response = await fetch(
-        `${this.#baseUrl}/getFundsAvailable?refreshCache=true`,
+        `${this.baseUrl}/getFundsAvailable?refreshCache=true`,
         requestOptions
       );
 
@@ -165,46 +168,50 @@ class WebSDK implements iWebSDK {
       if (this.user) this.user.balances = data.data;
       return data.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an error fetching user balances, error: ', error);
+      return error;
     }
   };
 
   #fetchUserWallets = async () => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.#baseUrl}/user/wallets`, requestOptions);
+      const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
 
       const data = await response.json();
       if (this.user) this.user.wallets = data.data;
       return data.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an error fetching user wallets, error: ', error);
+      return error;
     }
   };
 
   #fetchUserInfo = async () => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.#baseUrl}/user`, requestOptions);
+      const response = await fetch(`${this.baseUrl}/user`, requestOptions);
 
       const data = await response.json();
       if (this.user) this.user.info = data.data;
       return data.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an error fetching user info, error: ', error);
+      return error;
     }
   };
 
   #fetchUserNfts = async () => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.#baseUrl}/getNftsAvailable`, requestOptions);
+      const response = await fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
 
       const data = await response.json();
       if (this.user) this.user.nfts = data.data;
       return data.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an error fetching user nfts, error: ', error);
+      return error;
     }
   };
 
@@ -213,13 +220,14 @@ class WebSDK implements iWebSDK {
     try {
       const requestOptions = await this.#createRequest('POST');
 
-      const response = await fetch(`${this.#baseUrl}/createOrRecoverAccount`, requestOptions);
+      const response = await fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
 
       const data = await response.json();
       this.#wrappedDek = data.data;
       return data.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an error getting wrapped dek, error: ', error);
+      return error;
     }
   };
 
@@ -236,11 +244,12 @@ class WebSDK implements iWebSDK {
         tokenAddress,
       });
 
-      const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
+      const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
       const data = await response.json();
       return data.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an processing your payment, error: ', error);
+      return error;
     }
   };
 
@@ -250,11 +259,12 @@ class WebSDK implements iWebSDK {
 
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
 
-      const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
+      const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
       const data = await response.json();
       return data.result.data;
     } catch (error: any) {
-      console.log(error);
+      console.error('There was an error paying this transaction, error: ', error);
+      return error;
     }
   };
 
@@ -281,15 +291,30 @@ class WebSDK implements iWebSDK {
     const nfts = await this.#fetchUserNfts();
     return nfts;
   };
-}
 
-function createIframe(width: number, height: number) {
-  const iframe = document.createElement('iframe');
-  iframe.src = 'https://wallet.sphereone.xyz/';
-  iframe.width = width.toString();
-  iframe.height = height.toString();
-  return iframe;
+  setEnvironmet = (env: string) => {
+    this.#environment = env;
+  };
+
+  createIframe(width: number, height: number) {
+    const iframe = document.createElement('iframe');
+    switch (this.#environment) {
+      case 'PRODUCTION':
+        iframe.src = 'https://wallet.sphereone.xyz/';
+        break;
+
+      case 'STAGING':
+        iframe.src = 'https://sphereonewallet.web.app/';
+        break;
+
+      default:
+        iframe.src = 'http://localhost:19006';
+        break;
+    }
+    iframe.width = width.toString();
+    iframe.height = height.toString();
+    return iframe;
+  }
 }
 
 export default WebSDK;
-export { createIframe };
