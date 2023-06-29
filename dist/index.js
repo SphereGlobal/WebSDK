@@ -22,18 +22,17 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domain, _WebSDK_audience, _WebSDK_baseUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
+var _WebSDK_environment, _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domain, _WebSDK_audience, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createIframe = void 0;
 const auth0_js_1 = __importDefault(require("auth0-js"));
 class WebSDK {
-    constructor({ clientId, redirectUri, loginType, apiKey }) {
+    constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }) {
         this.loginType = 'REDIRECT';
+        _WebSDK_environment.set(this, 'DEVELOPMENT');
         _WebSDK_auth0Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domain.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
         _WebSDK_audience.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
-        _WebSDK_baseUrl.set(this, 'https://api-g2eggt3ika-uc.a.run.app');
         this.handleAuth = () => __awaiter(this, void 0, void 0, function* () {
             const authResult = yield new Promise((resolve, reject) => {
                 __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").parseHash((err, result) => {
@@ -64,7 +63,8 @@ class WebSDK {
                 return handleAuth;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error logging in , error: ', error);
+                return error;
             }
             finally {
                 if (this.loginType === 'POPUP')
@@ -152,53 +152,57 @@ class WebSDK {
         _WebSDK_fetchUserBalances.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/getFundsAvailable?refreshCache=true`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/getFundsAvailable?refreshCache=true`, requestOptions);
                 const data = yield response.json();
                 if (this.user)
                     this.user.balances = data.data;
                 return data.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error fetching user balances, error: ', error);
+                return error;
             }
         }));
         _WebSDK_fetchUserWallets.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/user/wallets`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/user/wallets`, requestOptions);
                 const data = yield response.json();
                 if (this.user)
                     this.user.wallets = data.data;
                 return data.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error fetching user wallets, error: ', error);
+                return error;
             }
         }));
         _WebSDK_fetchUserInfo.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/user`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/user`, requestOptions);
                 const data = yield response.json();
                 if (this.user)
                     this.user.info = data.data;
                 return data.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error fetching user info, error: ', error);
+                return error;
             }
         }));
         _WebSDK_fetchUserNfts.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/getNftsAvailable`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
                 const data = yield response.json();
                 if (this.user)
                     this.user.nfts = data.data;
                 return data.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error fetching user nfts, error: ', error);
+                return error;
             }
         }));
         _WebSDK_getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
@@ -206,13 +210,14 @@ class WebSDK {
                 return __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST');
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/createOrRecoverAccount`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
                 const data = yield response.json();
                 __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data, "f");
                 return data.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error getting wrapped dek, error: ', error);
+                return error;
             }
         }));
         this.pay = ({ toAddress, chain, symbol, amount, tokenAddress }) => __awaiter(this, void 0, void 0, function* () {
@@ -226,24 +231,26 @@ class WebSDK {
                     amount,
                     tokenAddress,
                 });
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/pay`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
                 const data = yield response.json();
                 return data.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an processing your payment, error: ', error);
+                return error;
             }
         });
         this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek, transactionId });
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/pay`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
                 const data = yield response.json();
                 return data.result.data;
             }
             catch (error) {
-                console.log(error);
+                console.error('There was an error paying this transaction, error: ', error);
+                return error;
             }
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
@@ -274,9 +281,13 @@ class WebSDK {
             const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
         });
+        this.setEnvironmet = (env) => {
+            __classPrivateFieldSet(this, _WebSDK_environment, env, "f");
+        };
         if (WebSDK.instance)
             return WebSDK.instance;
         WebSDK.instance = this;
+        this.baseUrl = baseUrl;
         this.loginType = loginType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
@@ -291,14 +302,23 @@ class WebSDK {
             responseType: 'token id_token',
         }), "f");
     }
+    createIframe(width, height) {
+        const iframe = document.createElement('iframe');
+        switch (__classPrivateFieldGet(this, _WebSDK_environment, "f")) {
+            case 'PRODUCTION':
+                iframe.src = 'https://wallet.sphereone.xyz/';
+                break;
+            case 'STAGING':
+                iframe.src = 'https://sphereonewallet.web.app/';
+                break;
+            default:
+                iframe.src = 'http://localhost:19006';
+                break;
+        }
+        iframe.width = width.toString();
+        iframe.height = height.toString();
+        return iframe;
+    }
 }
-_WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
-function createIframe(width, height) {
-    const iframe = document.createElement('iframe');
-    iframe.src = 'https://wallet.sphereone.xyz/';
-    iframe.width = width.toString();
-    iframe.height = height.toString();
-    return iframe;
-}
-exports.createIframe = createIframe;
+_WebSDK_environment = new WeakMap(), _WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
 exports.default = WebSDK;

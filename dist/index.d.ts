@@ -7,11 +7,12 @@ declare class WebSDK implements iWebSDK {
     clientId?: string;
     redirectUri?: string;
     apiKey?: string;
+    baseUrl?: string;
     user?: User;
     credentials?: Credentials | null;
-    constructor({ clientId, redirectUri, loginType, apiKey }: iWebSDK);
+    constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK);
     handleAuth: () => Promise<auth0.Auth0DecodedHash | null>;
-    handleCallback: () => Promise<auth0.Auth0DecodedHash | null | undefined>;
+    handleCallback: () => Promise<unknown>;
     handlePersistence: () => Promise<auth0.Auth0DecodedHash | null>;
     login: () => Promise<void>;
     logout: () => void;
@@ -21,7 +22,7 @@ declare class WebSDK implements iWebSDK {
     getUserInfo: () => Promise<any>;
     getBalances: () => Promise<any>;
     getNfts: () => Promise<any>;
+    setEnvironmet: (env: string) => void;
+    createIframe(width: number, height: number): HTMLIFrameElement;
 }
-declare function createIframe(width: number, height: number): HTMLIFrameElement;
 export default WebSDK;
-export { createIframe };
