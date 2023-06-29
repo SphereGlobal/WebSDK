@@ -38,6 +38,11 @@ class WebSDK implements iWebSDK {
     });
   }
 
+  handlePopup = () => {
+    this.#auth0Client.popup.callback({ hash: window.location.hash });
+  };
+
+
   handleAuth = async () => {
     const authResult: Auth0DecodedHash = await new Promise((resolve, reject) => {
       this.#auth0Client.parseHash((err: any, result: any) => {
@@ -66,9 +71,6 @@ class WebSDK implements iWebSDK {
     } catch (error) {
       console.error('There was an error logging in , error: ', error);
       return error;
-    } finally {
-      if (this.loginType === 'POPUP')
-        this.#auth0Client.popup.callback({ hash: window.location.hash });
     }
   };
 
