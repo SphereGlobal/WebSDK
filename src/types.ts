@@ -50,9 +50,11 @@ export enum WalletTypes {
 }
 
 export interface iWebSDK {
+  loginType: 'REDIRECT' | 'POPUP';
   providerUid?: string;
   clientId?: string;
   redirectUri?: string;
+  baseUrl?: string;
   apiKey?: string;
   user?: User | null;
   credentials?: Credentials | null;
