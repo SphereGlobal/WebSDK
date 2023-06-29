@@ -33,7 +33,7 @@ class WebSDK {
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domain.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
         _WebSDK_audience.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
-        this.handlePopup = () => {
+        this.closePopup = () => {
             __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
         };
         this.handleAuth = () => __awaiter(this, void 0, void 0, function* () {

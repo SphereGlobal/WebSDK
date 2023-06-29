@@ -38,7 +38,7 @@ class WebSDK implements iWebSDK {
     });
   }
 
-  handlePopup = () => {
+  closePopup = () => {
     this.#auth0Client.popup.callback({ hash: window.location.hash });
   };
 
