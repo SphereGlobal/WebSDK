@@ -14,8 +14,8 @@ class WebSDK implements iWebSDK {
   #environment: string = 'DEVELOPMENT';
   #auth0Client?: any;
   #wrappedDek: string = '';
-  #domain: string = 'dev-4fb2r65g1bnesuyt.us.auth0.com';
-  #audience: string = 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/';
+  #domain: string = 'sphereone.us.auth0.com';
+  #audience: string = 'https://sphereone.us.auth0.com/api/v2/"';
 
   constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
     if (WebSDK.instance) return WebSDK.instance;
