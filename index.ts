@@ -30,27 +30,6 @@ class WebSDK implements iWebSDK {
   #pwaStagingUrl = 'https://sphereonewallet.web.app';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
 
-  // constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
-  //   if (WebSDK.instance) return WebSDK.instance;
-  //   WebSDK.instance = this;
-
-  //   this.baseUrl = baseUrl;
-  //   this.loginType = loginType;
-  //   this.clientId = clientId;
-  //   this.redirectUri = redirectUri;
-  //   this.apiKey = apiKey;
-  //   this.user = {};
-  //   this.credentials = null;
-
-  //   this.#auth0Client = new auth0.WebAuth({
-  //     domain: this.#domain as string,
-  //     clientID: this.clientId as string,
-  //     redirectUri: this.redirectUri as string,
-  //     audience: this.#audience as string,
-  //     responseType: 'token id_token',
-  //   });
-  // }
-
   setClientId = (clientId: string) => {
     this.clientId = clientId;
     return this;
