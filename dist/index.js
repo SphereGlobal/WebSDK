@@ -374,7 +374,7 @@ class WebSDK {
     //     responseType: 'token id_token',
     //   });
     // }
-    init() {
+    static init() {
         return new WebSDK();
     }
     createIframe(width, height) {

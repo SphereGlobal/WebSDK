@@ -49,7 +49,7 @@ class WebSDK implements iWebSDK {
   //   });
   // }
 
-  init() {
+  static init() {
     return new WebSDK();
   }
 
