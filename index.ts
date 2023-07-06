@@ -2,7 +2,7 @@ import auth0, { Auth0DecodedHash } from 'auth0-js';
 import { Credentials, Transaction, User, iWebSDK } from './src/types';
 
 class WebSDK implements iWebSDK {
-  static instance: any;
+  static instance: WebSDK | undefined = undefined;
 
   loginType: 'REDIRECT' | 'POPUP' = 'REDIRECT';
   clientId?: string;
