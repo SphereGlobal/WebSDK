@@ -32,7 +32,7 @@ Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: fun
 class WebSDK {
     constructor() {
         this.loginType = 'REDIRECT';
-        _WebSDK_environment.set(this, types_1.Environments.DEVELOPMENT);
+        _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
         _WebSDK_auth0Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domainDev.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
@@ -61,7 +61,7 @@ class WebSDK {
             this.baseUrl = baseUrl;
             return this;
         };
-        this.setEnvironment = (environment) => {
+        this.setEnvironment = (environment = types_1.Environments.PRODUCTION) => {
             __classPrivateFieldSet(this, _WebSDK_environment, environment, "f");
             if (environment === types_1.Environments.DEVELOPMENT || environment === types_1.Environments.STAGING) {
                 __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"), "f");
@@ -108,7 +108,7 @@ class WebSDK {
             this.apiKey = '';
             this.baseUrl = '';
             this.loginType = 'REDIRECT';
-            __classPrivateFieldSet(this, _WebSDK_environment, types_1.Environments.DEVELOPMENT, "f");
+            __classPrivateFieldSet(this, _WebSDK_environment, types_1.Environments.PRODUCTION, "f");
             __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"), "f");
             __classPrivateFieldSet(this, _WebSDK_audience, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"), "f");
             WebSDK.instance = undefined;
@@ -364,14 +364,14 @@ class WebSDK {
     createIframe(width, height) {
         const iframe = document.createElement('iframe');
         switch (__classPrivateFieldGet(this, _WebSDK_environment, "f")) {
-            case types_1.Environments.PRODUCTION:
-                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaProdUrl, "f");
+            case types_1.Environments.DEVELOPMENT:
+                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaDevUrl, "f");
                 break;
             case types_1.Environments.STAGING:
                 iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaStagingUrl, "f");
                 break;
             default:
-                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaDevUrl, "f");
+                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaProdUrl, "f");
                 break;
         }
         iframe.width = width.toString();

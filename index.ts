@@ -13,7 +13,7 @@ class WebSDK implements iWebSDK {
   baseUrl?: string;
   user?: User;
   credentials?: Credentials | null;
-  #environment: Environments = Environments.DEVELOPMENT;
+  #environment: Environments = Environments.PRODUCTION;
   #auth0Client?: any;
   #wrappedDek: string = '';
 
@@ -50,7 +50,7 @@ class WebSDK implements iWebSDK {
     return this;
   };
 
-  setEnvironment = (environment: Environments) => {
+  setEnvironment = (environment: Environments = Environments.PRODUCTION) => {
     this.#environment = environment;
     if (environment === Environments.DEVELOPMENT || environment === Environments.STAGING) {
       this.#domain = this.#domainDev;
@@ -96,7 +96,7 @@ class WebSDK implements iWebSDK {
     this.apiKey = '';
     this.baseUrl = '';
     this.loginType = 'REDIRECT';
-    this.#environment = Environments.DEVELOPMENT;
+    this.#environment = Environments.PRODUCTION;
     this.#domain = this.#domainDev;
     this.#audience = this.#audienceDev;
     WebSDK.instance = undefined;
@@ -361,8 +361,8 @@ class WebSDK implements iWebSDK {
   createIframe(width: number, height: number) {
     const iframe = document.createElement('iframe');
     switch (this.#environment) {
-      case Environments.PRODUCTION:
-        iframe.src = this.#pwaProdUrl;
+      case Environments.DEVELOPMENT:
+        iframe.src = this.#pwaDevUrl;
         break;
 
       case Environments.STAGING:
@@ -370,7 +370,7 @@ class WebSDK implements iWebSDK {
         break;
 
       default:
-        iframe.src = this.#pwaDevUrl;
+        iframe.src = this.#pwaProdUrl;
         break;
     }
     iframe.width = width.toString();
