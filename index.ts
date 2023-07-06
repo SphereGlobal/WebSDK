@@ -51,10 +51,6 @@ class WebSDK implements iWebSDK {
   //   });
   // }
 
-  static init() {
-    return new WebSDK();
-  }
-
   setClientId = (clientId: string) => {
     this.clientId = clientId;
     return this;
