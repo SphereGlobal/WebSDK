@@ -11,7 +11,7 @@ class WebSDK implements iWebSDK {
   redirectUri?: string;
   apiKey?: string;
   baseUrl?: string;
-  user?: User = {};
+  user: User = {};
   credentials?: Credentials | null;
   #environment: Environments = Environments.PRODUCTION;
   #auth0Client?: any;
@@ -106,7 +106,6 @@ class WebSDK implements iWebSDK {
     this.#auth0Client.popup.callback({ hash: window.location.hash });
   };
 
-
   handleAuth = async () => {
     const authResult: Auth0DecodedHash = await new Promise((resolve, reject) => {
       this.#auth0Client.parseHash((err: any, result: any) => {
@@ -119,7 +118,7 @@ class WebSDK implements iWebSDK {
         accessToken: authResult.accessToken as string,
         idToken: authResult.idToken as string,
       };
-      if (this.user) this.user.uid = authResult.idTokenPayload.sub;
+      this.user.uid = authResult.idTokenPayload.sub;
 
       return authResult;
     } else return null;
@@ -150,7 +149,7 @@ class WebSDK implements iWebSDK {
         accessToken: persistance.accessToken as string,
         idToken: persistance.idToken as string,
       };
-      if (this.user) this.user.uid = persistance.idTokenPayload.sub;
+      this.user.uid = persistance.idTokenPayload.sub;
       return persistance;
     } else return null;
   };
@@ -231,7 +230,7 @@ class WebSDK implements iWebSDK {
       );
 
       const data = await response.json();
-      if (this.user) this.user.balances = data.data;
+      this.user.balances = data.data;
       return data.data;
     } catch (error: any) {
       console.error('There was an error fetching user balances, error: ', error);
@@ -245,7 +244,7 @@ class WebSDK implements iWebSDK {
       const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
 
       const data = await response.json();
-      if (this.user) this.user.wallets = data.data;
+      this.user.wallets = data.data;
       return data.data;
     } catch (error: any) {
       console.error('There was an error fetching user wallets, error: ', error);
@@ -259,7 +258,7 @@ class WebSDK implements iWebSDK {
       const response = await fetch(`${this.baseUrl}/user`, requestOptions);
 
       const data = await response.json();
-      if (this.user) this.user.info = data.data;
+      this.user.info = data.data;
       return data.data;
     } catch (error: any) {
       console.error('There was an error fetching user info, error: ', error);
@@ -273,7 +272,7 @@ class WebSDK implements iWebSDK {
       const response = await fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
 
       const data = await response.json();
-      if (this.user) this.user.nfts = data.data;
+      this.user.nfts = data.data;
       return data.data;
     } catch (error: any) {
       console.error('There was an error fetching user nfts, error: ', error);

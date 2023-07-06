@@ -131,8 +131,7 @@ class WebSDK {
                     accessToken: authResult.accessToken,
                     idToken: authResult.idToken,
                 };
-                if (this.user)
-                    this.user.uid = authResult.idTokenPayload.sub;
+                this.user.uid = authResult.idTokenPayload.sub;
                 return authResult;
             }
             else
@@ -165,8 +164,7 @@ class WebSDK {
                     accessToken: persistance.accessToken,
                     idToken: persistance.idToken,
                 };
-                if (this.user)
-                    this.user.uid = persistance.idTokenPayload.sub;
+                this.user.uid = persistance.idTokenPayload.sub;
                 return persistance;
             }
             else
@@ -234,8 +232,7 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/getFundsAvailable?refreshCache=true`, requestOptions);
                 const data = yield response.json();
-                if (this.user)
-                    this.user.balances = data.data;
+                this.user.balances = data.data;
                 return data.data;
             }
             catch (error) {
@@ -248,8 +245,7 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/user/wallets`, requestOptions);
                 const data = yield response.json();
-                if (this.user)
-                    this.user.wallets = data.data;
+                this.user.wallets = data.data;
                 return data.data;
             }
             catch (error) {
@@ -262,8 +258,7 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/user`, requestOptions);
                 const data = yield response.json();
-                if (this.user)
-                    this.user.info = data.data;
+                this.user.info = data.data;
                 return data.data;
             }
             catch (error) {
@@ -276,8 +271,7 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
                 const data = yield response.json();
-                if (this.user)
-                    this.user.nfts = data.data;
+                this.user.nfts = data.data;
                 return data.data;
             }
             catch (error) {
