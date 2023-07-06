@@ -14,20 +14,84 @@ class WebSDK implements iWebSDK {
   #environment: string = 'DEVELOPMENT';
   #auth0Client?: any;
   #wrappedDek: string = '';
-  #domain: string = 'sphereone.us.auth0.com';
-  #audience: string = 'https://sphereone.us.auth0.com/api/v2/';
 
-  constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
-    if (WebSDK.instance) return WebSDK.instance;
-    WebSDK.instance = this;
+  #domainDev: string = 'dev-4fb2r65g1bnesuyt.us.auth0.com';
+  #audienceDev: string = 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/';
+  #domainProd: string = 'sphereone.us.auth0.com';
+  #audienceProd: string = 'https://sphereone.us.auth0.com/api/v2/';
 
-    this.baseUrl = baseUrl;
-    this.loginType = loginType;
+  // by default, points to "DEVELOPMENT" environment
+  #domain: string = this.#domainDev;
+  #audience: string = this.#audienceDev;
+
+  #pwaDevUrl = 'http://localhost:19006';
+  #pwaStagingUrl = 'https://sphereonewallet.web.app';
+  #pwaProdUrl = 'https://wallet.sphereone.xyz';
+
+  // constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
+  //   if (WebSDK.instance) return WebSDK.instance;
+  //   WebSDK.instance = this;
+
+  //   this.baseUrl = baseUrl;
+  //   this.loginType = loginType;
+  //   this.clientId = clientId;
+  //   this.redirectUri = redirectUri;
+  //   this.apiKey = apiKey;
+  //   this.user = {};
+  //   this.credentials = null;
+
+  //   this.#auth0Client = new auth0.WebAuth({
+  //     domain: this.#domain as string,
+  //     clientID: this.clientId as string,
+  //     redirectUri: this.redirectUri as string,
+  //     audience: this.#audience as string,
+  //     responseType: 'token id_token',
+  //   });
+  // }
+
+  setClientId = (clientId: string) => {
     this.clientId = clientId;
+    return this;
+  };
+
+  setRedirectUri = (redirectUri: string) => {
     this.redirectUri = redirectUri;
+    return this;
+  };
+
+  setApiKey = (apiKey: string) => {
     this.apiKey = apiKey;
-    this.user = {};
-    this.credentials = null;
+    return this;
+  };
+
+  setBaseUrl = (baseUrl: string) => {
+    this.baseUrl = baseUrl;
+    return this;
+  };
+
+  setEnvironment = (environment: string) => {
+    this.#environment = environment;
+    if (environment === 'DEVELOPMENT' || environment === 'STAGING') {
+      this.#domain = this.#domainDev;
+      this.#audience = this.#audienceDev;
+    } else {
+      this.#domain = this.#domainProd;
+      this.#audience = this.#audienceProd;
+    }
+    return this;
+  };
+
+  setLoginType = (loginType: 'REDIRECT' | 'POPUP' = 'POPUP') => {
+    this.loginType = loginType;
+    return this;
+  };
+
+  build = () => {
+    if (!this.clientId) throw new Error('Missing clientId');
+    if (!this.redirectUri) throw new Error('Missing redirectUri');
+    if (!this.apiKey) throw new Error('Missing apiKey');
+    if (!this.baseUrl) throw new Error('Missing baseUrl');
+    if (WebSDK.instance) return WebSDK.instance;
 
     this.#auth0Client = new auth0.WebAuth({
       domain: this.#domain as string,
@@ -36,7 +100,25 @@ class WebSDK implements iWebSDK {
       audience: this.#audience as string,
       responseType: 'token id_token',
     });
-  }
+
+    WebSDK.instance = this;
+  };
+
+  clear = () => {
+    this.user = {};
+    this.credentials = null;
+    this.#wrappedDek = '';
+    this.#auth0Client = null;
+    this.clientId = '';
+    this.redirectUri = '';
+    this.apiKey = '';
+    this.baseUrl = '';
+    this.loginType = 'REDIRECT';
+    this.#environment = 'DEVELOPMENT';
+    this.#domain = this.#domainDev;
+    this.#audience = this.#audienceDev;
+    WebSDK.instance = undefined;
+  };
 
   closePopup = () => {
     this.#auth0Client.popup.callback({ hash: window.location.hash });
@@ -294,23 +376,19 @@ class WebSDK implements iWebSDK {
     return nfts;
   };
 
-  setEnvironmet = (env: string) => {
-    this.#environment = env;
-  };
-
   createIframe(width: number, height: number) {
     const iframe = document.createElement('iframe');
     switch (this.#environment) {
       case 'PRODUCTION':
-        iframe.src = 'https://wallet.sphereone.xyz/';
+        iframe.src = this.#pwaProdUrl;
         break;
 
       case 'STAGING':
-        iframe.src = 'https://sphereonewallet.web.app/';
+        iframe.src = this.#pwaStagingUrl;
         break;
 
       default:
-        iframe.src = 'http://localhost:19006';
+        iframe.src = this.#pwaDevUrl;
         break;
     }
     iframe.width = width.toString();

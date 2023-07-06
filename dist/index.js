@@ -22,17 +22,110 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-var _WebSDK_environment, _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domain, _WebSDK_audience, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
+var _WebSDK_environment, _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 const auth0_js_1 = __importDefault(require("auth0-js"));
 class WebSDK {
-    constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }) {
+    constructor() {
         this.loginType = 'REDIRECT';
         _WebSDK_environment.set(this, 'DEVELOPMENT');
         _WebSDK_auth0Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
-        _WebSDK_domain.set(this, 'sphereone.us.auth0.com');
-        _WebSDK_audience.set(this, 'https://sphereone.us.auth0.com/api/v2/');
+        _WebSDK_domainDev.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
+        _WebSDK_audienceDev.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
+        _WebSDK_domainProd.set(this, 'sphereone.us.auth0.com');
+        _WebSDK_audienceProd.set(this, 'https://sphereone.us.auth0.com/api/v2/');
+        // by default, points to "DEVELOPMENT" environment
+        _WebSDK_domain.set(this, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"));
+        _WebSDK_audience.set(this, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"));
+        _WebSDK_pwaDevUrl.set(this, 'http://localhost:19006');
+        _WebSDK_pwaStagingUrl.set(this, 'https://sphereonewallet.web.app');
+        _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
+        // constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
+        //   if (WebSDK.instance) return WebSDK.instance;
+        //   WebSDK.instance = this;
+        //   this.baseUrl = baseUrl;
+        //   this.loginType = loginType;
+        //   this.clientId = clientId;
+        //   this.redirectUri = redirectUri;
+        //   this.apiKey = apiKey;
+        //   this.user = {};
+        //   this.credentials = null;
+        //   this.#auth0Client = new auth0.WebAuth({
+        //     domain: this.#domain as string,
+        //     clientID: this.clientId as string,
+        //     redirectUri: this.redirectUri as string,
+        //     audience: this.#audience as string,
+        //     responseType: 'token id_token',
+        //   });
+        // }
+        this.setClientId = (clientId) => {
+            this.clientId = clientId;
+            return this;
+        };
+        this.setRedirectUri = (redirectUri) => {
+            this.redirectUri = redirectUri;
+            return this;
+        };
+        this.setApiKey = (apiKey) => {
+            this.apiKey = apiKey;
+            return this;
+        };
+        this.setBaseUrl = (baseUrl) => {
+            this.baseUrl = baseUrl;
+            return this;
+        };
+        this.setEnvironment = (environment) => {
+            __classPrivateFieldSet(this, _WebSDK_environment, environment, "f");
+            if (environment === 'DEVELOPMENT' || environment === 'STAGING') {
+                __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"), "f");
+                __classPrivateFieldSet(this, _WebSDK_audience, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"), "f");
+            }
+            else {
+                __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainProd, "f"), "f");
+                __classPrivateFieldSet(this, _WebSDK_audience, __classPrivateFieldGet(this, _WebSDK_audienceProd, "f"), "f");
+            }
+            return this;
+        };
+        this.setLoginType = (loginType = 'POPUP') => {
+            this.loginType = loginType;
+            return this;
+        };
+        this.build = () => {
+            if (!this.clientId)
+                throw new Error('Missing clientId');
+            if (!this.redirectUri)
+                throw new Error('Missing redirectUri');
+            if (!this.apiKey)
+                throw new Error('Missing apiKey');
+            if (!this.baseUrl)
+                throw new Error('Missing baseUrl');
+            if (WebSDK.instance)
+                return WebSDK.instance;
+            __classPrivateFieldSet(this, _WebSDK_auth0Client, new auth0_js_1.default.WebAuth({
+                domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
+                clientID: this.clientId,
+                redirectUri: this.redirectUri,
+                audience: __classPrivateFieldGet(this, _WebSDK_audience, "f"),
+                responseType: 'token id_token',
+            }), "f");
+            WebSDK.instance = this;
+        };
+        this.clear = () => {
+            this.user = {};
+            this.credentials = null;
+            __classPrivateFieldSet(this, _WebSDK_wrappedDek, '', "f");
+            __classPrivateFieldSet(this, _WebSDK_auth0Client, null, "f");
+            this.clientId = '';
+            this.redirectUri = '';
+            this.apiKey = '';
+            this.baseUrl = '';
+            this.loginType = 'REDIRECT';
+            __classPrivateFieldSet(this, _WebSDK_environment, 'DEVELOPMENT', "f");
+            __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"), "f");
+            __classPrivateFieldSet(this, _WebSDK_audience, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"), "f");
+            WebSDK.instance = undefined;
+        };
         this.closePopup = () => {
             __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
         };
@@ -280,38 +373,18 @@ class WebSDK {
             const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
         });
-        this.setEnvironmet = (env) => {
-            __classPrivateFieldSet(this, _WebSDK_environment, env, "f");
-        };
-        if (WebSDK.instance)
-            return WebSDK.instance;
-        WebSDK.instance = this;
-        this.baseUrl = baseUrl;
-        this.loginType = loginType;
-        this.clientId = clientId;
-        this.redirectUri = redirectUri;
-        this.apiKey = apiKey;
-        this.user = {};
-        this.credentials = null;
-        __classPrivateFieldSet(this, _WebSDK_auth0Client, new auth0_js_1.default.WebAuth({
-            domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
-            clientID: this.clientId,
-            redirectUri: this.redirectUri,
-            audience: __classPrivateFieldGet(this, _WebSDK_audience, "f"),
-            responseType: 'token id_token',
-        }), "f");
     }
     createIframe(width, height) {
         const iframe = document.createElement('iframe');
         switch (__classPrivateFieldGet(this, _WebSDK_environment, "f")) {
             case 'PRODUCTION':
-                iframe.src = 'https://wallet.sphereone.xyz/';
+                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaProdUrl, "f");
                 break;
             case 'STAGING':
-                iframe.src = 'https://sphereonewallet.web.app/';
+                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaStagingUrl, "f");
                 break;
             default:
-                iframe.src = 'http://localhost:19006';
+                iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaDevUrl, "f");
                 break;
         }
         iframe.width = width.toString();
@@ -319,5 +392,5 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_environment = new WeakMap(), _WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
+_WebSDK_environment = new WeakMap(), _WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
 exports.default = WebSDK;
