@@ -1,6 +1,8 @@
 import auth0, { Auth0DecodedHash } from 'auth0-js';
 import { Credentials, Environments, Transaction, User, iWebSDK } from './src/types';
 
+export { Environments as SphereEnvironment } from './src/types';
+
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
 

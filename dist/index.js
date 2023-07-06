@@ -24,8 +24,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _WebSDK_environment, _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SphereEnvironment = void 0;
 const auth0_js_1 = __importDefault(require("auth0-js"));
 const types_1 = require("./src/types");
+var types_2 = require("./src/types");
+Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: function () { return types_2.Environments; } });
 class WebSDK {
     constructor() {
         this.loginType = 'REDIRECT';
