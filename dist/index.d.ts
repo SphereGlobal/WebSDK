@@ -10,6 +10,7 @@ declare class WebSDK implements iWebSDK {
     baseUrl?: string;
     user?: User;
     credentials?: Credentials | null;
+    init(): WebSDK;
     setClientId: (clientId: string) => this;
     setRedirectUri: (redirectUri: string) => this;
     setApiKey: (apiKey: string) => this;

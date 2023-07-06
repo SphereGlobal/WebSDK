@@ -41,24 +41,6 @@ class WebSDK {
         _WebSDK_pwaDevUrl.set(this, 'http://localhost:19006');
         _WebSDK_pwaStagingUrl.set(this, 'https://sphereonewallet.web.app');
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
-        // constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
-        //   if (WebSDK.instance) return WebSDK.instance;
-        //   WebSDK.instance = this;
-        //   this.baseUrl = baseUrl;
-        //   this.loginType = loginType;
-        //   this.clientId = clientId;
-        //   this.redirectUri = redirectUri;
-        //   this.apiKey = apiKey;
-        //   this.user = {};
-        //   this.credentials = null;
-        //   this.#auth0Client = new auth0.WebAuth({
-        //     domain: this.#domain as string,
-        //     clientID: this.clientId as string,
-        //     redirectUri: this.redirectUri as string,
-        //     audience: this.#audience as string,
-        //     responseType: 'token id_token',
-        //   });
-        // }
         this.setClientId = (clientId) => {
             this.clientId = clientId;
             return this;
@@ -373,6 +355,27 @@ class WebSDK {
             const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
         });
+    }
+    // constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK) {
+    //   if (WebSDK.instance) return WebSDK.instance;
+    //   WebSDK.instance = this;
+    //   this.baseUrl = baseUrl;
+    //   this.loginType = loginType;
+    //   this.clientId = clientId;
+    //   this.redirectUri = redirectUri;
+    //   this.apiKey = apiKey;
+    //   this.user = {};
+    //   this.credentials = null;
+    //   this.#auth0Client = new auth0.WebAuth({
+    //     domain: this.#domain as string,
+    //     clientID: this.clientId as string,
+    //     redirectUri: this.redirectUri as string,
+    //     audience: this.#audience as string,
+    //     responseType: 'token id_token',
+    //   });
+    // }
+    init() {
+        return new WebSDK();
     }
     createIframe(width, height) {
         const iframe = document.createElement('iframe');
