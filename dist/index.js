@@ -25,10 +25,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var _WebSDK_environment, _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 const auth0_js_1 = __importDefault(require("auth0-js"));
+const types_1 = require("./src/types");
 class WebSDK {
     constructor() {
         this.loginType = 'REDIRECT';
-        _WebSDK_environment.set(this, 'DEVELOPMENT');
+        _WebSDK_environment.set(this, types_1.Environments.DEVELOPMENT);
         _WebSDK_auth0Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domainDev.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
@@ -59,7 +60,7 @@ class WebSDK {
         };
         this.setEnvironment = (environment) => {
             __classPrivateFieldSet(this, _WebSDK_environment, environment, "f");
-            if (environment === 'DEVELOPMENT' || environment === 'STAGING') {
+            if (environment === types_1.Environments.DEVELOPMENT || environment === types_1.Environments.STAGING) {
                 __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"), "f");
                 __classPrivateFieldSet(this, _WebSDK_audience, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"), "f");
             }
@@ -104,7 +105,7 @@ class WebSDK {
             this.apiKey = '';
             this.baseUrl = '';
             this.loginType = 'REDIRECT';
-            __classPrivateFieldSet(this, _WebSDK_environment, 'DEVELOPMENT', "f");
+            __classPrivateFieldSet(this, _WebSDK_environment, types_1.Environments.DEVELOPMENT, "f");
             __classPrivateFieldSet(this, _WebSDK_domain, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"), "f");
             __classPrivateFieldSet(this, _WebSDK_audience, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"), "f");
             WebSDK.instance = undefined;
@@ -381,10 +382,10 @@ class WebSDK {
     createIframe(width, height) {
         const iframe = document.createElement('iframe');
         switch (__classPrivateFieldGet(this, _WebSDK_environment, "f")) {
-            case 'PRODUCTION':
+            case types_1.Environments.PRODUCTION:
                 iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaProdUrl, "f");
                 break;
-            case 'STAGING':
+            case types_1.Environments.STAGING:
                 iframe.src = __classPrivateFieldGet(this, _WebSDK_pwaStagingUrl, "f");
                 break;
             default:

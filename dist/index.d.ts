@@ -1,5 +1,5 @@
 import auth0 from 'auth0-js';
-import { Credentials, Transaction, User, iWebSDK } from './src/types';
+import { Credentials, Environments, Transaction, User, iWebSDK } from './src/types';
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
@@ -15,7 +15,7 @@ declare class WebSDK implements iWebSDK {
     setRedirectUri: (redirectUri: string) => this;
     setApiKey: (apiKey: string) => this;
     setBaseUrl: (baseUrl: string) => this;
-    setEnvironment: (environment: string) => this;
+    setEnvironment: (environment: Environments) => this;
     setLoginType: (loginType?: 'REDIRECT' | 'POPUP') => this;
     build: () => WebSDK;
     clear: () => void;

@@ -1,5 +1,5 @@
 import auth0, { Auth0DecodedHash } from 'auth0-js';
-import { Credentials, Transaction, User, iWebSDK } from './src/types';
+import { Credentials, Environments, Transaction, User, iWebSDK } from './src/types';
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
@@ -11,7 +11,7 @@ class WebSDK implements iWebSDK {
   baseUrl?: string;
   user?: User;
   credentials?: Credentials | null;
-  #environment: string = 'DEVELOPMENT';
+  #environment: Environments = Environments.DEVELOPMENT;
   #auth0Client?: any;
   #wrappedDek: string = '';
 
@@ -73,9 +73,9 @@ class WebSDK implements iWebSDK {
     return this;
   };
 
-  setEnvironment = (environment: string) => {
+  setEnvironment = (environment: Environments) => {
     this.#environment = environment;
-    if (environment === 'DEVELOPMENT' || environment === 'STAGING') {
+    if (environment === Environments.DEVELOPMENT || environment === Environments.STAGING) {
       this.#domain = this.#domainDev;
       this.#audience = this.#audienceDev;
     } else {
@@ -119,7 +119,7 @@ class WebSDK implements iWebSDK {
     this.apiKey = '';
     this.baseUrl = '';
     this.loginType = 'REDIRECT';
-    this.#environment = 'DEVELOPMENT';
+    this.#environment = Environments.DEVELOPMENT;
     this.#domain = this.#domainDev;
     this.#audience = this.#audienceDev;
     WebSDK.instance = undefined;
@@ -384,11 +384,11 @@ class WebSDK implements iWebSDK {
   createIframe(width: number, height: number) {
     const iframe = document.createElement('iframe');
     switch (this.#environment) {
-      case 'PRODUCTION':
+      case Environments.PRODUCTION:
         iframe.src = this.#pwaProdUrl;
         break;
 
-      case 'STAGING':
+      case Environments.STAGING:
         iframe.src = this.#pwaStagingUrl;
         break;
 
