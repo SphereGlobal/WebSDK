@@ -106,6 +106,7 @@ class WebSDK implements iWebSDK {
     });
 
     WebSDK.instance = this;
+    return WebSDK.instance as WebSDK;
   };
 
   clear = () => {

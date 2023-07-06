@@ -92,6 +92,7 @@ class WebSDK {
                 responseType: 'token id_token',
             }), "f");
             WebSDK.instance = this;
+            return WebSDK.instance;
         };
         this.clear = () => {
             this.user = {};

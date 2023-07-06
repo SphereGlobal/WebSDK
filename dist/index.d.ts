@@ -17,7 +17,7 @@ declare class WebSDK implements iWebSDK {
     setBaseUrl: (baseUrl: string) => this;
     setEnvironment: (environment: string) => this;
     setLoginType: (loginType?: 'REDIRECT' | 'POPUP') => this;
-    build: () => WebSDK | undefined;
+    build: () => WebSDK;
     clear: () => void;
     closePopup: () => void;
     handleAuth: () => Promise<auth0.Auth0DecodedHash | null>;
