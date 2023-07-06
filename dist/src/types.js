@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WalletTypes = exports.SupportedChains = void 0;
+exports.Environments = exports.WalletTypes = exports.SupportedChains = void 0;
 var SupportedChains;
 (function (SupportedChains) {
     SupportedChains["ETHEREUM"] = "ETHEREUM";
@@ -19,3 +19,9 @@ var WalletTypes;
     WalletTypes["EOA"] = "EOA";
     WalletTypes["SMART_WALLET"] = "SmartWallet";
 })(WalletTypes = exports.WalletTypes || (exports.WalletTypes = {}));
+var Environments;
+(function (Environments) {
+    Environments["DEVELOPMENT"] = "development";
+    Environments["STAGING"] = "staging";
+    Environments["PRODUCTION"] = "production";
+})(Environments = exports.Environments || (exports.Environments = {}));

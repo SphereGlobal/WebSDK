@@ -1,8 +1,9 @@
 import auth0 from 'auth0-js';
-import { Credentials, Transaction, User, iWebSDK } from './src/types';
+import { Credentials, Environments, Transaction, User, iWebSDK } from './src/types';
+export { Environments as SphereEnvironment } from './src/types';
 declare class WebSDK implements iWebSDK {
     #private;
-    static instance: any;
+    static instance: WebSDK | undefined;
     loginType: 'REDIRECT' | 'POPUP';
     clientId?: string;
     redirectUri?: string;
@@ -10,7 +11,14 @@ declare class WebSDK implements iWebSDK {
     baseUrl?: string;
     user?: User;
     credentials?: Credentials | null;
-    constructor({ clientId, redirectUri, baseUrl, loginType, apiKey }: iWebSDK);
+    setClientId: (clientId: string) => this;
+    setRedirectUri: (redirectUri: string) => this;
+    setApiKey: (apiKey: string) => this;
+    setBaseUrl: (baseUrl: string) => this;
+    setEnvironment: (environment?: Environments) => this;
+    setLoginType: (loginType?: 'REDIRECT' | 'POPUP') => this;
+    build: () => WebSDK;
+    clear: () => void;
     closePopup: () => void;
     handleAuth: () => Promise<auth0.Auth0DecodedHash | null>;
     handleCallback: () => Promise<unknown>;
@@ -23,7 +31,6 @@ declare class WebSDK implements iWebSDK {
     getUserInfo: () => Promise<any>;
     getBalances: () => Promise<any>;
     getNfts: () => Promise<any>;
-    setEnvironmet: (env: string) => void;
     createIframe(width: number, height: number): HTMLIFrameElement;
 }
 export default WebSDK;

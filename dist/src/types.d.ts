@@ -90,3 +90,8 @@ export type NftsInfo = {
     address: string | undefined;
     tokenType?: string;
 };
+export declare enum Environments {
+    DEVELOPMENT = "development",
+    STAGING = "staging",
+    PRODUCTION = "production"
+}
