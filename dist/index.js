@@ -32,6 +32,7 @@ Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: fun
 class WebSDK {
     constructor() {
         this.loginType = 'REDIRECT';
+        this.user = {};
         _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
         _WebSDK_auth0Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
