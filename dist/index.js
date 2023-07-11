@@ -326,7 +326,7 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek, transactionId });
                 const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
                 const data = yield response.json();
-                return data.result.data;
+                return data;
             }
             catch (error) {
                 console.error('There was an error paying this transaction, error: ', error);

@@ -327,7 +327,7 @@ class WebSDK implements iWebSDK {
 
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
       const data = await response.json();
-      return data.result.data;
+      return data;
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
       return error;
