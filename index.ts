@@ -106,7 +106,6 @@ class WebSDK implements iWebSDK {
     this.#auth0Client.popup.callback({ hash: window.location.hash });
   };
 
-
   handleAuth = async () => {
     const authResult: Auth0DecodedHash = await new Promise((resolve, reject) => {
       this.#auth0Client.parseHash((err: any, result: any) => {
@@ -322,11 +321,12 @@ class WebSDK implements iWebSDK {
   payCharge = async (transactionId: string) => {
     try {
       const wrappedDek = await this.#getWrappedDek();
-
+      
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
-
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
+      console.log('WebSDK response:', response);
       const data = await response.json();
+      console.log('WebSDK data:', data);
       return data;
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
