@@ -1,12 +1,14 @@
 import auth0, { Auth0DecodedHash } from 'auth0-js';
-import { Credentials, Environments, Transaction, User, iWebSDK } from './src/types';
+import { ChargeReqBody, ChargeResponse, Credentials, Environments, LoginBehavior, SupportedChains, Transaction, User, iWebSDK } from './src/types';
 
 export { Environments as SphereEnvironment } from './src/types';
+export { SupportedChains } from './src/types';
+export { LoginBehavior } from './src/types';
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
 
-  loginType: 'REDIRECT' | 'POPUP' = 'REDIRECT';
+  loginType: LoginBehavior = LoginBehavior.REDIRECT;
   clientId?: string;
   redirectUri?: string;
   apiKey?: string;
@@ -46,7 +48,9 @@ class WebSDK implements iWebSDK {
   };
 
   setBaseUrl = (baseUrl: string) => {
-    this.baseUrl = baseUrl;
+    // trim and remove trailing slash `/`
+    const newBaseUrl = baseUrl.trim();
+    this.baseUrl = newBaseUrl.endsWith('/') ? newBaseUrl.slice(0,-1) : newBaseUrl;
     return this;
   };
 
@@ -62,7 +66,7 @@ class WebSDK implements iWebSDK {
     return this;
   };
 
-  setLoginType = (loginType: 'REDIRECT' | 'POPUP' = 'POPUP') => {
+  setLoginType = (loginType: LoginBehavior = LoginBehavior.REDIRECT) => {
     this.loginType = loginType;
     return this;
   };
@@ -90,16 +94,6 @@ class WebSDK implements iWebSDK {
     this.user = {};
     this.credentials = null;
     this.#wrappedDek = '';
-    this.#auth0Client = null;
-    this.clientId = '';
-    this.redirectUri = '';
-    this.apiKey = '';
-    this.baseUrl = '';
-    this.loginType = 'REDIRECT';
-    this.#environment = Environments.PRODUCTION;
-    this.#domain = this.#domainDev;
-    this.#audience = this.#audienceDev;
-    WebSDK.instance = undefined;
   };
 
   closePopup = () => {
@@ -156,7 +150,7 @@ class WebSDK implements iWebSDK {
   };
 
   login = async () => {
-    if (this.loginType === 'REDIRECT') {
+    if (this.loginType === LoginBehavior.REDIRECT) {
       this.#auth0Client.authorize();
     } else {
       await new Promise((resolve, reject) => {
@@ -186,6 +180,7 @@ class WebSDK implements iWebSDK {
       redirectUri: this.redirectUri,
       returnTo: this.redirectUri,
     });
+    this.clear();
   };
 
   #createRequest = async (method: string = 'GET', body: any = {}, headers: any = {}) => {
@@ -293,6 +288,29 @@ class WebSDK implements iWebSDK {
       return data.data;
     } catch (error: any) {
       console.error('There was an error getting wrapped dek, error: ', error);
+      return error;
+    }
+  };
+
+  createCharge = async (charge: ChargeReqBody) => {
+    try {
+      const requestOptions = await this.#createRequest(
+        'POST',
+        {
+          apiKey: this.apiKey,
+          isDirectTransfer: false,
+          isTest: false,
+          chargeData: charge
+        },
+        { 'x-api-key': this.apiKey ?? "" }
+      );
+
+      const response = await fetch(`${this.baseUrl}/createCharge`, requestOptions);
+
+      const data = await response.json();
+      return data.data as ChargeResponse;
+    } catch (error: any) {
+      console.error('There was an error creating your transaction, error: ', error);
       return error;
     }
   };

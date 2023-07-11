@@ -1,6 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Environments = exports.WalletTypes = exports.SupportedChains = void 0;
+exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
+var LoginBehavior;
+(function (LoginBehavior) {
+    LoginBehavior["REDIRECT"] = "REDIRECT";
+    LoginBehavior["POPUP"] = "POPUP";
+})(LoginBehavior = exports.LoginBehavior || (exports.LoginBehavior = {}));
 var SupportedChains;
 (function (SupportedChains) {
     SupportedChains["ETHEREUM"] = "ETHEREUM";
