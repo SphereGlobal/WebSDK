@@ -298,8 +298,6 @@ class WebSDK implements iWebSDK {
         'POST',
         {
           apiKey: this.apiKey,
-          isDirectTransfer: false,
-          isTest: false,
           chargeData: charge
         },
         { 'x-api-key': this.apiKey ?? "" }
