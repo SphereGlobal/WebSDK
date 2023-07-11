@@ -1,5 +1,5 @@
 import auth0, { Auth0DecodedHash } from 'auth0-js';
-import { ChargeReqBody, ChargeResponse, Credentials, Environments, LoginBehavior, SupportedChains, Transaction, User, iWebSDK } from './src/types';
+import { ChargeReqBody, ChargeResponse, Credentials, Environments, LoginBehavior, Transaction, User, iWebSDK } from './src/types';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
