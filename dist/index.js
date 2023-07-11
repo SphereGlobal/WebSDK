@@ -300,10 +300,7 @@ class WebSDK {
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
             var _b;
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', {
-                    apiKey: this.apiKey,
-                    chargeData: charge
-                }, { 'x-api-key': (_b = this.apiKey) !== null && _b !== void 0 ? _b : "" });
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_b = this.apiKey) !== null && _b !== void 0 ? _b : "" });
                 const response = yield fetch(`${this.baseUrl}/createCharge`, requestOptions);
                 const data = yield response.json();
                 return data.data;

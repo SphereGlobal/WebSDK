@@ -296,10 +296,7 @@ class WebSDK implements iWebSDK {
     try {
       const requestOptions = await this.#createRequest(
         'POST',
-        {
-          apiKey: this.apiKey,
-          chargeData: charge
-        },
+        { chargeData: charge },
         { 'x-api-key': this.apiKey ?? "" }
       );
 
