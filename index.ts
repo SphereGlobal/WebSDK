@@ -321,12 +321,10 @@ class WebSDK implements iWebSDK {
   payCharge = async (transactionId: string) => {
     try {
       const wrappedDek = await this.#getWrappedDek();
-      
+
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
-      console.log('WebSDK response:', response);
       const data = await response.json();
-      console.log('WebSDK data:', data);
       return data;
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);

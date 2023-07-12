@@ -325,9 +325,7 @@ class WebSDK {
                 const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek, transactionId });
                 const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
-                console.log('WebSDK response:', response);
                 const data = yield response.json();
-                console.log('WebSDK data:', data);
                 return data;
             }
             catch (error) {
