@@ -6,6 +6,11 @@ export interface WalletBalance {
   tokenMetadata: Token;
 }
 
+export enum LoginBehavior {
+  REDIRECT = 'REDIRECT',
+  POPUP = 'POPUP'
+}
+
 export interface Balance {
   tokenMetadata: Token;
   amount: number; // amount bigint
@@ -106,4 +111,30 @@ export enum Environments {
   DEVELOPMENT = 'development',
   STAGING = 'staging',
   PRODUCTION = 'production',
+}
+
+export interface ChargeItem {
+  name: string;
+  image: string;
+  amount: number;
+  quantity: number;
+}
+
+export type ChargeReqBody = {
+  tokenAddress: string;
+  symbol: string;
+  items: ChargeItem[];
+  chain: SupportedChains;
+  successUrl: string;
+  cancelUrl: string;
+  amount?: number;
+  toAddress?: string;
+};
+
+export interface ChargeResponse {
+  data: {
+    paymentUrl: string;
+    chargeId: string;
+  } | null;
+  error: string | null;
 }

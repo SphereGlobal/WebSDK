@@ -1,10 +1,12 @@
 import auth0 from 'auth0-js';
-import { Credentials, Environments, Transaction, User, iWebSDK } from './src/types';
+import { ChargeReqBody, Credentials, Environments, LoginBehavior, Transaction, User, iWebSDK } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
+export { SupportedChains } from './src/types';
+export { LoginBehavior } from './src/types';
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
-    loginType: 'REDIRECT' | 'POPUP';
+    loginType: LoginBehavior;
     clientId?: string;
     redirectUri?: string;
     apiKey?: string;
@@ -16,7 +18,7 @@ declare class WebSDK implements iWebSDK {
     setApiKey: (apiKey: string) => this;
     setBaseUrl: (baseUrl: string) => this;
     setEnvironment: (environment?: Environments) => this;
-    setLoginType: (loginType?: 'REDIRECT' | 'POPUP') => this;
+    setLoginType: (loginType?: LoginBehavior) => this;
     build: () => WebSDK;
     clear: () => void;
     closePopup: () => void;
@@ -25,6 +27,7 @@ declare class WebSDK implements iWebSDK {
     handlePersistence: () => Promise<auth0.Auth0DecodedHash | null>;
     login: () => Promise<void>;
     logout: () => void;
+    createCharge: (charge: ChargeReqBody) => Promise<any>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
     payCharge: (transactionId: string) => Promise<any>;
     getWallets: () => Promise<any>;
