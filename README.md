@@ -1,14 +1,12 @@
 # SphereOne Web SDK - Quick Installation Guide
 
-[![LICENSE](https://img.shields.io/github/license/motdotla/dotenv.svg)](LICENSE)
-
 This guide provides step-by-step instructions for installing and getting started with the SphereOne Web SDK.
 
 ## Prerequisites
 
 - Node.js (version 16 or higher) and npm (Node Package Manager) installed on your machine.
 
-Please contact [SphereOne Support](mailto:support@sphereone.xyz?subject=Request%20for%20Production%20API%20Key) for further support such as API Keys, Accounts, and other necessary project setups.
+Please contact [SphereOne Support](mailto:support@sphereone.xyz?subject=Request%20for%20Web%20SDK%20Assistance) for further support such as API Keys, Accounts, and other necessary project setups.
 
 Once that is done, please follow the steps below.
 
