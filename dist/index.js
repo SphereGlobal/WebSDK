@@ -204,6 +204,7 @@ class WebSDK {
         this.logout = () => {
             var _a;
             (_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signoutSilent();
+            window.location.replace(this.redirectUri);
             this.clear();
         };
         _WebSDK_createRequest.set(this, (method = 'GET', body = {}, headers = {}) => __awaiter(this, void 0, void 0, function* () {
