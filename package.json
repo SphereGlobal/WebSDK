@@ -13,7 +13,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/auth0-js": "^9.14.7",
     "@types/node": "^20.2.5",
     "@typescript-eslint/eslint-plugin": "^5.59.8",
     "eslint": "^8.41.0",
@@ -27,7 +26,7 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "auth0-js": "^9.21.0",
+    "oidc-client-ts": "^2.2.4",
     "tsx": "^3.12.7"
   }
 }
