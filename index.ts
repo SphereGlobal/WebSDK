@@ -191,6 +191,7 @@ class WebSDK implements iWebSDK {
 
   logout = () => {
     this.#oauth2Client?.signoutSilent();
+    window.location.replace(this.redirectUri as string);
     this.clear();
   };
 
