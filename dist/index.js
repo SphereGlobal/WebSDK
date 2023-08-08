@@ -19,14 +19,11 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-var _WebSDK_environment, _WebSDK_auth0Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
+var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
-const auth0_js_1 = __importDefault(require("auth0-js"));
 const types_1 = require("./src/types");
+const oidc_client_ts_1 = require("oidc-client-ts");
 var types_2 = require("./src/types");
 Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: function () { return types_2.Environments; } });
 var types_3 = require("./src/types");
@@ -38,10 +35,10 @@ class WebSDK {
         this.loginType = types_1.LoginBehavior.REDIRECT;
         this.user = {};
         _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
-        _WebSDK_auth0Client.set(this, void 0);
+        _WebSDK_oauth2Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
-        _WebSDK_domainDev.set(this, 'dev-4fb2r65g1bnesuyt.us.auth0.com');
-        _WebSDK_audienceDev.set(this, 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/');
+        _WebSDK_domainDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
+        _WebSDK_audienceDev.set(this, 'https://apiorytest-g2eggt3ika-uc.a.run.app');
         _WebSDK_domainProd.set(this, 'sphereone.us.auth0.com');
         _WebSDK_audienceProd.set(this, 'https://sphereone.us.auth0.com/api/v2/');
         // by default, points to "DEVELOPMENT" environment
@@ -52,6 +49,10 @@ class WebSDK {
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
         this.setClientId = (clientId) => {
             this.clientId = clientId;
+            return this;
+        };
+        this.setClientSecret = (clientSecret) => {
+            this.clientSecret = clientSecret;
             return this;
         };
         this.setRedirectUri = (redirectUri) => {
@@ -87,6 +88,8 @@ class WebSDK {
         this.build = () => {
             if (!this.clientId)
                 throw new Error('Missing clientId');
+            if (!this.clientSecret)
+                throw new Error('Missing clientSecret');
             if (!this.redirectUri)
                 throw new Error('Missing redirectUri');
             if (!this.apiKey)
@@ -95,12 +98,13 @@ class WebSDK {
                 throw new Error('Missing baseUrl');
             if (WebSDK.instance)
                 return WebSDK.instance;
-            __classPrivateFieldSet(this, _WebSDK_auth0Client, new auth0_js_1.default.WebAuth({
-                domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
-                clientID: this.clientId,
-                redirectUri: this.redirectUri,
-                audience: __classPrivateFieldGet(this, _WebSDK_audience, "f"),
-                responseType: 'token id_token',
+            __classPrivateFieldSet(this, _WebSDK_oauth2Client, new oidc_client_ts_1.UserManager({
+                authority: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
+                client_id: this.clientId,
+                client_secret: this.clientSecret,
+                redirect_uri: this.redirectUri,
+                response_type: 'code',
+                post_logout_redirect_uri: this.redirectUri,
             }), "f");
             WebSDK.instance = this;
             return WebSDK.instance;
@@ -110,26 +114,46 @@ class WebSDK {
             this.credentials = null;
             __classPrivateFieldSet(this, _WebSDK_wrappedDek, '', "f");
         };
-        this.closePopup = () => {
-            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.callback({ hash: window.location.hash });
-        };
         this.handleAuth = () => __awaiter(this, void 0, void 0, function* () {
-            const authResult = yield new Promise((resolve, reject) => {
-                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").parseHash((err, result) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve(result);
-                });
-            });
-            if (authResult) {
+            try {
+                const authResult = yield new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
+                    var _a;
+                    try {
+                        const user = yield ((_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signinCallback());
+                        resolve(user);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                }));
+                if (authResult) {
+                    this.credentials = {
+                        accessToken: authResult.access_token,
+                        idToken: authResult.id_token,
+                    };
+                    if (this.user)
+                        this.user.uid = authResult.profile.sub;
+                    return authResult;
+                }
+                else
+                    return null;
+            }
+            catch (error) {
+                console.error('There was an error loggin in, error: ', error);
+                return error;
+            }
+        });
+        this.handlePersistence = () => __awaiter(this, void 0, void 0, function* () {
+            var _b;
+            const persistence = yield ((_b = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _b === void 0 ? void 0 : _b.getUser());
+            if (persistence) {
                 this.credentials = {
-                    accessToken: authResult.accessToken,
-                    idToken: authResult.idToken,
+                    accessToken: persistence.access_token,
+                    idToken: persistence.id_token,
                 };
                 if (this.user)
-                    this.user.uid = authResult.idTokenPayload.sub;
-                return authResult;
+                    this.user.uid = persistence.profile.sub;
+                return persistence;
             }
             else
                 return null;
@@ -147,63 +171,47 @@ class WebSDK {
                 return error;
             }
         });
-        this.handlePersistence = () => __awaiter(this, void 0, void 0, function* () {
-            const persistance = yield new Promise((resolve, reject) => {
-                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").checkSession({}, (err, result) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve(result);
-                });
-            });
-            if (persistance) {
-                this.credentials = {
-                    accessToken: persistance.accessToken,
-                    idToken: persistance.idToken,
-                };
-                if (this.user)
-                    this.user.uid = persistance.idTokenPayload.sub;
-                return persistance;
-            }
-            else
-                return null;
-        });
         this.login = () => __awaiter(this, void 0, void 0, function* () {
+            var _c, _d;
             if (this.loginType === types_1.LoginBehavior.REDIRECT) {
-                __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").authorize();
+                (_c = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _c === void 0 ? void 0 : _c.signinRedirect({
+                    extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
+                });
             }
             else {
-                yield new Promise((resolve, reject) => {
-                    __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").popup.authorize({
-                        domain: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
-                        redirectUri: this.redirectUri,
-                        responseType: 'token id_token',
-                    }, (err, authResult) => __awaiter(this, void 0, void 0, function* () {
-                        if (err)
-                            reject(err);
-                        else {
-                            this.credentials = {
-                                accessToken: authResult.accessToken,
-                                idToken: authResult.idToken,
-                            };
-                            resolve(authResult);
-                        }
+                try {
+                    const authResult = yield ((_d = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _d === void 0 ? void 0 : _d.signinPopup({
+                        extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
                     }));
-                });
+                    if (authResult) {
+                        this.credentials = {
+                            accessToken: authResult.access_token,
+                            idToken: authResult.id_token,
+                        };
+                        if (this.user)
+                            this.user.uid = authResult.profile.sub;
+                        return authResult;
+                    }
+                    else
+                        return null;
+                }
+                catch (error) {
+                    console.error('There was an error logging in , error: ', error);
+                    return error;
+                }
             }
         });
         this.logout = () => {
-            __classPrivateFieldGet(this, _WebSDK_auth0Client, "f").logout({
-                redirectUri: this.redirectUri,
-                returnTo: this.redirectUri,
-            });
+            var _a;
+            (_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signoutSilent();
+            window.location.replace(this.redirectUri);
             this.clear();
         };
         _WebSDK_createRequest.set(this, (method = 'GET', body = {}, headers = {}) => __awaiter(this, void 0, void 0, function* () {
-            var _a;
+            var _e;
             const myHeaders = new Headers();
             myHeaders.append('Content-Type', 'application/json');
-            myHeaders.append('Authorization', `Bearer ${(_a = this.credentials) === null || _a === void 0 ? void 0 : _a.accessToken}`);
+            myHeaders.append('Authorization', `Bearer ${(_e = this.credentials) === null || _e === void 0 ? void 0 : _e.accessToken}`);
             if (Object.keys(headers).length) {
                 for (const [key, value] of Object.entries(headers)) {
                     myHeaders.append(key, value);
@@ -298,9 +306,9 @@ class WebSDK {
             }
         }));
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
-            var _b;
+            var _f;
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_b = this.apiKey) !== null && _b !== void 0 ? _b : "" });
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_f = this.apiKey) !== null && _f !== void 0 ? _f : '' });
                 const response = yield fetch(`${this.baseUrl}/createCharge`, requestOptions);
                 const data = yield response.json();
                 return data.data;
@@ -344,29 +352,29 @@ class WebSDK {
             }
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
-            var _c;
-            if ((_c = this.user) === null || _c === void 0 ? void 0 : _c.wallets)
+            var _g;
+            if ((_g = this.user) === null || _g === void 0 ? void 0 : _g.wallets)
                 return this.user.wallets;
             const wallets = yield __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f").call(this);
             return wallets;
         });
         this.getUserInfo = () => __awaiter(this, void 0, void 0, function* () {
-            var _d;
-            if ((_d = this.user) === null || _d === void 0 ? void 0 : _d.info)
+            var _h;
+            if ((_h = this.user) === null || _h === void 0 ? void 0 : _h.info)
                 return this.user.info;
             const userInfo = yield __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f").call(this);
             return userInfo;
         });
         this.getBalances = () => __awaiter(this, void 0, void 0, function* () {
-            var _e;
-            if ((_e = this.user) === null || _e === void 0 ? void 0 : _e.balances)
+            var _j;
+            if ((_j = this.user) === null || _j === void 0 ? void 0 : _j.balances)
                 return this.user.balances;
             const balances = yield __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f").call(this);
             return balances;
         });
         this.getNfts = () => __awaiter(this, void 0, void 0, function* () {
-            var _f;
-            if ((_f = this.user) === null || _f === void 0 ? void 0 : _f.nfts)
+            var _k;
+            if ((_k = this.user) === null || _k === void 0 ? void 0 : _k.nfts)
                 return this.user.nfts;
             const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
@@ -390,6 +398,6 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_environment = new WeakMap(), _WebSDK_auth0Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
+_WebSDK_environment = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
 WebSDK.instance = undefined;
 exports.default = WebSDK;
