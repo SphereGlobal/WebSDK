@@ -1,5 +1,14 @@
-import auth0, { Auth0DecodedHash } from 'auth0-js';
-import { ChargeReqBody, ChargeResponse, Credentials, Environments, LoginBehavior, Transaction, User, iWebSDK } from './src/types';
+import {
+  ChargeReqBody,
+  ChargeResponse,
+  Credentials,
+  Environments,
+  LoginBehavior,
+  Transaction,
+  User,
+  iWebSDK,
+} from './src/types';
+import { UserManager } from 'oidc-client-ts';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
@@ -10,17 +19,18 @@ class WebSDK implements iWebSDK {
 
   loginType: LoginBehavior = LoginBehavior.REDIRECT;
   clientId?: string;
+  clientSecret?: string;
   redirectUri?: string;
   apiKey?: string;
   baseUrl?: string;
   user?: User = {};
   credentials?: Credentials | null;
   #environment: Environments = Environments.PRODUCTION;
-  #auth0Client?: any;
+  #oauth2Client?: UserManager;
   #wrappedDek: string = '';
 
-  #domainDev: string = 'dev-4fb2r65g1bnesuyt.us.auth0.com';
-  #audienceDev: string = 'https://dev-4fb2r65g1bnesuyt.us.auth0.com/api/v2/';
+  #domainDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
+  #audienceDev: string = 'https://apiorytest-g2eggt3ika-uc.a.run.app';
   #domainProd: string = 'sphereone.us.auth0.com';
   #audienceProd: string = 'https://sphereone.us.auth0.com/api/v2/';
 
@@ -37,6 +47,11 @@ class WebSDK implements iWebSDK {
     return this;
   };
 
+  setClientSecret = (clientSecret: string) => {
+    this.clientSecret = clientSecret;
+    return this;
+  };
+
   setRedirectUri = (redirectUri: string) => {
     this.redirectUri = redirectUri;
     return this;
@@ -50,7 +65,7 @@ class WebSDK implements iWebSDK {
   setBaseUrl = (baseUrl: string) => {
     // trim and remove trailing slash `/`
     const newBaseUrl = baseUrl.trim();
-    this.baseUrl = newBaseUrl.endsWith('/') ? newBaseUrl.slice(0,-1) : newBaseUrl;
+    this.baseUrl = newBaseUrl.endsWith('/') ? newBaseUrl.slice(0, -1) : newBaseUrl;
     return this;
   };
 
@@ -73,17 +88,19 @@ class WebSDK implements iWebSDK {
 
   build = () => {
     if (!this.clientId) throw new Error('Missing clientId');
+    if (!this.clientSecret) throw new Error('Missing clientSecret');
     if (!this.redirectUri) throw new Error('Missing redirectUri');
     if (!this.apiKey) throw new Error('Missing apiKey');
     if (!this.baseUrl) throw new Error('Missing baseUrl');
     if (WebSDK.instance) return WebSDK.instance;
 
-    this.#auth0Client = new auth0.WebAuth({
-      domain: this.#domain as string,
-      clientID: this.clientId as string,
-      redirectUri: this.redirectUri as string,
-      audience: this.#audience as string,
-      responseType: 'token id_token',
+    this.#oauth2Client = new UserManager({
+      authority: this.#domain as string,
+      client_id: this.clientId as string,
+      client_secret: this.clientSecret as string,
+      redirect_uri: this.redirectUri as string,
+      response_type: 'code',
+      post_logout_redirect_uri: this.redirectUri as string,
     });
 
     WebSDK.instance = this;
@@ -96,25 +113,40 @@ class WebSDK implements iWebSDK {
     this.#wrappedDek = '';
   };
 
-  closePopup = () => {
-    this.#auth0Client.popup.callback({ hash: window.location.hash });
+  handleAuth = async () => {
+    try {
+      const authResult: any = await new Promise(async (resolve, reject) => {
+        try {
+          const user = await this.#oauth2Client?.signinCallback();
+          resolve(user);
+        } catch (error: any) {
+          reject(error);
+        }
+      });
+
+      if (authResult) {
+        this.credentials = {
+          accessToken: authResult.access_token,
+          idToken: authResult.id_token,
+        };
+        if (this.user) this.user.uid = authResult.profile.sub;
+        return authResult;
+      } else return null;
+    } catch (error: any) {
+      console.error('There was an error loggin in, error: ', error);
+      return error;
+    }
   };
 
-  handleAuth = async () => {
-    const authResult: Auth0DecodedHash = await new Promise((resolve, reject) => {
-      this.#auth0Client.parseHash((err: any, result: any) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
-    });
-    if (authResult) {
+  handlePersistence = async () => {
+    const persistence = await this.#oauth2Client?.getUser();
+    if (persistence) {
       this.credentials = {
-        accessToken: authResult.accessToken as string,
-        idToken: authResult.idToken as string,
+        accessToken: persistence.access_token,
+        idToken: persistence.id_token as string,
       };
-      if (this.user) this.user.uid = authResult.idTokenPayload.sub;
-
-      return authResult;
+      if (this.user) this.user.uid = persistence.profile.sub;
+      return persistence;
     } else return null;
   };
 
@@ -131,54 +163,34 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  handlePersistence = async () => {
-    const persistance: Auth0DecodedHash = await new Promise((resolve, reject) => {
-      this.#auth0Client.checkSession({}, (err: any, result: Auth0DecodedHash) => {
-        if (err) reject(err);
-        else resolve(result);
-      });
-    });
-    if (persistance) {
-      this.credentials = {
-        accessToken: persistance.accessToken as string,
-        idToken: persistance.idToken as string,
-      };
-      if (this.user) this.user.uid = persistance.idTokenPayload.sub;
-      return persistance;
-    } else return null;
-  };
-
   login = async () => {
     if (this.loginType === LoginBehavior.REDIRECT) {
-      this.#auth0Client.authorize();
-    } else {
-      await new Promise((resolve, reject) => {
-        this.#auth0Client.popup.authorize(
-          {
-            domain: this.#domain,
-            redirectUri: this.redirectUri,
-            responseType: 'token id_token',
-          },
-          async (err: any, authResult: any) => {
-            if (err) reject(err);
-            else {
-              this.credentials = {
-                accessToken: authResult.accessToken,
-                idToken: authResult.idToken,
-              };
-              resolve(authResult);
-            }
-          }
-        );
+      this.#oauth2Client?.signinRedirect({
+        extraQueryParams: { audience: this.#audience },
       });
+    } else {
+      try {
+        const authResult = await this.#oauth2Client?.signinPopup({
+          extraQueryParams: { audience: this.#audience },
+        });
+
+        if (authResult) {
+          this.credentials = {
+            accessToken: authResult.access_token,
+            idToken: authResult.id_token as string,
+          };
+          if (this.user) this.user.uid = authResult.profile.sub;
+          return authResult;
+        } else return null;
+      } catch (error: any) {
+        console.error('There was an error logging in , error: ', error);
+        return error;
+      }
     }
   };
 
   logout = () => {
-    this.#auth0Client.logout({
-      redirectUri: this.redirectUri,
-      returnTo: this.redirectUri,
-    });
+    this.#oauth2Client?.signoutSilent();
     this.clear();
   };
 
@@ -296,7 +308,7 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#createRequest(
         'POST',
         { chargeData: charge },
-        { 'x-api-key': this.apiKey ?? "" }
+        { 'x-api-key': this.apiKey ?? '' }
       );
 
       const response = await fetch(`${this.baseUrl}/createCharge`, requestOptions);
