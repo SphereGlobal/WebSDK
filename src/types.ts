@@ -58,6 +58,7 @@ export interface iWebSDK {
   loginType: 'REDIRECT' | 'POPUP';
   providerUid?: string;
   clientId?: string;
+  clientSecret?: string;
   redirectUri?: string;
   baseUrl?: string;
   apiKey?: string;

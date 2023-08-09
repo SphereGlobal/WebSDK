@@ -1,4 +1,3 @@
-import auth0 from 'auth0-js';
 import { ChargeReqBody, Credentials, Environments, LoginBehavior, Transaction, User, iWebSDK } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
@@ -8,12 +7,14 @@ declare class WebSDK implements iWebSDK {
     static instance: WebSDK | undefined;
     loginType: LoginBehavior;
     clientId?: string;
+    clientSecret?: string;
     redirectUri?: string;
     apiKey?: string;
     baseUrl?: string;
     user?: User;
     credentials?: Credentials | null;
     setClientId: (clientId: string) => this;
+    setClientSecret: (clientSecret: string) => this;
     setRedirectUri: (redirectUri: string) => this;
     setApiKey: (apiKey: string) => this;
     setBaseUrl: (baseUrl: string) => this;
@@ -21,11 +22,10 @@ declare class WebSDK implements iWebSDK {
     setLoginType: (loginType?: LoginBehavior) => this;
     build: () => WebSDK;
     clear: () => void;
-    closePopup: () => void;
-    handleAuth: () => Promise<auth0.Auth0DecodedHash | null>;
-    handleCallback: () => Promise<unknown>;
-    handlePersistence: () => Promise<auth0.Auth0DecodedHash | null>;
-    login: () => Promise<void>;
+    handleAuth: () => Promise<any>;
+    handlePersistence: () => Promise<import("oidc-client-ts").User | null>;
+    handleCallback: () => Promise<any>;
+    login: () => Promise<any>;
     logout: () => void;
     createCharge: (charge: ChargeReqBody) => Promise<any>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
