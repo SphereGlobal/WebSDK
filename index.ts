@@ -31,8 +31,8 @@ class WebSDK implements iWebSDK {
 
   #domainDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
   #audienceDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
-  #domainProd: string = 'sphereone.us.auth0.com';
-  #audienceProd: string = 'https://sphereone.us.auth0.com/api/v2/';
+  #domainProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
+  #audienceProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
 
   // by default, points to "DEVELOPMENT" environment
   #domain: string = this.#domainDev;

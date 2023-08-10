@@ -39,8 +39,8 @@ class WebSDK {
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domainDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
         _WebSDK_audienceDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
-        _WebSDK_domainProd.set(this, 'sphereone.us.auth0.com');
-        _WebSDK_audienceProd.set(this, 'https://sphereone.us.auth0.com/api/v2/');
+        _WebSDK_domainProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
+        _WebSDK_audienceProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
         // by default, points to "DEVELOPMENT" environment
         _WebSDK_domain.set(this, __classPrivateFieldGet(this, _WebSDK_domainDev, "f"));
         _WebSDK_audience.set(this, __classPrivateFieldGet(this, _WebSDK_audienceDev, "f"));
