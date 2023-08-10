@@ -30,7 +30,7 @@ class WebSDK implements iWebSDK {
   #wrappedDek: string = '';
 
   #domainDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
-  #audienceDev: string = 'https://apiorytest-g2eggt3ika-uc.a.run.app';
+  #audienceDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
   #domainProd: string = 'sphereone.us.auth0.com';
   #audienceProd: string = 'https://sphereone.us.auth0.com/api/v2/';
 
