@@ -1,5 +1,4 @@
 import React from 'react';
-// import { images } from '../../assets';
 const logo = require('../../assets/SphereOneLogo.svg') as string;
 
 interface LoginButtonProps {
