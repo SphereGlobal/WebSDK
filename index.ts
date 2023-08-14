@@ -188,11 +188,7 @@ class WebSDK implements iWebSDK {
           data: '',
         },
       });
-      if (!data) return;
-
-      data.scope = data.scope;
-      data.expires_at = data.expires_at;
-      data.profile = data.profile;
+      if (!data) throw new Error("Something went wrong updating token...");
 
       const path = `user:${this.#audience}/:${this.clientId}`;
       this.#oauth2Client?.settings.userStore.set(path, JSON.stringify(data));

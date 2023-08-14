@@ -196,10 +196,7 @@ class WebSDK {
                     },
                 }));
                 if (!data)
-                    return;
-                data.scope = data.scope;
-                data.expires_at = data.expires_at;
-                data.profile = data.profile;
+                    throw new Error("Something went wrong updating token...");
                 const path = `user:${__classPrivateFieldGet(this, _WebSDK_audience, "f")}/:${this.clientId}`;
                 (_e = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _e === void 0 ? void 0 : _e.settings.userStore.set(path, JSON.stringify(data));
                 this.credentials = {
