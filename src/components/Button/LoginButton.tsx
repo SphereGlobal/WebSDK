@@ -7,9 +7,17 @@ interface LoginButtonProps {
 }
 
 const LoginButton: React.FC<LoginButtonProps> = ({ onClick, buttonStyle }) => {
+  const imgStyle: React.CSSProperties = {
+    width: '28px', 
+  };
+
+  if (window.innerWidth >= 1280) {
+    imgStyle.width = '40px';
+  }
+
   return (
     <button style={buttonStyle} onClick={onClick}>
-      <img src={logo} className="w-28 xl:w-40" alt="Logo" />
+      <img src={logo} style={imgStyle} alt="Logo" />
     </button>
   );
 };
