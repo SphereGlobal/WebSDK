@@ -8,7 +8,7 @@ export interface WalletBalance {
 
 export enum LoginBehavior {
   REDIRECT = 'REDIRECT',
-  POPUP = 'POPUP'
+  POPUP = 'POPUP',
 }
 
 export interface Balance {
@@ -91,6 +91,7 @@ export interface Info {
 export interface Credentials {
   accessToken: string;
   idToken: string;
+  refreshToken?: string;
 }
 
 export interface Transaction {
