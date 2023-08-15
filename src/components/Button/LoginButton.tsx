@@ -1,6 +1,7 @@
 import React from 'react';
-const BlackLogo = require('../../assets/SphereOneLogo.svg') as string;
-const WhiteLogo = require('../../assets/SphereOneLogo.svg') as string;
+import BlackLogo from '../../assets/BlackLogo.png';
+import WhiteLogo from '../../assets/WhiteLogo.png';
+
 
 interface LoginButtonProps {
   onClick: () => void;
