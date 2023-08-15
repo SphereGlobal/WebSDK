@@ -25,6 +25,7 @@ declare class WebSDK implements iWebSDK {
     handleAuth: () => Promise<any>;
     handlePersistence: () => Promise<import("oidc-client-ts").User | null>;
     handleCallback: () => Promise<any>;
+    renewToken: () => Promise<"Token successfully updated!" | undefined>;
     login: () => Promise<any>;
     logout: () => void;
     createCharge: (charge: ChargeReqBody) => Promise<any>;

@@ -19,7 +19,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
+var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_oidcClient, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
 const types_1 = require("./src/types");
@@ -36,6 +36,7 @@ class WebSDK {
         this.user = {};
         _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
         _WebSDK_oauth2Client.set(this, void 0);
+        _WebSDK_oidcClient.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_domainDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
         _WebSDK_audienceDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
@@ -88,8 +89,6 @@ class WebSDK {
         this.build = () => {
             if (!this.clientId)
                 throw new Error('Missing clientId');
-            if (!this.clientSecret)
-                throw new Error('Missing clientSecret');
             if (!this.redirectUri)
                 throw new Error('Missing redirectUri');
             if (!this.apiKey)
@@ -104,6 +103,17 @@ class WebSDK {
                 client_secret: this.clientSecret,
                 redirect_uri: this.redirectUri,
                 response_type: 'code',
+                scope: 'openid profile offline_access',
+                post_logout_redirect_uri: this.redirectUri,
+                userStore: new oidc_client_ts_1.WebStorageStateStore({ store: window.localStorage }),
+            }), "f");
+            __classPrivateFieldSet(this, _WebSDK_oidcClient, new oidc_client_ts_1.OidcClient({
+                authority: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
+                client_id: this.clientId,
+                client_secret: this.clientSecret,
+                redirect_uri: this.redirectUri,
+                response_type: 'code',
+                scope: 'openid profile offline_access',
                 post_logout_redirect_uri: this.redirectUri,
             }), "f");
             WebSDK.instance = this;
@@ -129,6 +139,7 @@ class WebSDK {
                 if (authResult) {
                     this.credentials = {
                         accessToken: authResult.access_token,
+                        refreshToken: authResult.refresh_token,
                         idToken: authResult.id_token,
                     };
                     if (this.user)
@@ -149,6 +160,7 @@ class WebSDK {
             if (persistence) {
                 this.credentials = {
                     accessToken: persistence.access_token,
+                    refreshToken: persistence.refresh_token,
                     idToken: persistence.id_token,
                 };
                 if (this.user)
@@ -171,21 +183,49 @@ class WebSDK {
                 return error;
             }
         });
+        this.renewToken = () => __awaiter(this, void 0, void 0, function* () {
+            var _c, _d, _e;
+            try {
+                const user = yield ((_c = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _c === void 0 ? void 0 : _c.getUser());
+                const data = yield ((_d = __classPrivateFieldGet(this, _WebSDK_oidcClient, "f")) === null || _d === void 0 ? void 0 : _d.useRefreshToken({
+                    state: {
+                        refresh_token: user === null || user === void 0 ? void 0 : user.refresh_token,
+                        profile: user === null || user === void 0 ? void 0 : user.profile,
+                        session_state: null,
+                        data: '',
+                    },
+                }));
+                if (!data)
+                    throw new Error("Something went wrong updating token...");
+                const path = `user:${__classPrivateFieldGet(this, _WebSDK_audience, "f")}/:${this.clientId}`;
+                (_e = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _e === void 0 ? void 0 : _e.settings.userStore.set(path, JSON.stringify(data));
+                this.credentials = {
+                    accessToken: data.access_token,
+                    refreshToken: data.refresh_token,
+                    idToken: data.id_token,
+                };
+                return "Token successfully updated!";
+            }
+            catch (error) {
+                console.error('Error updating token: ', error);
+            }
+        });
         this.login = () => __awaiter(this, void 0, void 0, function* () {
-            var _c, _d;
+            var _f, _g;
             if (this.loginType === types_1.LoginBehavior.REDIRECT) {
-                (_c = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _c === void 0 ? void 0 : _c.signinRedirect({
+                (_f = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _f === void 0 ? void 0 : _f.signinRedirect({
                     extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
                 });
             }
             else {
                 try {
-                    const authResult = yield ((_d = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _d === void 0 ? void 0 : _d.signinPopup({
+                    const authResult = yield ((_g = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _g === void 0 ? void 0 : _g.signinPopup({
                         extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
                     }));
                     if (authResult) {
                         this.credentials = {
                             accessToken: authResult.access_token,
+                            refreshToken: authResult.refresh_token,
                             idToken: authResult.id_token,
                         };
                         if (this.user)
@@ -208,10 +248,10 @@ class WebSDK {
             this.clear();
         };
         _WebSDK_createRequest.set(this, (method = 'GET', body = {}, headers = {}) => __awaiter(this, void 0, void 0, function* () {
-            var _e;
+            var _h;
             const myHeaders = new Headers();
             myHeaders.append('Content-Type', 'application/json');
-            myHeaders.append('Authorization', `Bearer ${(_e = this.credentials) === null || _e === void 0 ? void 0 : _e.accessToken}`);
+            myHeaders.append('Authorization', `Bearer ${(_h = this.credentials) === null || _h === void 0 ? void 0 : _h.accessToken}`);
             if (Object.keys(headers).length) {
                 for (const [key, value] of Object.entries(headers)) {
                     myHeaders.append(key, value);
@@ -306,9 +346,9 @@ class WebSDK {
             }
         }));
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
-            var _f;
+            var _j;
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_f = this.apiKey) !== null && _f !== void 0 ? _f : '' });
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_j = this.apiKey) !== null && _j !== void 0 ? _j : '' });
                 const response = yield fetch(`${this.baseUrl}/createCharge`, requestOptions);
                 const data = yield response.json();
                 return data.data;
@@ -352,29 +392,29 @@ class WebSDK {
             }
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
-            var _g;
-            if ((_g = this.user) === null || _g === void 0 ? void 0 : _g.wallets)
+            var _k;
+            if ((_k = this.user) === null || _k === void 0 ? void 0 : _k.wallets)
                 return this.user.wallets;
             const wallets = yield __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f").call(this);
             return wallets;
         });
         this.getUserInfo = () => __awaiter(this, void 0, void 0, function* () {
-            var _h;
-            if ((_h = this.user) === null || _h === void 0 ? void 0 : _h.info)
+            var _l;
+            if ((_l = this.user) === null || _l === void 0 ? void 0 : _l.info)
                 return this.user.info;
             const userInfo = yield __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f").call(this);
             return userInfo;
         });
         this.getBalances = () => __awaiter(this, void 0, void 0, function* () {
-            var _j;
-            if ((_j = this.user) === null || _j === void 0 ? void 0 : _j.balances)
+            var _m;
+            if ((_m = this.user) === null || _m === void 0 ? void 0 : _m.balances)
                 return this.user.balances;
             const balances = yield __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f").call(this);
             return balances;
         });
         this.getNfts = () => __awaiter(this, void 0, void 0, function* () {
-            var _k;
-            if ((_k = this.user) === null || _k === void 0 ? void 0 : _k.nfts)
+            var _o;
+            if ((_o = this.user) === null || _o === void 0 ? void 0 : _o.nfts)
                 return this.user.nfts;
             const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
@@ -398,6 +438,6 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_environment = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
+_WebSDK_environment = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_oidcClient = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
 WebSDK.instance = undefined;
 exports.default = WebSDK;
