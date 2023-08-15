@@ -8,5 +8,6 @@
       "forceConsistentCasingInFileNames": true, /* Disallow inconsistently-cased references to the same file. */
       "declaration": true,
       "outDir": "./dist",
+      "jsx": "react" // Specify "react" for React JSX syntax
     }
   }

@@ -9,10 +9,12 @@ import {
   iWebSDK,
 } from './src/types';
 import { IdTokenClaims, OidcClient, UserManager, WebStorageStateStore } from 'oidc-client-ts';
+import LoginButton from './src/components/Button/LoginButton';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
+export { LoginButton };
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
