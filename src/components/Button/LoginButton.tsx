@@ -1,7 +1,4 @@
 import React from 'react';
-import BlackLogo from '../../assets/BlackLogo.png';
-import WhiteLogo from '../../assets/WhiteLogo.png';
-
 
 interface LoginButtonProps {
   onClick: () => void;
@@ -9,10 +6,13 @@ interface LoginButtonProps {
   isLogoDark?: boolean;
 }
 
-const LoginButton: React.FC<LoginButtonProps> = ({ onClick, buttonStyle, isLogoDark = false }) => {
+const blackLogoSrc = "https://firebasestorage.googleapis.com/v0/b/sphereone-testing.appspot.com/o/BlackLogo.png?alt=media&token=60ba8159-273a-4d01-9473-5a82685d9054"
+const whiteLogoSrc = "https://firebasestorage.googleapis.com/v0/b/sphereone-testing.appspot.com/o/WhiteLogo.png?alt=media&token=e796c9fd-db1b-456a-818d-db1bab51c976"
+
+const LoginButton: React.FC<LoginButtonProps> = ({ onClick, buttonStyle, isLogoDark, ...props }) => {
   return (
-    <button style={buttonStyle} onClick={onClick}>
-      <img src={isLogoDark ? BlackLogo : WhiteLogo} alt="logo" />
+    <button style={buttonStyle} onClick={onClick} {...props}>
+      <img src={isLogoDark ? blackLogoSrc : whiteLogoSrc} alt="SphereOne logo" />
     </button>
   );
 };
