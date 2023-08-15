@@ -24,7 +24,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_oidcClient, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
+exports.WhiteLogo = exports.BlackLogo = exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
 const types_1 = require("./src/types");
 const oidc_client_ts_1 = require("oidc-client-ts");
 const LoginButton_1 = __importDefault(require("./src/components/Button/LoginButton"));
@@ -35,6 +35,9 @@ var types_3 = require("./src/types");
 Object.defineProperty(exports, "SupportedChains", { enumerable: true, get: function () { return types_3.SupportedChains; } });
 var types_4 = require("./src/types");
 Object.defineProperty(exports, "LoginBehavior", { enumerable: true, get: function () { return types_4.LoginBehavior; } });
+var assets_1 = require("./src/assets");
+Object.defineProperty(exports, "BlackLogo", { enumerable: true, get: function () { return assets_1.BlackLogo; } });
+Object.defineProperty(exports, "WhiteLogo", { enumerable: true, get: function () { return assets_1.WhiteLogo; } });
 class WebSDK {
     constructor() {
         this.loginType = types_1.LoginBehavior.REDIRECT;
