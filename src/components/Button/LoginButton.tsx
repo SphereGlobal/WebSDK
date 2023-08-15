@@ -1,23 +1,17 @@
 import React from 'react';
-const logo = require('../../assets/SphereOneLogo.svg') as string;
+const BlackLogo = require('../../assets/SphereOneLogo.svg') as string;
+const WhiteLogo = require('../../assets/SphereOneLogo.svg') as string;
 
 interface LoginButtonProps {
   onClick: () => void;
   buttonStyle?: React.CSSProperties;
+  logoColor?: string;
 }
 
-const LoginButton: React.FC<LoginButtonProps> = ({ onClick, buttonStyle }) => {
-  const imgStyle: React.CSSProperties = {
-    width: '28px', 
-  };
-
-  if (window.innerWidth >= 1280) {
-    imgStyle.width = '40px';
-  }
-
+const LoginButton: React.FC<LoginButtonProps> = ({ onClick, buttonStyle, logoColor = 'black' }) => {
   return (
     <button style={buttonStyle} onClick={onClick}>
-      <img src={logo} style={imgStyle} alt="Logo" />
+      <img src={!logoColor ? BlackLogo : WhiteLogo} alt="logo" />
     </button>
   );
 };
