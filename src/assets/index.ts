@@ -1,5 +1,5 @@
-import BlackLogo from '../../assets/BlackLogo.png';
-import WhiteLogo from '../../assets/WhiteLogo.png';
+import BlackLogo from './BlackLogo.png';
+import WhiteLogo from './WhiteLogo.png';
 
 export {
   BlackLogo,
