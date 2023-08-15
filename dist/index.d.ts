@@ -23,7 +23,7 @@ declare class WebSDK implements iWebSDK {
     setBaseUrl: (baseUrl: string) => this;
     setEnvironment: (environment?: Environments) => this;
     setLoginType: (loginType?: LoginBehavior) => this;
-    build: () => WebSDK;
+    build: () => WebSDK | undefined;
     clear: () => void;
     handleAuth: () => Promise<any>;
     handlePersistence: () => Promise<import("oidc-client-ts").User | null>;
