@@ -19,11 +19,16 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_oidcClient, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
+exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
 const types_1 = require("./src/types");
 const oidc_client_ts_1 = require("oidc-client-ts");
+const LoginButton_1 = __importDefault(require("./src/components/Button/LoginButton"));
+exports.LoginButton = LoginButton_1.default;
 var types_2 = require("./src/types");
 Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: function () { return types_2.Environments; } });
 var types_3 = require("./src/types");
@@ -38,8 +43,8 @@ class WebSDK {
         _WebSDK_oauth2Client.set(this, void 0);
         _WebSDK_oidcClient.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
-        _WebSDK_domainDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
-        _WebSDK_audienceDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
+        _WebSDK_domainDev.set(this, 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/');
+        _WebSDK_audienceDev.set(this, 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com');
         _WebSDK_domainProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
         _WebSDK_audienceProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
         // by default, points to "DEVELOPMENT" environment
