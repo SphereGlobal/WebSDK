@@ -8,14 +8,11 @@ import {
   User,
   iWebSDK,
 } from './src/types';
-import { IdTokenClaims, OidcClient, UserManager, WebStorageStateStore } from 'oidc-client-ts';
-import LoginButton from './src/components/Button/LoginButton';
+import { UserManager } from 'oidc-client-ts';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
-export { LoginButton };
-export { BlackLogo, WhiteLogo } from "./src/assets";
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
@@ -30,10 +27,10 @@ class WebSDK implements iWebSDK {
   credentials?: Credentials | null;
   #environment: Environments = Environments.PRODUCTION;
   #oauth2Client?: UserManager;
-  #oidcClient?: OidcClient;
   #wrappedDek: string = '';
-  #domainDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/';
-  #audienceDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com';
+
+  #domainDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
+  #audienceDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
   #domainProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
   #audienceProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
 
@@ -91,6 +88,7 @@ class WebSDK implements iWebSDK {
 
   build = () => {
     if (!this.clientId) throw new Error('Missing clientId');
+    if (!this.clientSecret) throw new Error('Missing clientSecret');
     if (!this.redirectUri) throw new Error('Missing redirectUri');
     if (!this.apiKey) throw new Error('Missing apiKey');
     if (!this.baseUrl) throw new Error('Missing baseUrl');
@@ -102,18 +100,6 @@ class WebSDK implements iWebSDK {
       client_secret: this.clientSecret as string,
       redirect_uri: this.redirectUri as string,
       response_type: 'code',
-      scope: 'openid profile offline_access',
-      post_logout_redirect_uri: this.redirectUri as string,
-      userStore: new WebStorageStateStore({ store: window.localStorage }),
-    });
-
-    this.#oidcClient = new OidcClient({
-      authority: this.#domain as string,
-      client_id: this.clientId as string,
-      client_secret: this.clientSecret as string,
-      redirect_uri: this.redirectUri as string,
-      response_type: 'code',
-      scope: 'openid profile offline_access',
       post_logout_redirect_uri: this.redirectUri as string,
     });
 
@@ -141,7 +127,6 @@ class WebSDK implements iWebSDK {
       if (authResult) {
         this.credentials = {
           accessToken: authResult.access_token,
-          refreshToken: authResult.refresh_token,
           idToken: authResult.id_token,
         };
         if (this.user) this.user.uid = authResult.profile.sub;
@@ -158,7 +143,6 @@ class WebSDK implements iWebSDK {
     if (persistence) {
       this.credentials = {
         accessToken: persistence.access_token,
-        refreshToken: persistence.refresh_token,
         idToken: persistence.id_token as string,
       };
       if (this.user) this.user.uid = persistence.profile.sub;
@@ -179,34 +163,6 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  renewToken = async () => {
-    try {
-      const user = await this.#oauth2Client?.getUser();
-      const data = await this.#oidcClient?.useRefreshToken({
-        state: {
-          refresh_token: user?.refresh_token as string,
-          profile: user?.profile as IdTokenClaims,
-          session_state: null,
-          data: '',
-        },
-      });
-      if (!data) throw new Error("Something went wrong updating token...");
-
-      const path = `user:${this.#audience}/:${this.clientId}`;
-      this.#oauth2Client?.settings.userStore.set(path, JSON.stringify(data));
-
-      this.credentials = {
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        idToken: data.id_token as string,
-      };
-
-      return "Token successfully updated!"
-    } catch (error: any) {
-      console.error('Error updating token: ', error);
-    }
-  };
-
   login = async () => {
     if (this.loginType === LoginBehavior.REDIRECT) {
       this.#oauth2Client?.signinRedirect({
@@ -221,7 +177,6 @@ class WebSDK implements iWebSDK {
         if (authResult) {
           this.credentials = {
             accessToken: authResult.access_token,
-            refreshToken: authResult.refresh_token,
             idToken: authResult.id_token as string,
           };
           if (this.user) this.user.uid = authResult.profile.sub;
