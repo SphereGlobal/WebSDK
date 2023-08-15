@@ -1,10 +1,7 @@
 import { ChargeReqBody, Credentials, Environments, LoginBehavior, Transaction, User, iWebSDK } from './src/types';
-import LoginButton from './src/components/Button/LoginButton';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
-export { LoginButton };
-export { BlackLogo, WhiteLogo } from "./src/assets";
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
@@ -28,7 +25,6 @@ declare class WebSDK implements iWebSDK {
     handleAuth: () => Promise<any>;
     handlePersistence: () => Promise<import("oidc-client-ts").User | null>;
     handleCallback: () => Promise<any>;
-    renewToken: () => Promise<"Token successfully updated!" | undefined>;
     login: () => Promise<any>;
     logout: () => void;
     createCharge: (charge: ChargeReqBody) => Promise<any>;
