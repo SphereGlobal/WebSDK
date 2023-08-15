@@ -43,8 +43,8 @@ class WebSDK {
         _WebSDK_oauth2Client.set(this, void 0);
         _WebSDK_oidcClient.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
-        _WebSDK_domainDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
-        _WebSDK_audienceDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
+        _WebSDK_domainDev.set(this, 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/');
+        _WebSDK_audienceDev.set(this, 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com');
         _WebSDK_domainProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
         _WebSDK_audienceProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
         // by default, points to "DEVELOPMENT" environment

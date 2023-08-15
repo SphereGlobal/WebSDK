@@ -32,8 +32,8 @@ class WebSDK implements iWebSDK {
   #oidcClient?: OidcClient;
   #wrappedDek: string = '';
 
-  #domainDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
-  #audienceDev: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
+  #domainDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/';
+  #audienceDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com';
   #domainProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
   #audienceProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
 
