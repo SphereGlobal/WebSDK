@@ -13,6 +13,7 @@ import { UserManager } from 'oidc-client-ts';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
+export { LoginButton } from "./src/components/Button/LoginButton";
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
@@ -87,6 +88,7 @@ class WebSDK implements iWebSDK {
   };
 
   build = () => {
+    if (typeof window === 'undefined') return;
     if (!this.clientId) throw new Error('Missing clientId');
     if (!this.clientSecret) throw new Error('Missing clientSecret');
     if (!this.redirectUri) throw new Error('Missing redirectUri');
@@ -190,6 +192,7 @@ class WebSDK implements iWebSDK {
   };
 
   logout = () => {
+    if (typeof window === 'undefined') return;
     this.#oauth2Client?.signoutSilent();
     window.location.replace(this.redirectUri as string);
     this.clear();
