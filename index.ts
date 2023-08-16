@@ -13,7 +13,7 @@ import { UserManager } from 'oidc-client-ts';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
-export { LoginButton };
+export { LoginButton } from "./src/components/Button/LoginButton";
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;

@@ -2,8 +2,7 @@ import { ChargeReqBody, Credentials, Environments, LoginBehavior, Transaction, U
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
-export { LoginButton };
-
+export { LoginButton } from "./src/components/Button/LoginButton";
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
