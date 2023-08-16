@@ -1,7 +1,7 @@
 import React from 'react';
 interface LoginButtonProps {
-    onClick: () => void;
-    buttonStyle?: React.CSSProperties;
+    buttonProps?: any;
+    imageProps?: any;
     isLogoDark?: boolean;
 }
 declare const LoginButton: React.FC<LoginButtonProps>;
