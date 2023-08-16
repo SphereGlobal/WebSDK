@@ -95,6 +95,8 @@ class WebSDK {
             return this;
         };
         this.build = () => {
+            if (typeof window === 'undefined')
+                return;
             if (!this.clientId)
                 throw new Error('Missing clientId');
             if (!this.redirectUri)
@@ -251,6 +253,8 @@ class WebSDK {
         });
         this.logout = () => {
             var _a;
+            if (typeof window === 'undefined')
+                return;
             (_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signoutSilent();
             window.location.replace(this.redirectUri);
             this.clear();
