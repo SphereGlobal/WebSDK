@@ -4,7 +4,6 @@ export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton };
-export { BlackLogo, WhiteLogo } from "./src/assets";
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
