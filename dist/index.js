@@ -30,7 +30,7 @@ var types_3 = require("./src/types");
 Object.defineProperty(exports, "SupportedChains", { enumerable: true, get: function () { return types_3.SupportedChains; } });
 var types_4 = require("./src/types");
 Object.defineProperty(exports, "LoginBehavior", { enumerable: true, get: function () { return types_4.LoginBehavior; } });
-var LoginButton_1 = require("./src/components/Button/LoginButton");
+var LoginButton_1 = require("./src/components/LoginButton");
 Object.defineProperty(exports, "LoginButton", { enumerable: true, get: function () { return LoginButton_1.LoginButton; } });
 class WebSDK {
     constructor() {
