@@ -21,7 +21,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 };
 var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
+exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
 const types_1 = require("./src/types");
 const oidc_client_ts_1 = require("oidc-client-ts");
 var types_2 = require("./src/types");
@@ -30,6 +30,8 @@ var types_3 = require("./src/types");
 Object.defineProperty(exports, "SupportedChains", { enumerable: true, get: function () { return types_3.SupportedChains; } });
 var types_4 = require("./src/types");
 Object.defineProperty(exports, "LoginBehavior", { enumerable: true, get: function () { return types_4.LoginBehavior; } });
+var LoginButton_1 = require("./src/components/LoginButton");
+Object.defineProperty(exports, "LoginButton", { enumerable: true, get: function () { return LoginButton_1.LoginButton; } });
 class WebSDK {
     constructor() {
         this.loginType = types_1.LoginBehavior.REDIRECT;
@@ -37,8 +39,8 @@ class WebSDK {
         _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
         _WebSDK_oauth2Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
-        _WebSDK_domainDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
-        _WebSDK_audienceDev.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
+        _WebSDK_domainDev.set(this, 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/');
+        _WebSDK_audienceDev.set(this, 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com');
         _WebSDK_domainProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
         _WebSDK_audienceProd.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
         // by default, points to "DEVELOPMENT" environment
@@ -86,6 +88,8 @@ class WebSDK {
             return this;
         };
         this.build = () => {
+            if (typeof window === 'undefined')
+                return;
             if (!this.clientId)
                 throw new Error('Missing clientId');
             if (!this.clientSecret)
@@ -203,6 +207,8 @@ class WebSDK {
         });
         this.logout = () => {
             var _a;
+            if (typeof window === 'undefined')
+                return;
             (_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signoutSilent();
             window.location.replace(this.redirectUri);
             this.clear();

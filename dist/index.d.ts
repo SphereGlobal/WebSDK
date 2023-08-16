@@ -2,6 +2,7 @@ import { ChargeReqBody, Credentials, Environments, LoginBehavior, Transaction, U
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
+export { LoginButton } from "./src/components/LoginButton";
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
@@ -20,7 +21,7 @@ declare class WebSDK implements iWebSDK {
     setBaseUrl: (baseUrl: string) => this;
     setEnvironment: (environment?: Environments) => this;
     setLoginType: (loginType?: LoginBehavior) => this;
-    build: () => WebSDK;
+    build: () => WebSDK | undefined;
     clear: () => void;
     handleAuth: () => Promise<any>;
     handlePersistence: () => Promise<import("oidc-client-ts").User | null>;
