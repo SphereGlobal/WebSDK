@@ -89,6 +89,7 @@ class WebSDK implements iWebSDK {
   };
 
   build = () => {
+    if (typeof window === 'undefined') return;
     if (!this.clientId) throw new Error('Missing clientId');
     if (!this.redirectUri) throw new Error('Missing redirectUri');
     if (!this.apiKey) throw new Error('Missing apiKey');
@@ -234,6 +235,7 @@ class WebSDK implements iWebSDK {
   };
 
   logout = () => {
+    if (typeof window === 'undefined') return;
     this.#oauth2Client?.signoutSilent();
     window.location.replace(this.redirectUri as string);
     this.clear();

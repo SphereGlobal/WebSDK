@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 interface LoginButtonProps {
   onClick: () => void;
   buttonStyle?: React.CSSProperties;
