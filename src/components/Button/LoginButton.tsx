@@ -33,11 +33,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({
         ...buttonStyle,
       }}
       {...props}>
-      <img
-        src={blackLogoSrc}
-        alt="SphereOne logo"
-        style={{ ...imageStyles }}
-      />
+      <img height={20} src={blackLogoSrc} alt="SphereOne logo" style={{ ...imageStyles }} />
     </button>
   );
 };
