@@ -9,11 +9,13 @@ import {
   iWebSDK,
 } from './src/types';
 import { UserManager } from 'oidc-client-ts';
+import * as jose from 'jose';
+import jwtDecode from 'jwt-decode';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
-export { LoginButton } from "./src/components/LoginButton";
+export { LoginButton } from './src/components/LoginButton';
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
@@ -297,10 +299,13 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#createRequest('POST');
 
       const response = await fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
+      const data = (await response.json()).data;
+      const secret = new TextEncoder().encode(this.user?.uid as string);
+      await jose.jwtVerify(data, secret);
+      const decodeData = jwtDecode(data) as any;
 
-      const data = await response.json();
-      this.#wrappedDek = data.data;
-      return data.data;
+      this.#wrappedDek = decodeData.data;
+      return decodeData.data;
     } catch (error: any) {
       console.error('There was an error getting wrapped dek, error: ', error);
       return error;

@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -19,11 +42,16 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
 const types_1 = require("./src/types");
 const oidc_client_ts_1 = require("oidc-client-ts");
+const jose = __importStar(require("jose"));
+const jwt_decode_1 = __importDefault(require("jwt-decode"));
 var types_2 = require("./src/types");
 Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: function () { return types_2.Environments; } });
 var types_3 = require("./src/types");
@@ -297,14 +325,18 @@ class WebSDK {
             }
         }));
         _WebSDK_getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
+            var _f;
             if (__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f"))
                 return __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST');
                 const response = yield fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
-                const data = yield response.json();
-                __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data, "f");
-                return data.data;
+                const data = (yield response.json()).data;
+                const secret = new TextEncoder().encode((_f = this.user) === null || _f === void 0 ? void 0 : _f.uid);
+                yield jose.jwtVerify(data, secret);
+                const decodeData = (0, jwt_decode_1.default)(data);
+                __classPrivateFieldSet(this, _WebSDK_wrappedDek, decodeData.data, "f");
+                return decodeData.data;
             }
             catch (error) {
                 console.error('There was an error getting wrapped dek, error: ', error);
@@ -312,9 +344,9 @@ class WebSDK {
             }
         }));
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
-            var _f;
+            var _g;
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_f = this.apiKey) !== null && _f !== void 0 ? _f : '' });
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_g = this.apiKey) !== null && _g !== void 0 ? _g : '' });
                 const response = yield fetch(`${this.baseUrl}/createCharge`, requestOptions);
                 const data = yield response.json();
                 return data.data;
@@ -358,29 +390,29 @@ class WebSDK {
             }
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
-            var _g;
-            if ((_g = this.user) === null || _g === void 0 ? void 0 : _g.wallets)
+            var _h;
+            if ((_h = this.user) === null || _h === void 0 ? void 0 : _h.wallets)
                 return this.user.wallets;
             const wallets = yield __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f").call(this);
             return wallets;
         });
         this.getUserInfo = () => __awaiter(this, void 0, void 0, function* () {
-            var _h;
-            if ((_h = this.user) === null || _h === void 0 ? void 0 : _h.info)
+            var _j;
+            if ((_j = this.user) === null || _j === void 0 ? void 0 : _j.info)
                 return this.user.info;
             const userInfo = yield __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f").call(this);
             return userInfo;
         });
         this.getBalances = () => __awaiter(this, void 0, void 0, function* () {
-            var _j;
-            if ((_j = this.user) === null || _j === void 0 ? void 0 : _j.balances)
+            var _k;
+            if ((_k = this.user) === null || _k === void 0 ? void 0 : _k.balances)
                 return this.user.balances;
             const balances = yield __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f").call(this);
             return balances;
         });
         this.getNfts = () => __awaiter(this, void 0, void 0, function* () {
-            var _k;
-            if ((_k = this.user) === null || _k === void 0 ? void 0 : _k.nfts)
+            var _l;
+            if ((_l = this.user) === null || _l === void 0 ? void 0 : _l.nfts)
                 return this.user.nfts;
             const nfts = yield __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f").call(this);
             return nfts;
