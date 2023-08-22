@@ -347,6 +347,18 @@ class WebSDK implements iWebSDK {
     }
   };
 
+  constructRoute = async (transactionId: string) => {
+    try {
+      const requestOptions = await this.#createRequest('POST', { transactionId });
+      const response = await fetch(`${this.baseUrl}/constructRoute`, requestOptions);
+      const data = await response.json();
+      return data.data;
+    } catch (error: any) {
+      console.error('There was an error constructing this route, error: ', error);
+      return error;
+    }
+  };
+
   payCharge = async (transactionId: string) => {
     try {
       const wrappedDek = await this.#getWrappedDek();

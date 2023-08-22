@@ -30,6 +30,7 @@ declare class WebSDK implements iWebSDK {
     logout: () => void;
     createCharge: (charge: ChargeReqBody) => Promise<any>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
+    constructRoute: (transactionId: string) => Promise<any>;
     payCharge: (transactionId: string) => Promise<any>;
     getWallets: () => Promise<any>;
     getUserInfo: () => Promise<any>;
