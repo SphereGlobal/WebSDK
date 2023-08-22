@@ -347,7 +347,7 @@ class WebSDK {
         this.constructRoute = (transactionId) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { transactionId });
-                const response = yield fetch(`${this.baseUrl}/constructRoute`, requestOptions);
+                const response = yield fetch(`${this.baseUrl}/pay/route`, requestOptions);
                 const data = yield response.json();
                 return data.data;
             }
