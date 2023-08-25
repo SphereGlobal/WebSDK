@@ -120,9 +120,9 @@ export interface ChargeItem {
   image: string;
   amount: number;
   quantity: number;
-  nftUri: string;
-  nftContractAddress: string;
-  nftChain: SupportedChains;
+  nftUri?: string;
+  nftContractAddress?: string;
+  nftChain?: SupportedChains;
 }
 
 export type ChargeReqBody = {
