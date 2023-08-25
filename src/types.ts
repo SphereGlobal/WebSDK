@@ -140,3 +140,40 @@ export interface ChargeResponse {
   } | null;
   error: string | null;
 }
+
+export enum TxStatus {
+  PENDING = "PENDING", // Not executed already
+  PROCESSING = "PROCESSING", // Waiting to get mined
+  SUCCESS = "SUCCESS",
+  FAILURE = "FAILURE",
+  CANCELED = "CANCELED",
+  WAITING = "WAITING", // Waiting for user to pay
+}
+
+export interface TransactionEstimate {
+  txId: string, // transactionId
+  status: TxStatus, // TxStatus - WAITING, PROCESSING, COMPLETED, CANCELED, FAILED (should be PENDING)
+  total: number, // total amount initially received, not including other costs
+  totalUsd: number, // USD value of total amount
+  estimation: {
+    costUsd: number, // cost (in usd) to make the transaction
+    timeEstimate: number, // in minutes, rough estimate (for 60 seconds)
+    gas: string, // gas for the transaction
+    route: string, // the route batches that will be executed
+  },
+  to: {
+    toAmount: string, // amount to be received
+    toAddress: string, // receiver address
+    toChain: string, // destination chain
+    toToken: { // extra token metadata
+      symbol: string,
+      name: string,
+      decimals: number,
+      address: string,
+      logoURI: string,
+      chain: string,
+    },
+  },
+  startTimestamp: number, // timestamp when response is sent back to client-side
+  limitTimestamp: number, // timestamp when this route is still valid, minimum
+}

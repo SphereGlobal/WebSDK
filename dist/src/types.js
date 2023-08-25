@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
+exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
 var LoginBehavior;
 (function (LoginBehavior) {
     LoginBehavior["REDIRECT"] = "REDIRECT";
@@ -30,3 +30,12 @@ var Environments;
     Environments["STAGING"] = "staging";
     Environments["PRODUCTION"] = "production";
 })(Environments || (exports.Environments = Environments = {}));
+var TxStatus;
+(function (TxStatus) {
+    TxStatus["PENDING"] = "PENDING";
+    TxStatus["PROCESSING"] = "PROCESSING";
+    TxStatus["SUCCESS"] = "SUCCESS";
+    TxStatus["FAILURE"] = "FAILURE";
+    TxStatus["CANCELED"] = "CANCELED";
+    TxStatus["WAITING"] = "WAITING";
+})(TxStatus || (exports.TxStatus = TxStatus = {}));

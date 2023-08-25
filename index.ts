@@ -5,6 +5,7 @@ import {
   Environments,
   LoginBehavior,
   Transaction,
+  TransactionEstimate,
   User,
   iWebSDK,
 } from './src/types';
@@ -352,7 +353,7 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#createRequest('POST', { transactionId });
       const response = await fetch(`${this.baseUrl}/pay/route`, requestOptions);
       const data = await response.json();
-      return data.data;
+      return data.data as TransactionEstimate;
     } catch (error: any) {
       console.error('There was an error constructing this route, error: ', error);
       return error;

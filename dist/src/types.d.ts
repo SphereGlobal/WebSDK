@@ -124,3 +124,38 @@ export interface ChargeResponse {
     } | null;
     error: string | null;
 }
+export declare enum TxStatus {
+    PENDING = "PENDING",
+    PROCESSING = "PROCESSING",
+    SUCCESS = "SUCCESS",
+    FAILURE = "FAILURE",
+    CANCELED = "CANCELED",
+    WAITING = "WAITING"
+}
+export interface TransactionEstimate {
+    txId: string;
+    status: TxStatus;
+    total: number;
+    totalUsd: number;
+    estimation: {
+        costUsd: number;
+        timeEstimate: number;
+        gas: string;
+        route: string;
+    };
+    to: {
+        toAmount: string;
+        toAddress: string;
+        toChain: string;
+        toToken: {
+            symbol: string;
+            name: string;
+            decimals: number;
+            address: string;
+            logoURI: string;
+            chain: string;
+        };
+    };
+    startTimestamp: number;
+    limitTimestamp: number;
+}
