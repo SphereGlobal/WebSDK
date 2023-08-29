@@ -92,8 +92,6 @@ class WebSDK {
                 return;
             if (!this.clientId)
                 throw new Error('Missing clientId');
-            if (!this.clientSecret)
-                throw new Error('Missing clientSecret');
             if (!this.redirectUri)
                 throw new Error('Missing redirectUri');
             if (!this.apiKey)
@@ -109,6 +107,7 @@ class WebSDK {
                 redirect_uri: this.redirectUri,
                 response_type: 'code',
                 post_logout_redirect_uri: this.redirectUri,
+                userStore: window ? new oidc_client_ts_1.WebStorageStateStore({ store: window.localStorage }) : undefined,
             }), "f");
             WebSDK.instance = this;
             return WebSDK.instance;
