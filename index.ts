@@ -8,12 +8,13 @@ import {
   User,
   iWebSDK,
 } from './src/types';
-import { UserManager } from 'oidc-client-ts';
+import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
-export { LoginButton } from "./src/components/LoginButton";
+export { LoginButton } from './src/components/LoginButton';
+
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
@@ -90,7 +91,6 @@ class WebSDK implements iWebSDK {
   build = () => {
     if (typeof window === 'undefined') return;
     if (!this.clientId) throw new Error('Missing clientId');
-    if (!this.clientSecret) throw new Error('Missing clientSecret');
     if (!this.redirectUri) throw new Error('Missing redirectUri');
     if (!this.apiKey) throw new Error('Missing apiKey');
     if (!this.baseUrl) throw new Error('Missing baseUrl');
@@ -103,6 +103,7 @@ class WebSDK implements iWebSDK {
       redirect_uri: this.redirectUri as string,
       response_type: 'code',
       post_logout_redirect_uri: this.redirectUri as string,
+      userStore: window ? new WebStorageStateStore({ store: window.localStorage }) : undefined,
     });
 
     WebSDK.instance = this;
