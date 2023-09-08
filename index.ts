@@ -385,9 +385,9 @@ class WebSDK implements iWebSDK {
     const { transactions } = await decodeJWT(encoded)
     let response = transactions
     if (!getReceived) 
-      response = transactions.filter((t: any) => t.receiverUid === undefined)
+      response = transactions.filter((t: any) => t.receiverUid !== this.user?.uid)
     if (!getSent)
-      response = transactions.filter((t: any) => t.senderUid === undefined)
+      response = transactions.filter((t: any) => t.senderUid !== this.user?.uid)
 
     return quantity > 0 ? response.splice(0, quantity) : response.splice(0)
   }

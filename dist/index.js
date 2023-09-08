@@ -374,9 +374,9 @@ class WebSDK {
             const { transactions } = yield (0, utils_1.decodeJWT)(encoded);
             let response = transactions;
             if (!getReceived)
-                response = transactions.filter((t) => t.receiverUid === undefined);
+                response = transactions.filter((t) => { var _a; return t.receiverUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
             if (!getSent)
-                response = transactions.filter((t) => t.senderUid === undefined);
+                response = transactions.filter((t) => { var _a; return t.senderUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
             return quantity > 0 ? response.splice(0, quantity) : response.splice(0);
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
