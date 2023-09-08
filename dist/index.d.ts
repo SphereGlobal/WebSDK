@@ -3,7 +3,6 @@ export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
-
 declare class WebSDK implements iWebSDK {
     #private;
     static instance: WebSDK | undefined;
@@ -32,6 +31,7 @@ declare class WebSDK implements iWebSDK {
     createCharge: (charge: ChargeReqBody) => Promise<any>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
     payCharge: (transactionId: string) => Promise<any>;
+    getTransactions: (quantity?: number, getReceived?: boolean, getSent?: boolean) => Promise<any>;
     getWallets: () => Promise<any>;
     getUserInfo: () => Promise<any>;
     getBalances: () => Promise<any>;

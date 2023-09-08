@@ -9,6 +9,7 @@ import {
   iWebSDK,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
+import { decodeJWT } from './src/utils';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
@@ -308,6 +309,19 @@ class WebSDK implements iWebSDK {
     }
   };
 
+  #fetchTransactions = async () => {
+    try{
+      const requestOptions = await this.#createRequest()
+      const response = await fetch(`${this.baseUrl}/transactions`, requestOptions)
+      
+      const data = await response.json()
+      return data.data
+    } catch (error: any) {
+      console.error('There was an error getting transactions, error: ', error)
+      return error;
+    }
+  }
+
   createCharge = async (charge: ChargeReqBody) => {
     try {
       const requestOptions = await this.#createRequest(
@@ -361,6 +375,22 @@ class WebSDK implements iWebSDK {
       return error;
     }
   };
+
+  getTransactions = async (
+    quantity = 0, 
+    getReceived = true, 
+    getSent = true
+  ) => {
+    const encoded = await this.#fetchTransactions()
+    const { transactions } = await decodeJWT(encoded)
+    let response = transactions
+    if (!getReceived) 
+      response = transactions.filter((t: any) => t.receiverUid === undefined)
+    if (!getSent)
+      response = transactions.filter((t: any) => t.senderUid === undefined)
+
+    return quantity > 0 ? response.splice(0, quantity) : response.splice(0)
+  }
 
   getWallets = async () => {
     if (this.user?.wallets) return this.user.wallets;
