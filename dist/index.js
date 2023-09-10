@@ -130,6 +130,7 @@ class WebSDK {
                     }
                 }));
                 if (authResult) {
+                    console.log('authResult: ', authResult);
                     this.credentials = {
                         accessToken: authResult.access_token,
                         idToken: authResult.id_token,

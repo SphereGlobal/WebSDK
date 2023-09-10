@@ -15,7 +15,6 @@ export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 
-
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
 
@@ -128,6 +127,7 @@ class WebSDK implements iWebSDK {
       });
 
       if (authResult) {
+        console.log('authResult: ', authResult);
         this.credentials = {
           accessToken: authResult.access_token,
           idToken: authResult.id_token,
