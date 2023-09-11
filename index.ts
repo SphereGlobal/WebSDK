@@ -104,6 +104,7 @@ class WebSDK implements iWebSDK {
       response_type: 'code',
       post_logout_redirect_uri: this.redirectUri as string,
       userStore: window ? new WebStorageStateStore({ store: window.localStorage }) : undefined,
+      scope: 'openid offline_access',
     });
 
     WebSDK.instance = this;
@@ -180,9 +181,11 @@ class WebSDK implements iWebSDK {
   handleCallback = async () => {
     try {
       const persistence = await this.handlePersistence();
+      console.log('persistence in webSDK 184', persistence);
       if (persistence) return persistence;
 
       const handleAuth = await this.handleAuth();
+      console.log('handleAuth in webSDK 188', handleAuth);
       return handleAuth;
     } catch (error) {
       console.error('There was an error logging in , error: ', error);
@@ -192,14 +195,17 @@ class WebSDK implements iWebSDK {
 
   login = async () => {
     if (this.loginType === LoginBehavior.REDIRECT) {
-      this.#oauth2Client?.signinRedirect({
+      console.log('loginType', this.loginType, 'credentials before redirect', this.credentials);
+      await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
         scope: 'openid offline_access',
       });
+      console.log('console.log credentials post redirect?', this.credentials);
     } else {
       try {
         const authResult = await this.#oauth2Client?.signinPopup({
           extraQueryParams: { audience: this.#audience },
+          scope: 'openid offline_access',
         });
 
         if (authResult) {
