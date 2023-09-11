@@ -16,7 +16,6 @@ export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 
-
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
 
@@ -310,17 +309,17 @@ class WebSDK implements iWebSDK {
   };
 
   #fetchTransactions = async () => {
-    try{
-      const requestOptions = await this.#createRequest()
-      const response = await fetch(`${this.baseUrl}/transactions`, requestOptions)
-      
-      const data = await response.json()
-      return data.data
+    try {
+      const requestOptions = await this.#createRequest();
+      const response = await fetch(`${this.baseUrl}/transactions`, requestOptions);
+
+      const data = await response.json();
+      return data.data;
     } catch (error: any) {
-      console.error('There was an error getting transactions, error: ', error)
+      console.error('There was an error getting transactions, error: ', error);
       return error;
     }
-  }
+  };
 
   createCharge = async (charge: ChargeReqBody) => {
     try {
@@ -377,20 +376,35 @@ class WebSDK implements iWebSDK {
   };
 
   getTransactions = async (
-    quantity = 0, 
-    getReceived = true, 
+    quantity = 0,
+    getReceived = true,
     getSent = true
-  ) => {
-    const encoded = await this.#fetchTransactions()
-    const { transactions } = await decodeJWT(encoded)
-    let response = transactions
-    if (!getReceived) 
-      response = transactions.filter((t: any) => t.receiverUid !== this.user?.uid)
-    if (!getSent)
-      response = transactions.filter((t: any) => t.senderUid !== this.user?.uid)
+  ): Promise<Transaction[]> => {
+    const encoded = await this.#fetchTransactions();
+    const { transactions } = await decodeJWT(encoded);
+    let response = transactions;
+    if (!getReceived) response = transactions.filter((t: any) => t.receiverUid !== this.user?.uid);
+    if (!getSent) response = transactions.filter((t: any) => t.senderUid !== this.user?.uid);
 
-    return quantity > 0 ? response.splice(0, quantity) : response.splice(0)
-  }
+    const limitTxs = quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+    const txs: Transaction[] = limitTxs.map((t: any) => {
+      return {
+        date: t.dateCreated || null,
+        toAddress: t.toAddress || null,
+        chain: t.chain,
+        symbol: t.symbol || t.commodity,
+        amount: t.total || t.commodityAmount,
+        tokenAddress: t.tokenAddress || null,
+        nft: {
+          img: t.itemInfo.imageUrl,
+          name: t.itemInfo.name,
+          address: t.address,
+        }
+      }
+    })
+
+    return txs
+  };
 
   getWallets = async () => {
     if (this.user?.wallets) return this.user.wallets;

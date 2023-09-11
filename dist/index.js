@@ -377,7 +377,23 @@ class WebSDK {
                 response = transactions.filter((t) => { var _a; return t.receiverUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
             if (!getSent)
                 response = transactions.filter((t) => { var _a; return t.senderUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
-            return quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+            const limitTxs = quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+            const txs = limitTxs.map((t) => {
+                return {
+                    date: t.dateCreated || null,
+                    toAddress: t.toAddress || null,
+                    chain: t.chain,
+                    symbol: t.symbol || t.commodity,
+                    amount: t.total || t.commodityAmount,
+                    tokenAddress: t.tokenAddress || null,
+                    nft: {
+                        img: t.itemInfo.imageUrl,
+                        name: t.itemInfo.name,
+                        address: t.address,
+                    }
+                };
+            });
+            return txs;
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
             var _g;

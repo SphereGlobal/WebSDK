@@ -31,7 +31,7 @@ declare class WebSDK implements iWebSDK {
     createCharge: (charge: ChargeReqBody) => Promise<any>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
     payCharge: (transactionId: string) => Promise<any>;
-    getTransactions: (quantity?: number, getReceived?: boolean, getSent?: boolean) => Promise<any>;
+    getTransactions: (quantity?: number, getReceived?: boolean, getSent?: boolean) => Promise<Transaction[]>;
     getWallets: () => Promise<any>;
     getUserInfo: () => Promise<any>;
     getBalances: () => Promise<any>;

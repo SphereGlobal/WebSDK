@@ -95,11 +95,13 @@ export interface Credentials {
 }
 
 export interface Transaction {
+  date?: Date;
   toAddress: string;
   chain: SupportedChains;
   symbol: string;
   amount: number;
   tokenAddress: string;
+  nft?: NftsInfo
 }
 
 export type NftsInfo = {
