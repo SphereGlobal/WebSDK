@@ -124,7 +124,7 @@ class WebSDK implements iWebSDK {
           console.log('user in webSDK 124', user);
           resolve(user);
         } catch (error: any) {
-          console.log('error 127');
+          console.log('error 127', error);
           reject(error);
         }
       });
@@ -194,6 +194,7 @@ class WebSDK implements iWebSDK {
     if (this.loginType === LoginBehavior.REDIRECT) {
       this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
+        scope: 'openid offline_access',
       });
     } else {
       try {
@@ -202,6 +203,7 @@ class WebSDK implements iWebSDK {
         });
 
         if (authResult) {
+          console.log('authResult in webSDK 205', authResult);
           this.credentials = {
             accessToken: authResult.access_token,
             idToken: authResult.id_token as string,
