@@ -36,5 +36,8 @@ declare class WebSDK implements iWebSDK {
     getBalances: () => Promise<any>;
     getNfts: () => Promise<any>;
     createIframe(width: number, height: number): HTMLIFrameElement;
+    isTokenExpired: () => boolean;
+    refreshToken: () => Promise<false | import("oidc-client-ts").User>;
+    checkTokenAndExecuteFunction: (property: any, fn: Function) => Promise<any>;
 }
 export default WebSDK;
