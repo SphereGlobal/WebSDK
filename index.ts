@@ -450,9 +450,7 @@ class WebSDK implements iWebSDK {
       if (this.credentials?.refreshToken) {
         console.log('trying to refresh token');
         console.log('old credentials', this.credentials);
-        const userRefreshed = await this.#oauth2Client?.signinSilent({
-          extraQueryParams: { audience: this.#audience },
-        });
+        const userRefreshed = await this.#oauth2Client?.signinSilent();
         console.log('userRefreshed: ', userRefreshed);
         if (userRefreshed) {
           this.credentials = {
