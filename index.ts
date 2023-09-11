@@ -121,12 +121,14 @@ class WebSDK implements iWebSDK {
       const authResult: any = await new Promise(async (resolve, reject) => {
         try {
           const user = await this.#oauth2Client?.signinCallback();
+          console.log('user in webSDK 124', user);
           resolve(user);
         } catch (error: any) {
+          console.log('error 127');
           reject(error);
         }
       });
-
+      console.log('authResult in webSDK 131', authResult);
       if (authResult) {
         this.credentials = {
           accessToken: authResult.access_token,
@@ -436,26 +438,15 @@ class WebSDK implements iWebSDK {
     return iframe;
   }
 
-  isTokenExpired = () => {
-    console.log(
-      'is Token Expired info \n',
-      'this.credentials?.expires_at: \n',
-      this.credentials?.expires_at,
-      '\n',
-      'Math.floor(Date.now() / 1000): \n',
-      Math.floor(Date.now() / 1000),
-      '\n',
-      'this.credentials?.expires_at && this.credentials?.expires_at < Math.floor(Date.now() / 1000): \n',
-      this.credentials?.expires_at && this.credentials?.expires_at < Math.floor(Date.now() / 1000)
-    );
-    return this.credentials?.expires_at
+  isTokenExpired = () =>
+    this.credentials?.expires_at
       ? this.credentials.expires_at < Math.floor(Date.now() / 1000)
       : true;
-  };
 
   refreshToken = async () => {
     try {
       console.log('refresh Token');
+      console.log('credentials', this.credentials);
       if (this.credentials?.refreshToken) {
         console.log('trying to refresh token');
         console.log('old credentials', this.credentials);
