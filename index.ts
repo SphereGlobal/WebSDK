@@ -105,6 +105,7 @@ class WebSDK implements iWebSDK {
       post_logout_redirect_uri: this.redirectUri as string,
       userStore: window ? new WebStorageStateStore({ store: window.localStorage }) : undefined,
       scope: 'openid offline_access',
+      automaticSilentRenew: true,
     });
 
     WebSDK.instance = this;
@@ -122,14 +123,11 @@ class WebSDK implements iWebSDK {
       const authResult: any = await new Promise(async (resolve, reject) => {
         try {
           const user = await this.#oauth2Client?.signinCallback();
-          console.log('user in webSDK 124', user);
           resolve(user);
         } catch (error: any) {
-          console.log('error 127', error);
           reject(error);
         }
       });
-      console.log('authResult in webSDK 131', authResult);
       if (authResult) {
         this.credentials = {
           accessToken: authResult.access_token,
@@ -140,7 +138,6 @@ class WebSDK implements iWebSDK {
 
         if (this.user) {
           this.user.uid = authResult.profile.sub;
-          // add expires_at to user
         }
         return authResult;
       } else return null;
@@ -198,18 +195,15 @@ class WebSDK implements iWebSDK {
       console.log('loginType', this.loginType, 'credentials before redirect', this.credentials);
       await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
-        scope: 'openid offline_access',
       });
       console.log('console.log credentials post redirect?', this.credentials);
     } else {
       try {
         const authResult = await this.#oauth2Client?.signinPopup({
           extraQueryParams: { audience: this.#audience },
-          scope: 'openid offline_access',
         });
 
         if (authResult) {
-          console.log('authResult in webSDK 205', authResult);
           this.credentials = {
             accessToken: authResult.access_token,
             idToken: authResult.id_token as string,
