@@ -19,11 +19,12 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek;
+var _WebSDK_environment, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_domainDev, _WebSDK_audienceDev, _WebSDK_domainProd, _WebSDK_audienceProd, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaDevUrl, _WebSDK_pwaStagingUrl, _WebSDK_pwaProdUrl, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
 const types_1 = require("./src/types");
 const oidc_client_ts_1 = require("oidc-client-ts");
+const utils_1 = require("./src/utils");
 var types_2 = require("./src/types");
 Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: function () { return types_2.Environments; } });
 var types_3 = require("./src/types");
@@ -310,6 +311,18 @@ class WebSDK {
                 return error;
             }
         }));
+        _WebSDK_fetchTransactions.set(this, () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
+                const response = yield fetch(`${this.baseUrl}/transactions`, requestOptions);
+                const data = yield response.json();
+                return data.data;
+            }
+            catch (error) {
+                console.error('There was an error getting transactions, error: ', error);
+                return error;
+            }
+        }));
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
             var _f;
             try {
@@ -355,6 +368,38 @@ class WebSDK {
                 console.error('There was an error paying this transaction, error: ', error);
                 return error;
             }
+        });
+        this.getTransactions = (quantity = 0, getReceived = true, getSent = true) => __awaiter(this, void 0, void 0, function* () {
+            // Get all transactions encoded
+            const encoded = yield __classPrivateFieldGet(this, _WebSDK_fetchTransactions, "f").call(this);
+            // Decode JWT payload to get raw transactions
+            const { transactions } = yield (0, utils_1.decodeJWT)(encoded);
+            let response = transactions;
+            // if getReceived is set to false, only get the transactions that have "senderUid"
+            if (!getReceived)
+                response = transactions.filter((t) => { var _a; return t.receiverUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
+            // if getSent is set to false, only get the transactions that have "receiverUid"
+            if (!getSent)
+                response = transactions.filter((t) => { var _a; return t.senderUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
+            // if quantity is set to higher than 0, only get the transaction quantity else we get all of them
+            const limitTxs = quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+            // map transactions to have a typed return object
+            const txs = limitTxs.map((t) => {
+                return {
+                    date: t.dateCreated || null,
+                    toAddress: t.toAddress || null,
+                    chain: t.chain,
+                    symbol: t.symbol || t.commodity,
+                    amount: t.total || t.commodityAmount,
+                    tokenAddress: t.tokenAddress || null,
+                    nft: {
+                        img: t.itemInfo.imageUrl,
+                        name: t.itemInfo.name,
+                        address: t.address,
+                    }
+                };
+            });
+            return txs;
         });
         this.getWallets = () => __awaiter(this, void 0, void 0, function* () {
             var _g;
@@ -403,6 +448,6 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_environment = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap();
+_WebSDK_environment = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_domainDev = new WeakMap(), _WebSDK_audienceDev = new WeakMap(), _WebSDK_domainProd = new WeakMap(), _WebSDK_audienceProd = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaDevUrl = new WeakMap(), _WebSDK_pwaStagingUrl = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap();
 WebSDK.instance = undefined;
 exports.default = WebSDK;

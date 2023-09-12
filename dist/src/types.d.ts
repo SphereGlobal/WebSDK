@@ -84,11 +84,13 @@ export interface Credentials {
     refreshToken?: string;
 }
 export interface Transaction {
+    date?: Date;
     toAddress: string;
     chain: SupportedChains;
     symbol: string;
     amount: number;
     tokenAddress: string;
+    nft?: NftsInfo;
 }
 export type NftsInfo = {
     img: string | undefined;
