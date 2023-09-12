@@ -380,13 +380,22 @@ class WebSDK implements iWebSDK {
     getReceived = true,
     getSent = true
   ): Promise<Transaction[]> => {
+    // Get all transactions encoded
     const encoded = await this.#fetchTransactions();
+
+    // Decode JWT payload to get raw transactions
     const { transactions } = await decodeJWT(encoded);
     let response = transactions;
+
+    // if getReceived is set to false, only get the transactions that have "senderUid"
     if (!getReceived) response = transactions.filter((t: any) => t.receiverUid !== this.user?.uid);
+    // if getSent is set to false, only get the transactions that have "receiverUid"
     if (!getSent) response = transactions.filter((t: any) => t.senderUid !== this.user?.uid);
 
+    // if quantity is set to higher than 0, only get the transaction quantity else we get all of them
     const limitTxs = quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+
+    // map transactions to have a typed return object
     const txs: Transaction[] = limitTxs.map((t: any) => {
       return {
         date: t.dateCreated || null,

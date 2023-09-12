@@ -370,14 +370,20 @@ class WebSDK {
             }
         });
         this.getTransactions = (quantity = 0, getReceived = true, getSent = true) => __awaiter(this, void 0, void 0, function* () {
+            // Get all transactions encoded
             const encoded = yield __classPrivateFieldGet(this, _WebSDK_fetchTransactions, "f").call(this);
+            // Decode JWT payload to get raw transactions
             const { transactions } = yield (0, utils_1.decodeJWT)(encoded);
             let response = transactions;
+            // if getReceived is set to false, only get the transactions that have "senderUid"
             if (!getReceived)
                 response = transactions.filter((t) => { var _a; return t.receiverUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
+            // if getSent is set to false, only get the transactions that have "receiverUid"
             if (!getSent)
                 response = transactions.filter((t) => { var _a; return t.senderUid !== ((_a = this.user) === null || _a === void 0 ? void 0 : _a.uid); });
+            // if quantity is set to higher than 0, only get the transaction quantity else we get all of them
             const limitTxs = quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+            // map transactions to have a typed return object
             const txs = limitTxs.map((t) => {
                 return {
                     date: t.dateCreated || null,
