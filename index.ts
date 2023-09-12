@@ -9,12 +9,12 @@ import {
   iWebSDK,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
+import { decodeJWT } from './src/utils';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
-
 
 class WebSDK implements iWebSDK {
   static instance: WebSDK | undefined = undefined;
@@ -308,6 +308,19 @@ class WebSDK implements iWebSDK {
     }
   };
 
+  #fetchTransactions = async () => {
+    try {
+      const requestOptions = await this.#createRequest();
+      const response = await fetch(`${this.baseUrl}/transactions`, requestOptions);
+
+      const data = await response.json();
+      return data.data;
+    } catch (error: any) {
+      console.error('There was an error getting transactions, error: ', error);
+      return error;
+    }
+  };
+
   createCharge = async (charge: ChargeReqBody) => {
     try {
       const requestOptions = await this.#createRequest(
@@ -360,6 +373,46 @@ class WebSDK implements iWebSDK {
       console.error('There was an error paying this transaction, error: ', error);
       return error;
     }
+  };
+
+  getTransactions = async (
+    quantity = 0,
+    getReceived = true,
+    getSent = true
+  ): Promise<Transaction[]> => {
+    // Get all transactions encoded
+    const encoded = await this.#fetchTransactions();
+
+    // Decode JWT payload to get raw transactions
+    const { transactions } = await decodeJWT(encoded);
+    let response = transactions;
+
+    // if getReceived is set to false, only get the transactions that have "senderUid"
+    if (!getReceived) response = transactions.filter((t: any) => t.receiverUid !== this.user?.uid);
+    // if getSent is set to false, only get the transactions that have "receiverUid"
+    if (!getSent) response = transactions.filter((t: any) => t.senderUid !== this.user?.uid);
+
+    // if quantity is set to higher than 0, only get the transaction quantity else we get all of them
+    const limitTxs = quantity > 0 ? response.splice(0, quantity) : response.splice(0);
+
+    // map transactions to have a typed return object
+    const txs: Transaction[] = limitTxs.map((t: any) => {
+      return {
+        date: t.dateCreated || null,
+        toAddress: t.toAddress || null,
+        chain: t.chain,
+        symbol: t.symbol || t.commodity,
+        amount: t.total || t.commodityAmount,
+        tokenAddress: t.tokenAddress || null,
+        nft: {
+          img: t.itemInfo.imageUrl,
+          name: t.itemInfo.name,
+          address: t.address,
+        }
+      }
+    })
+
+    return txs
   };
 
   getWallets = async () => {
