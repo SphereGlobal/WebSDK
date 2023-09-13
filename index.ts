@@ -24,7 +24,7 @@ class WebSDK implements iWebSDK {
   redirectUri?: string;
   apiKey?: string;
   baseUrl?: string;
-  user?: User = {};
+  user?: User | null | undefined = undefined;
   credentials?: Credentials | null;
   #environment: Environments = Environments.PRODUCTION;
   #oauth2Client?: UserManager;
@@ -113,7 +113,7 @@ class WebSDK implements iWebSDK {
   };
 
   clear = () => {
-    this.user = {};
+    this.user = null;
     this.credentials = null;
     this.#wrappedDek = '';
   };
@@ -138,7 +138,8 @@ class WebSDK implements iWebSDK {
 
         if (this.user) {
           this.user.uid = authResult.profile.sub;
-        }
+        } else this.user = { uid: authResult.profile.sub };
+        await this.getUserInfo();
         return authResult;
       } else return null;
     } catch (error: any) {
@@ -149,8 +150,11 @@ class WebSDK implements iWebSDK {
 
   handlePersistence = async () => {
     const persistence = await this.#oauth2Client?.getUser();
+    console.log('persistence', persistence);
     if (persistence) {
-      if (!this.isTokenExpired) {
+      const isExpired = await this.isTokenExpired();
+      if (!isExpired) {
+        console.log('token not expired');
         this.credentials = {
           accessToken: persistence.access_token,
           idToken: persistence.id_token as string,
@@ -158,9 +162,12 @@ class WebSDK implements iWebSDK {
           expires_at: persistence.expires_at ?? 0,
         };
         if (this.user) this.user.uid = persistence.profile.sub;
+        else this.user = { uid: persistence.profile.sub };
+        await this.getUserInfo();
         return persistence;
       } else {
         const refreshed = await this.refreshToken();
+        console.log('refreshed inside handle persistence', refreshed);
         if (refreshed) {
           this.credentials = {
             accessToken: refreshed.access_token,
@@ -169,20 +176,28 @@ class WebSDK implements iWebSDK {
             expires_at: refreshed.expires_at ?? 0,
           };
           if (this.user) this.user.uid = refreshed.profile.sub;
+          else this.user = { uid: refreshed.profile.sub };
+          await this.getUserInfo();
           return refreshed;
-        } else return null;
+        } else {
+          console.log("couldn't refresh token");
+          this.logout();
+          return null;
+        }
       }
     } else return null;
   };
 
   handleCallback = async () => {
     try {
+      console.log('handleCallback');
       const persistence = await this.handlePersistence();
-      console.log('persistence in webSDK 184', persistence);
+      console.log('persistence inside handleCallback', persistence);
       if (persistence) return persistence;
 
+      console.log('handleAuth');
       const handleAuth = await this.handleAuth();
-      console.log('handleAuth in webSDK 188', handleAuth);
+      console.log('handleAuth inside handleCallback', handleAuth);
       return handleAuth;
     } catch (error) {
       console.error('There was an error logging in , error: ', error);
@@ -192,11 +207,9 @@ class WebSDK implements iWebSDK {
 
   login = async () => {
     if (this.loginType === LoginBehavior.REDIRECT) {
-      console.log('loginType', this.loginType, 'credentials before redirect', this.credentials);
       await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
       });
-      console.log('console.log credentials post redirect?', this.credentials);
     } else {
       try {
         const authResult = await this.#oauth2Client?.signinPopup({
@@ -211,6 +224,7 @@ class WebSDK implements iWebSDK {
             expires_at: authResult.expires_at ?? 0,
           };
           if (this.user) this.user.uid = authResult.profile.sub;
+          else this.user = { uid: authResult.profile.sub };
           return authResult;
         } else return null;
       } catch (error: any) {
@@ -221,10 +235,14 @@ class WebSDK implements iWebSDK {
   };
 
   logout = () => {
-    if (typeof window === 'undefined') return;
-    this.#oauth2Client?.signoutSilent();
-    window.location.replace(this.redirectUri as string);
-    this.clear();
+    try {
+      if (typeof window === 'undefined') return;
+      this.#oauth2Client?.signoutSilent();
+      window.location.replace(this.redirectUri as string);
+      this.clear();
+    } catch (e) {
+      console.log('error logging out', e);
+    }
   };
 
   #createRequest = async (method: string = 'GET', body: any = {}, headers: any = {}) => {
@@ -278,7 +296,7 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  #fetchUserWallets = async () => {
+  #fetchUserWallets = async (forceRefresh?: boolean) => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
@@ -356,30 +374,24 @@ class WebSDK implements iWebSDK {
   };
 
   pay = async ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => {
+    const payFn = async () => {
+      const wrappedDek = await this.#getWrappedDek();
+
+      const requestOptions = await this.#createRequest('POST', {
+        wrappedDek,
+        toAddress,
+        chain,
+        symbol,
+        amount,
+        tokenAddress,
+      });
+
+      const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
+      const data = await response.json();
+      return data.data;
+    };
     try {
-      const payFn = async () => {
-        const wrappedDek = await this.#getWrappedDek();
-
-        const requestOptions = await this.#createRequest('POST', {
-          wrappedDek,
-          toAddress,
-          chain,
-          symbol,
-          amount,
-          tokenAddress,
-        });
-
-        const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
-        const data = await response.json();
-        return data.data;
-      };
-      if (!this.isTokenExpired) {
-        return await payFn();
-      }
-      const refreshed = await this.refreshToken();
-      if (refreshed) {
-        return await payFn();
-      } else throw new Error('The session is expired, please login again');
+      await this.checkTokenAndExecuteFunction(payFn);
     } catch (error: any) {
       console.error('There was an processing your payment, error: ', error);
       return error;
@@ -396,29 +408,24 @@ class WebSDK implements iWebSDK {
       return data;
     };
     try {
-      if (!this.isTokenExpired()) {
-        return await payChargeFn();
-      }
-      const refreshed = await this.refreshToken();
-      if (refreshed) {
-        return await payChargeFn();
-      } else throw new Error('The session is expired, please login again');
+      await this.checkTokenAndExecuteFunction(payChargeFn);
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
       return error;
     }
   };
 
-  getWallets = async () =>
-    this.checkTokenAndExecuteFunction(this.user?.wallets, this.#fetchUserWallets);
+  getWallets = (forceRefresh?: boolean) =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserWallets, this.user?.wallets, forceRefresh);
 
-  getUserInfo = async () =>
-    await this.checkTokenAndExecuteFunction(this.user?.info, this.#fetchUserInfo);
+  getUserInfo = (forceRefresh?: boolean) =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserInfo, this.user?.info, forceRefresh);
 
-  getBalances = async () =>
-    await this.checkTokenAndExecuteFunction(this.user?.balances, this.#fetchUserBalances);
+  getBalances = (forceRefresh?: boolean) =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserBalances, this.user?.balances, forceRefresh);
 
-  getNfts = async () => this.checkTokenAndExecuteFunction(this.user?.nfts, this.#fetchUserNfts);
+  getNfts = (forceRefresh?: boolean) =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
 
   createIframe(width: number, height: number) {
     const iframe = document.createElement('iframe');
@@ -440,20 +447,44 @@ class WebSDK implements iWebSDK {
     return iframe;
   }
 
-  isTokenExpired = () =>
-    this.credentials?.expires_at
+  isTokenExpired = async () => {
+    console.log('this.credentials inside isTokenExpired', this.credentials);
+    if (!this.credentials) {
+      const user = await this.#oauth2Client?.getUser();
+      console.log('user inside isTokenExpired', user);
+      if (user) {
+        return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
+      }
+    }
+    return this.credentials?.expires_at
       ? this.credentials.expires_at < Math.floor(Date.now() / 1000)
       : true;
+  };
 
   refreshToken = async () => {
     try {
-      console.log('refresh Token');
-      console.log('credentials', this.credentials);
+      const user = await this.#oauth2Client?.getUser();
+      console.log('user inside refresh token');
+      if (
+        this.credentials?.expires_at &&
+        this.credentials?.expires_at > Math.floor(Date.now() / 1000)
+      ) {
+        console.log('token is not expired');
+        return user;
+      }
+
+      if (!this.credentials?.refreshToken && user) {
+        this.credentials = {
+          refreshToken: user?.refresh_token,
+          accessToken: '',
+          idToken: '',
+          expires_at: 0,
+        };
+      }
       if (this.credentials?.refreshToken) {
-        console.log('trying to refresh token');
-        console.log('old credentials', this.credentials);
+        console.log("token is expired, let's refresh it");
         const userRefreshed = await this.#oauth2Client?.signinSilent();
-        console.log('userRefreshed: ', userRefreshed);
+        console.log('userRefreshed inside refresh token', userRefreshed);
         if (userRefreshed) {
           this.credentials = {
             accessToken: userRefreshed.access_token,
@@ -461,7 +492,6 @@ class WebSDK implements iWebSDK {
             refreshToken: userRefreshed.refresh_token,
             expires_at: userRefreshed.expires_at ?? 0,
           };
-          console.log('new credentials', this.credentials);
           return userRefreshed;
         } else return false;
       }
@@ -471,15 +501,20 @@ class WebSDK implements iWebSDK {
       return false;
     }
   };
-  checkTokenAndExecuteFunction = async (property: any, fn: Function) => {
-    if (!this.isTokenExpired()) {
-      if (property) return property;
-      const data = await fn();
+
+  checkTokenAndExecuteFunction = async (
+    fn: Function,
+    property: any = undefined,
+    forceRefresh: boolean = false
+  ) => {
+    if (!(await this.isTokenExpired())) {
+      if (property && !forceRefresh) return property;
+      const data = await fn(forceRefresh);
       return data;
     } else {
       const refreshed = await this.refreshToken();
       if (refreshed) {
-        const data = await fn();
+        const data = await fn(forceRefresh);
         return data;
       } else throw new Error('The session is expired, please login again');
     }

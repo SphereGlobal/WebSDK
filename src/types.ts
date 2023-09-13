@@ -62,7 +62,7 @@ export interface iWebSDK {
   redirectUri?: string;
   baseUrl?: string;
   apiKey?: string;
-  user?: User | null;
+  user?: User | null | undefined;
   credentials?: Credentials | null;
   balances?: WalletBalance[] | null;
   auth0Client?: any;

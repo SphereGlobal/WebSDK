@@ -35,7 +35,7 @@ Object.defineProperty(exports, "LoginButton", { enumerable: true, get: function 
 class WebSDK {
     constructor() {
         this.loginType = types_1.LoginBehavior.REDIRECT;
-        this.user = {};
+        this.user = undefined;
         _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
         _WebSDK_oauth2Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
@@ -109,12 +109,14 @@ class WebSDK {
                 response_type: 'code',
                 post_logout_redirect_uri: this.redirectUri,
                 userStore: window ? new oidc_client_ts_1.WebStorageStateStore({ store: window.localStorage }) : undefined,
+                scope: 'openid offline_access',
+                automaticSilentRenew: true,
             }), "f");
             WebSDK.instance = this;
             return WebSDK.instance;
         };
         this.clear = () => {
-            this.user = {};
+            this.user = null;
             this.credentials = null;
             __classPrivateFieldSet(this, _WebSDK_wrappedDek, '', "f");
         };
@@ -139,8 +141,10 @@ class WebSDK {
                     };
                     if (this.user) {
                         this.user.uid = authResult.profile.sub;
-                        // add expires_at to user
                     }
+                    else
+                        this.user = { uid: authResult.profile.sub };
+                    yield this.getUserInfo();
                     return authResult;
                 }
                 else
@@ -154,8 +158,11 @@ class WebSDK {
         this.handlePersistence = () => __awaiter(this, void 0, void 0, function* () {
             var _b, _c, _d;
             const persistence = yield ((_b = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _b === void 0 ? void 0 : _b.getUser());
+            console.log('persistence', persistence);
             if (persistence) {
-                if (!this.isTokenExpired) {
+                const isExpired = yield this.isTokenExpired();
+                if (!isExpired) {
+                    console.log('token not expired');
                     this.credentials = {
                         accessToken: persistence.access_token,
                         idToken: persistence.id_token,
@@ -164,10 +171,14 @@ class WebSDK {
                     };
                     if (this.user)
                         this.user.uid = persistence.profile.sub;
+                    else
+                        this.user = { uid: persistence.profile.sub };
+                    yield this.getUserInfo();
                     return persistence;
                 }
                 else {
                     const refreshed = yield this.refreshToken();
+                    console.log('refreshed inside handle persistence', refreshed);
                     if (refreshed) {
                         this.credentials = {
                             accessToken: refreshed.access_token,
@@ -177,10 +188,16 @@ class WebSDK {
                         };
                         if (this.user)
                             this.user.uid = refreshed.profile.sub;
+                        else
+                            this.user = { uid: refreshed.profile.sub };
+                        yield this.getUserInfo();
                         return refreshed;
                     }
-                    else
+                    else {
+                        console.log("couldn't refresh token");
+                        this.logout();
                         return null;
+                    }
                 }
             }
             else
@@ -188,10 +205,14 @@ class WebSDK {
         });
         this.handleCallback = () => __awaiter(this, void 0, void 0, function* () {
             try {
+                console.log('handleCallback');
                 const persistence = yield this.handlePersistence();
+                console.log('persistence inside handleCallback', persistence);
                 if (persistence)
                     return persistence;
+                console.log('handleAuth');
                 const handleAuth = yield this.handleAuth();
+                console.log('handleAuth inside handleCallback', handleAuth);
                 return handleAuth;
             }
             catch (error) {
@@ -202,9 +223,9 @@ class WebSDK {
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             var _e, _f, _g;
             if (this.loginType === types_1.LoginBehavior.REDIRECT) {
-                (_e = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _e === void 0 ? void 0 : _e.signinRedirect({
+                yield ((_e = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _e === void 0 ? void 0 : _e.signinRedirect({
                     extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
-                });
+                }));
             }
             else {
                 try {
@@ -220,6 +241,8 @@ class WebSDK {
                         };
                         if (this.user)
                             this.user.uid = authResult.profile.sub;
+                        else
+                            this.user = { uid: authResult.profile.sub };
                         return authResult;
                     }
                     else
@@ -233,11 +256,16 @@ class WebSDK {
         });
         this.logout = () => {
             var _a;
-            if (typeof window === 'undefined')
-                return;
-            (_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signoutSilent();
-            window.location.replace(this.redirectUri);
-            this.clear();
+            try {
+                if (typeof window === 'undefined')
+                    return;
+                (_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signoutSilent();
+                window.location.replace(this.redirectUri);
+                this.clear();
+            }
+            catch (e) {
+                console.log('error logging out', e);
+            }
         };
         _WebSDK_createRequest.set(this, (method = 'GET', body = {}, headers = {}) => __awaiter(this, void 0, void 0, function* () {
             var _h;
@@ -280,7 +308,7 @@ class WebSDK {
                 return error;
             }
         }));
-        _WebSDK_fetchUserWallets.set(this, () => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK_fetchUserWallets.set(this, (forceRefresh) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/user/wallets`, requestOptions);
@@ -352,30 +380,22 @@ class WebSDK {
             }
         });
         this.pay = ({ toAddress, chain, symbol, amount, tokenAddress }) => __awaiter(this, void 0, void 0, function* () {
-            try {
-                const payFn = () => __awaiter(this, void 0, void 0, function* () {
-                    const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
-                    const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', {
-                        wrappedDek,
-                        toAddress,
-                        chain,
-                        symbol,
-                        amount,
-                        tokenAddress,
-                    });
-                    const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
-                    const data = yield response.json();
-                    return data.data;
+            const payFn = () => __awaiter(this, void 0, void 0, function* () {
+                const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', {
+                    wrappedDek,
+                    toAddress,
+                    chain,
+                    symbol,
+                    amount,
+                    tokenAddress,
                 });
-                if (!this.isTokenExpired) {
-                    return yield payFn();
-                }
-                const refreshed = yield this.refreshToken();
-                if (refreshed) {
-                    return yield payFn();
-                }
-                else
-                    throw new Error('The session is expired, please login again');
+                const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
+                const data = yield response.json();
+                return data.data;
+            });
+            try {
+                yield this.checkTokenAndExecuteFunction(payFn);
             }
             catch (error) {
                 console.error('There was an processing your payment, error: ', error);
@@ -391,51 +411,60 @@ class WebSDK {
                 return data;
             });
             try {
-                if (!this.isTokenExpired()) {
-                    return yield payChargeFn();
-                }
-                const refreshed = yield this.refreshToken();
-                if (refreshed) {
-                    return yield payChargeFn();
-                }
-                else
-                    throw new Error('The session is expired, please login again');
+                yield this.checkTokenAndExecuteFunction(payChargeFn);
             }
             catch (error) {
                 console.error('There was an error paying this transaction, error: ', error);
                 return error;
             }
         });
-        this.getWallets = () => __awaiter(this, void 0, void 0, function* () { var _k; return this.checkTokenAndExecuteFunction((_k = this.user) === null || _k === void 0 ? void 0 : _k.wallets, __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f")); });
-        this.getUserInfo = () => __awaiter(this, void 0, void 0, function* () { var _l; return yield this.checkTokenAndExecuteFunction((_l = this.user) === null || _l === void 0 ? void 0 : _l.info, __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f")); });
-        this.getBalances = () => __awaiter(this, void 0, void 0, function* () { var _m; return yield this.checkTokenAndExecuteFunction((_m = this.user) === null || _m === void 0 ? void 0 : _m.balances, __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f")); });
-        this.getNfts = () => __awaiter(this, void 0, void 0, function* () { var _o; return this.checkTokenAndExecuteFunction((_o = this.user) === null || _o === void 0 ? void 0 : _o.nfts, __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f")); });
-        this.isTokenExpired = () => {
-            var _a, _b, _c, _d;
-            console.log('is Token Expired info \n', 'this.credentials?.expires_at: \n', (_a = this.credentials) === null || _a === void 0 ? void 0 : _a.expires_at, '\n', 'Math.floor(Date.now() / 1000): \n', Math.floor(Date.now() / 1000), '\n', 'this.credentials?.expires_at && this.credentials?.expires_at < Math.floor(Date.now() / 1000): \n', ((_b = this.credentials) === null || _b === void 0 ? void 0 : _b.expires_at) && ((_c = this.credentials) === null || _c === void 0 ? void 0 : _c.expires_at) < Math.floor(Date.now() / 1000));
-            return ((_d = this.credentials) === null || _d === void 0 ? void 0 : _d.expires_at)
+        this.getWallets = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.wallets, forceRefresh); };
+        this.getUserInfo = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.info, forceRefresh); };
+        this.getBalances = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.balances, forceRefresh); };
+        this.getNfts = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.nfts, forceRefresh); };
+        this.isTokenExpired = () => __awaiter(this, void 0, void 0, function* () {
+            var _k, _l;
+            console.log('this.credentials inside isTokenExpired', this.credentials);
+            if (!this.credentials) {
+                const user = yield ((_k = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _k === void 0 ? void 0 : _k.getUser());
+                console.log('user inside isTokenExpired', user);
+                if (user) {
+                    return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
+                }
+            }
+            return ((_l = this.credentials) === null || _l === void 0 ? void 0 : _l.expires_at)
                 ? this.credentials.expires_at < Math.floor(Date.now() / 1000)
                 : true;
-        };
+        });
         this.refreshToken = () => __awaiter(this, void 0, void 0, function* () {
-            var _p, _q, _r;
+            var _m, _o, _p, _q, _r, _s, _t;
             try {
-                console.log('refresh Token');
-                if ((_p = this.credentials) === null || _p === void 0 ? void 0 : _p.refreshToken) {
-                    console.log('trying to refresh token');
-                    console.log('old credentials', this.credentials);
-                    const userRefreshed = yield ((_q = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _q === void 0 ? void 0 : _q.signinSilent({
-                        extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
-                    }));
-                    console.log('userRefreshed: ', userRefreshed);
+                const user = yield ((_m = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _m === void 0 ? void 0 : _m.getUser());
+                console.log('user inside refresh token');
+                if (((_o = this.credentials) === null || _o === void 0 ? void 0 : _o.expires_at) &&
+                    ((_p = this.credentials) === null || _p === void 0 ? void 0 : _p.expires_at) > Math.floor(Date.now() / 1000)) {
+                    console.log('token is not expired');
+                    return user;
+                }
+                if (!((_q = this.credentials) === null || _q === void 0 ? void 0 : _q.refreshToken) && user) {
+                    this.credentials = {
+                        refreshToken: user === null || user === void 0 ? void 0 : user.refresh_token,
+                        accessToken: '',
+                        idToken: '',
+                        expires_at: 0,
+                    };
+                }
+                if ((_r = this.credentials) === null || _r === void 0 ? void 0 : _r.refreshToken) {
+                    console.log("token is expired, let's refresh it");
+                    const userRefreshed = yield ((_s = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _s === void 0 ? void 0 : _s.signinSilent());
+                    console.log('userRefreshed inside refresh token', userRefreshed);
                     if (userRefreshed) {
                         this.credentials = {
                             accessToken: userRefreshed.access_token,
                             idToken: userRefreshed.id_token,
                             refreshToken: userRefreshed.refresh_token,
-                            expires_at: (_r = userRefreshed.expires_at) !== null && _r !== void 0 ? _r : 0,
+                            expires_at: (_t = userRefreshed.expires_at) !== null && _t !== void 0 ? _t : 0,
                         };
-                        console.log('new credentials', this.credentials);
                         return userRefreshed;
                     }
                     else
@@ -448,17 +477,17 @@ class WebSDK {
                 return false;
             }
         });
-        this.checkTokenAndExecuteFunction = (property, fn) => __awaiter(this, void 0, void 0, function* () {
-            if (!this.isTokenExpired()) {
-                if (property)
+        this.checkTokenAndExecuteFunction = (fn, property = undefined, forceRefresh = false) => __awaiter(this, void 0, void 0, function* () {
+            if (!(yield this.isTokenExpired())) {
+                if (property && !forceRefresh)
                     return property;
-                const data = yield fn();
+                const data = yield fn(forceRefresh);
                 return data;
             }
             else {
                 const refreshed = yield this.refreshToken();
                 if (refreshed) {
-                    const data = yield fn();
+                    const data = yield fn(forceRefresh);
                     return data;
                 }
                 else

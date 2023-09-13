@@ -12,7 +12,7 @@ declare class WebSDK implements iWebSDK {
     redirectUri?: string;
     apiKey?: string;
     baseUrl?: string;
-    user?: User;
+    user?: User | null | undefined;
     credentials?: Credentials | null;
     setClientId: (clientId: string) => this;
     setClientSecret: (clientSecret: string) => this;
@@ -31,13 +31,13 @@ declare class WebSDK implements iWebSDK {
     createCharge: (charge: ChargeReqBody) => Promise<any>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
     payCharge: (transactionId: string) => Promise<any>;
-    getWallets: () => Promise<any>;
-    getUserInfo: () => Promise<any>;
-    getBalances: () => Promise<any>;
-    getNfts: () => Promise<any>;
+    getWallets: (forceRefresh?: boolean) => Promise<any>;
+    getUserInfo: (forceRefresh?: boolean) => Promise<any>;
+    getBalances: (forceRefresh?: boolean) => Promise<any>;
+    getNfts: (forceRefresh?: boolean) => Promise<any>;
     createIframe(width: number, height: number): HTMLIFrameElement;
-    isTokenExpired: () => boolean;
-    refreshToken: () => Promise<false | import("oidc-client-ts").User>;
-    checkTokenAndExecuteFunction: (property: any, fn: Function) => Promise<any>;
+    isTokenExpired: () => Promise<boolean>;
+    refreshToken: () => Promise<false | import("oidc-client-ts").User | null | undefined>;
+    checkTokenAndExecuteFunction: (fn: Function, property?: any, forceRefresh?: boolean) => Promise<any>;
 }
 export default WebSDK;
