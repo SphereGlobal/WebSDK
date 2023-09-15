@@ -1,3 +1,4 @@
+import { BigNumber } from '@ethersproject/bignumber';
 export interface WalletBalance {
     price: number;
     amount: number;
@@ -150,6 +151,15 @@ export declare enum TxStatus {
 export interface Estimate {
     time: number;
     costUsd: number;
+    ethGas: BigNumber;
+    maticGas: BigNumber;
+    optGas: BigNumber;
+    avaxGas: BigNumber;
+    arbGas: BigNumber;
+    bscGas: BigNumber;
+    solGas: BigNumber;
+    eosEvmGas: BigNumber;
+    baseGas: BigNumber;
 }
 export declare enum RouteActionType {
     BRIDGE = "BRIDGE",
@@ -158,10 +168,13 @@ export declare enum RouteActionType {
 }
 export interface SwapData {
     fromChain: SupportedChains;
+    fromAmount: BigNumber;
     fromToken: Token;
     fromAddress: string;
     fromPrivateKey: string;
+    toAmount: BigNumber;
     toToken: Token;
+    estimatedGas: BigNumber;
 }
 export interface SwapResponse {
     data: SwapResponseData | null;
@@ -173,6 +186,8 @@ export interface SwapResponseData {
     fromAddress: string;
     fromToken: Token;
     toToken: Token;
+    toAmount: BigNumber;
+    fromAmount: BigNumber;
     userOperation?: {
         userOpHash: string;
         wait: () => Promise<any>;
@@ -187,6 +202,7 @@ export interface SwapResponseData {
 }
 export interface TransferData {
     fromChain: SupportedChains;
+    fromAmount: BigNumber;
     fromAddress: string;
     fromPrivateKey: string;
     fromToken: Token;
@@ -217,13 +233,24 @@ export interface BridgeQuote {
     rawQuote: any;
     service: BridgeServices;
     fromChain: SupportedChains;
+    fromAmount: BigNumber;
     fromAddress: string;
     fromToken: Token;
     toChain: SupportedChains;
+    toAmount: BigNumber;
     toAddress: string;
     toToken: Token;
     estimatedTime: number;
     estimatedCostUSD: number;
+    estimatedEthGas: BigNumber;
+    estimatedMatGas: BigNumber;
+    estimatedAvaxGas: BigNumber;
+    estimatedArbGas: BigNumber;
+    estimatedBscGas: BigNumber;
+    estimatedSolGas: BigNumber;
+    estimatedOptGas: BigNumber;
+    estimatedEosEvmGas: BigNumber;
+    estimatedBaseGas: BigNumber;
     bridgeId?: string;
     depositAddress?: string;
 }
@@ -266,6 +293,7 @@ export interface TransferResponse {
 }
 export interface TransferResponseData {
     fromChain: SupportedChains;
+    fromAmount: BigNumber;
     fromAddress: string;
     fromTokenAddress: string;
     toAddress: string;
@@ -274,6 +302,7 @@ export interface TransferResponseData {
     fromPrivateKey: string;
     transferType: TransferType;
     status: TxStatus;
+    fee?: BigNumber;
     rawRecipient?: any;
     sponsoredFee: boolean;
     userOperation?: {
