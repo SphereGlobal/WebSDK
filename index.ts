@@ -76,6 +76,7 @@ class WebSDK implements iWebSDK {
     // trim and remove trailing slash `/`
     const newBaseUrl = baseUrl.trim();
     this.baseUrl = newBaseUrl.endsWith('/') ? newBaseUrl.slice(0, -1) : newBaseUrl;
+    return this;
   };
 
   setEnvironment = (environment: Environments = Environments.PRODUCTION) => {

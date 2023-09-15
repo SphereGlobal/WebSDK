@@ -73,6 +73,7 @@ class WebSDK {
             // trim and remove trailing slash `/`
             const newBaseUrl = baseUrl.trim();
             this.baseUrl = newBaseUrl.endsWith('/') ? newBaseUrl.slice(0, -1) : newBaseUrl;
+            return this;
         };
         this.setEnvironment = (environment = types_1.Environments.PRODUCTION) => {
             __classPrivateFieldSet(this, _WebSDK_environment, environment, "f");
@@ -104,7 +105,7 @@ class WebSDK {
             __classPrivateFieldSet(this, _WebSDK_oauth2Client, new oidc_client_ts_1.UserManager({
                 authority: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
                 client_id: this.clientId,
-                // client_secret: this.clientSecret as string,
+                client_secret: this.clientSecret,
                 redirect_uri: this.redirectUri,
                 response_type: 'code',
                 post_logout_redirect_uri: this.redirectUri,
