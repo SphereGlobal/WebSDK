@@ -1,3 +1,5 @@
+import { BigNumber } from '@ethersproject/bignumber';
+
 export interface WalletBalance {
   price: number; // usdc amount bigint
   amount: number; // amount bigint
@@ -169,15 +171,15 @@ export enum TxStatus {
 export interface Estimate {
   time: number; // minutes
   costUsd: number;
-  // ethGas: BigNumber;
-  // maticGas: BigNumber;
-  // optGas: BigNumber;
-  // avaxGas: BigNumber;
-  // arbGas: BigNumber;
-  // bscGas: BigNumber;
-  // solGas: BigNumber;
-  // eosEvmGas: BigNumber;
-  // baseGas: BigNumber;
+  ethGas: BigNumber;
+  maticGas: BigNumber;
+  optGas: BigNumber;
+  avaxGas: BigNumber;
+  arbGas: BigNumber;
+  bscGas: BigNumber;
+  solGas: BigNumber;
+  eosEvmGas: BigNumber;
+  baseGas: BigNumber;
 }
 export enum RouteActionType {
   BRIDGE = 'BRIDGE',
@@ -186,13 +188,13 @@ export enum RouteActionType {
 }
 export interface SwapData {
   fromChain: SupportedChains;
-  // fromAmount: BigNumber;
+  fromAmount: BigNumber;
   fromToken: Token;
   fromAddress: string;
   fromPrivateKey: string;
-  // toAmount: BigNumber;
+  toAmount: BigNumber;
   toToken: Token;
-  // estimatedGas: BigNumber;
+  estimatedGas: BigNumber;
 }
 
 export interface SwapResponse {
@@ -206,8 +208,8 @@ export interface SwapResponseData {
   fromAddress: string;
   fromToken: Token;
   toToken: Token;
-  // toAmount: BigNumber;
-  // fromAmount: BigNumber;
+  toAmount: BigNumber;
+  fromAmount: BigNumber;
   userOperation?: {
     userOpHash: string;
     wait: () => Promise<any>;
@@ -223,7 +225,7 @@ export interface SwapResponseData {
 
 export interface TransferData {
   fromChain: SupportedChains;
-  // fromAmount: BigNumber;
+  fromAmount: BigNumber;
   fromAddress: string;
   fromPrivateKey: string;
   fromToken: Token;
@@ -256,24 +258,24 @@ export interface BridgeQuote {
   rawQuote: any; // Raw lifi quote or null
   service: BridgeServices;
   fromChain: SupportedChains;
-  // fromAmount: BigNumber;
+  fromAmount: BigNumber;
   fromAddress: string;
   fromToken: Token;
   toChain: SupportedChains;
-  // toAmount: BigNumber;
+  toAmount: BigNumber;
   toAddress: string;
   toToken: Token;
   estimatedTime: number;
   estimatedCostUSD: number;
-  // estimatedEthGas: BigNumber;
-  // estimatedMatGas: BigNumber;
-  // estimatedAvaxGas: BigNumber;
-  // estimatedArbGas: BigNumber;
-  // estimatedBscGas: BigNumber;
-  // estimatedSolGas: BigNumber;
-  // estimatedOptGas: BigNumber;
-  // estimatedEosEvmGas: BigNumber;
-  // estimatedBaseGas: BigNumber;
+  estimatedEthGas: BigNumber;
+  estimatedMatGas: BigNumber;
+  estimatedAvaxGas: BigNumber;
+  estimatedArbGas: BigNumber;
+  estimatedBscGas: BigNumber;
+  estimatedSolGas: BigNumber;
+  estimatedOptGas: BigNumber;
+  estimatedEosEvmGas: BigNumber;
+  estimatedBaseGas: BigNumber;
 
   //  is only needed for StealthEX / SWFT bridge
   bridgeId?: string;
@@ -323,7 +325,7 @@ export interface TransferResponse {
 }
 export interface TransferResponseData {
   fromChain: SupportedChains;
-  // fromAmount: BigNumber;
+  fromAmount: BigNumber;
   fromAddress: string;
   fromTokenAddress: string;
   toAddress: string;
@@ -332,7 +334,7 @@ export interface TransferResponseData {
   fromPrivateKey: string;
   transferType: TransferType;
   status: TxStatus;
-  // fee?: BigNumber;
+  fee?: BigNumber;
   rawRecipient?: any;
   sponsoredFee: boolean;
   userOperation?: {
