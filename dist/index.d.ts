@@ -1,4 +1,4 @@
-import { ChargeReqBody, ChargeResponse, Environments, Info, LoginBehavior, NftsInfo, Transaction, User, WalletDoc, iWebSDK, PayError, PayResponse, UserBalance } from './src/types';
+import { ChargeReqBody, Environments, Info, LoginBehavior, NftsInfo, Transaction, User, WalletDoc, iWebSDK, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -27,19 +27,19 @@ declare class WebSDK implements iWebSDK {
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;
     logout: () => Promise<void>;
-    createCharge: (charge: ChargeReqBody) => Promise<ChargeResponse>;
-    pay: ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => Promise<any>;
-    payCharge: (transactionId: string) => Promise<PayError | PayResponse>;
-    getWallets: (forceRefresh?: boolean) => Promise<WalletDoc[]>;
-    getUserInfo: (forceRefresh?: boolean) => Promise<Info>;
-    getBalances: (forceRefresh?: boolean) => Promise<UserBalance>;
-    getNfts: (forceRefresh?: boolean) => Promise<NftsInfo[]>;
+    createCharge: (charge: ChargeReqBody) => Promise<ChargeUrlAndId | null>;
+    pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+    payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+    getWallets: (forceRefresh?: boolean) => Promise<WalletDoc[] | Error>;
+    getUserInfo: (forceRefresh?: boolean) => Promise<Info | Error>;
+    getBalances: (forceRefresh?: boolean) => Promise<UserBalance | Error>;
+    getNfts: (forceRefresh?: boolean) => Promise<NftsInfo[] | Error>;
     getTransactions: (props?: {
         quantity: number;
         getReceived: boolean;
         getSent: boolean;
         forceRefresh: boolean;
-    }) => Promise<Transaction[]>;
+    }) => Promise<Transaction[] | Error>;
     createIframe(width: number, height: number): HTMLIFrameElement;
     isTokenExpired: () => Promise<boolean>;
     refreshToken: () => Promise<false | import("oidc-client-ts").User | null | undefined>;

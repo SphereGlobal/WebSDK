@@ -50,7 +50,10 @@ export interface WalletDoc {
   type: WalletTypes;
   starkPrivateKey?: string;
 }
-
+export interface WalletResponse {
+  data: WalletDoc[] | null;
+  error: string | null;
+}
 export enum WalletTypes {
   EOA = 'EOA',
   SMART_WALLET = 'SmartWallet',
@@ -75,7 +78,7 @@ export interface User {
   balances?: UserBalance;
   nfts?: NftsInfo[];
   uid?: string;
-  transactions?: string; // this is encoded
+  transactions?: string; // this data comes as a JWT
 }
 
 export interface Info {
@@ -92,6 +95,10 @@ export interface Info {
   username?: string;
   isMerchant: boolean;
   profilePicture: string;
+}
+export interface UserInfoResponse {
+  data: Info | null;
+  error: string | null;
 }
 
 export interface Credentials {
@@ -117,6 +124,11 @@ export type NftsInfo = {
   address: string | undefined;
   tokenType?: string;
 };
+
+export interface NftsInfoResponse {
+  data: NftsInfo[] | null;
+  error: string | null;
+}
 
 export enum Environments {
   DEVELOPMENT = 'development',
@@ -145,11 +157,12 @@ export type ChargeReqBody = {
   toAddress?: string;
 };
 
+export interface ChargeUrlAndId {
+  paymentUrl: string;
+  chargeId: string;
+}
 export interface ChargeResponse {
-  data: {
-    paymentUrl: string;
-    chargeId: string;
-  } | null;
+  data: ChargeUrlAndId | null;
   error: string | null;
 }
 
@@ -359,7 +372,7 @@ export interface RouteBatch {
 export interface Route {
   id?: string;
   toChain?: SupportedChains;
-  toAmount?: string; // BigNumber string
+  toAmount?: string;
   toAddress?: string;
   toToken?: Token;
   estimate?: Estimate;
@@ -368,25 +381,47 @@ export interface Route {
   batches: RouteBatch[];
   fromUid?: string;
 }
-export interface PayResponse {
-  error: null;
-  data: {
-    status: TxStatus;
-    route: Route;
-  };
+
+export interface OnRampResponse {
+  status: TxStatus;
+  onrampLink: string;
 }
-export interface PayError {
-  error: {
-    code: string;
-    message: string;
-  };
-  data: {
-    status: TxStatus;
-    onrampLink: string;
-  } | null;
+
+export interface RouteResponse {
+  status: TxStatus;
+  route: Route;
+}
+export interface PayErrorResponse {
+  error: string | { code: string; message: string };
+  data: null;
+}
+
+export interface PayResponseOnRampLink {
+  error: { code: string; message: string };
+  data: OnRampResponse;
+}
+
+export interface PayResponseRouteCreated {
+  error: null;
+  data: RouteResponse;
 }
 
 export interface UserBalance {
   balances: WalletBalance[];
   total: string;
+}
+
+export interface UserBalancesResponse {
+  data: UserBalance | null;
+  error: string | null;
+}
+
+export interface WrappedDekResponse {
+  data: string | null;
+  error: null | string;
+}
+
+export interface TransactionsResponse {
+  data: string | null; // this data comes as a JWT
+  error: string | null;
 }

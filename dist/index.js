@@ -105,7 +105,7 @@ class WebSDK {
             __classPrivateFieldSet(this, _WebSDK_oauth2Client, new oidc_client_ts_1.UserManager({
                 authority: __classPrivateFieldGet(this, _WebSDK_domain, "f"),
                 client_id: this.clientId,
-                client_secret: this.clientSecret,
+                // client_secret: this.clientSecret as string,
                 redirect_uri: this.redirectUri,
                 response_type: 'code',
                 post_logout_redirect_uri: this.redirectUri,
@@ -300,86 +300,102 @@ class WebSDK {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/getFundsAvailable?refreshCache=true`, requestOptions);
-                const data = yield response.json();
-                if (this.user)
+                const data = (yield response.json());
+                console.log('data.data inside fetchUserBalances', data.data);
+                if (data.error)
+                    throw new Error(data.error);
+                if (this.user && data.data)
                     this.user.balances = data.data;
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error fetching user balances, error: ', error);
-                return { balances: [], total: '0' };
+                throw new Error(error.message || error);
             }
         }));
         _WebSDK_fetchUserWallets.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/user/wallets`, requestOptions);
-                const data = yield response.json();
-                if (this.user)
+                const data = (yield response.json());
+                if (data.error)
+                    throw new Error(data.error);
+                if (this.user && data.data)
                     this.user.wallets = data.data;
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error fetching user wallets, error: ', error);
-                return [];
+                throw new Error(error.message || error);
             }
         }));
         _WebSDK_fetchUserInfo.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/user`, requestOptions);
-                const data = yield response.json();
-                if (this.user)
+                const data = (yield response.json());
+                if (data.error)
+                    throw new Error(data.error);
+                if (this.user && data.data)
                     this.user.info = data.data;
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error fetching user info, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         }));
         _WebSDK_fetchUserNfts.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
-                const data = yield response.json();
-                if (this.user)
+                const data = (yield response.json());
+                if (data.error)
+                    throw new Error(data.error);
+                if (this.user && data.data)
                     this.user.nfts = data.data;
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error fetching user nfts, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         }));
         _WebSDK_getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
-            if (__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f") && __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") > Date.now())
+            console.log(__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f"), __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") * 1000, Date.now(), 'is expired', __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") * 1000 < Date.now());
+            if (__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f") && __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") * 1000 > Date.now())
                 return __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST');
                 const response = yield fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
-                const data = yield response.json();
-                __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data, "f");
-                __classPrivateFieldSet(this, _WebSDK_wrappedDekExpiration, (yield (0, utils_1.decodeJWT)(__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f"))).exp * 1000, "f");
+                const data = (yield response.json());
+                if (data.error)
+                    throw new Error(data.error);
+                if (data.data) {
+                    __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data, "f");
+                    __classPrivateFieldSet(this, _WebSDK_wrappedDekExpiration, (yield (0, utils_1.decodeJWT)(__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f"))).exp * 1000, "f");
+                }
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error getting wrapped dek, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         }));
         _WebSDK_fetchTransactions.set(this, () => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/transactions`, requestOptions);
-                const data = yield response.json();
-                if (this.user)
+                const data = (yield response.json());
+                if (data.error)
+                    throw new Error(data.error);
+                if (this.user && data.data)
                     this.user.transactions = data.data;
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error getting transactions, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         }));
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
@@ -387,17 +403,21 @@ class WebSDK {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_m = this.apiKey) !== null && _m !== void 0 ? _m : '' });
                 const response = yield fetch(`${this.baseUrl}/createCharge`, requestOptions);
-                const data = yield response.json();
+                const data = (yield response.json());
+                if (data.error)
+                    throw new Error(data.error);
                 return data.data;
             }
             catch (error) {
                 console.error('There was an error creating your transaction, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         });
-        this.pay = ({ toAddress, chain, symbol, amount, tokenAddress }) => __awaiter(this, void 0, void 0, function* () {
+        this.pay = ({ toAddress, chain, symbol, amount, tokenAddress, }) => __awaiter(this, void 0, void 0, function* () {
             const payFn = () => __awaiter(this, void 0, void 0, function* () {
                 const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
+                if (!wrappedDek)
+                    throw new Error('There was an error getting the wrapped dek');
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', {
                     wrappedDek,
                     toAddress,
@@ -407,32 +427,31 @@ class WebSDK {
                     tokenAddress,
                 });
                 const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
-                const data = yield response.json();
-                return data.data;
+                return (yield response.json());
             });
             try {
-                yield this.checkTokenAndExecuteFunction(payFn);
+                return yield this.checkTokenAndExecuteFunction(payFn);
             }
             catch (error) {
                 console.error('There was an processing your payment, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         });
         this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
             const payChargeFn = () => __awaiter(this, void 0, void 0, function* () {
                 const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
+                if (!wrappedDek)
+                    throw new Error('There was an error getting the wrapped dek');
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek, transactionId });
                 const response = yield fetch(`${this.baseUrl}/pay`, requestOptions);
-                const data = yield response.json();
-                console.log('payCharge data', data);
-                return data;
+                return (yield response.json());
             });
             try {
                 return yield this.checkTokenAndExecuteFunction(payChargeFn);
             }
             catch (error) {
                 console.error('There was an error paying this transaction, error: ', error);
-                return error;
+                throw new Error(error.message || error);
             }
         });
         this.getWallets = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.wallets, forceRefresh); };
@@ -457,6 +476,8 @@ class WebSDK {
             if (forceRefresh === undefined)
                 forceRefresh = false;
             const encoded = yield this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchTransactions, "f"), (_o = this.user) === null || _o === void 0 ? void 0 : _o.transactions, forceRefresh);
+            if (!encoded)
+                throw new Error("Couldn't get transactions");
             // Decode JWT payload to get raw transactions
             const { transactions } = yield (0, utils_1.decodeJWT)(encoded);
             let response = transactions;
@@ -494,6 +515,8 @@ class WebSDK {
                 if (user) {
                     return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
                 }
+                else
+                    return true;
             }
             return ((_q = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _q === void 0 ? void 0 : _q.expires_at)
                 ? __classPrivateFieldGet(this, _WebSDK_credentials, "f").expires_at < Math.floor(Date.now() / 1000)

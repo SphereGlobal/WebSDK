@@ -44,6 +44,10 @@ export interface WalletDoc {
     type: WalletTypes;
     starkPrivateKey?: string;
 }
+export interface WalletResponse {
+    data: WalletDoc[] | null;
+    error: string | null;
+}
 export declare enum WalletTypes {
     EOA = "EOA",
     SMART_WALLET = "SmartWallet"
@@ -83,6 +87,10 @@ export interface Info {
     isMerchant: boolean;
     profilePicture: string;
 }
+export interface UserInfoResponse {
+    data: Info | null;
+    error: string | null;
+}
 export interface Credentials {
     accessToken: string;
     idToken: string;
@@ -104,6 +112,10 @@ export type NftsInfo = {
     address: string | undefined;
     tokenType?: string;
 };
+export interface NftsInfoResponse {
+    data: NftsInfo[] | null;
+    error: string | null;
+}
 export declare enum Environments {
     DEVELOPMENT = "development",
     STAGING = "staging",
@@ -128,11 +140,12 @@ export type ChargeReqBody = {
     amount?: number;
     toAddress?: string;
 };
+export interface ChargeUrlAndId {
+    paymentUrl: string;
+    chargeId: string;
+}
 export interface ChargeResponse {
-    data: {
-        paymentUrl: string;
-        chargeId: string;
-    } | null;
+    data: ChargeUrlAndId | null;
     error: string | null;
 }
 export interface CreateRequest {
@@ -334,24 +347,45 @@ export interface Route {
     batches: RouteBatch[];
     fromUid?: string;
 }
-export interface PayResponse {
-    error: null;
-    data: {
-        status: TxStatus;
-        route: Route;
-    };
+export interface OnRampResponse {
+    status: TxStatus;
+    onrampLink: string;
 }
-export interface PayError {
+export interface RouteResponse {
+    status: TxStatus;
+    route: Route;
+}
+export interface PayErrorResponse {
+    error: string | {
+        code: string;
+        message: string;
+    };
+    data: null;
+}
+export interface PayResponseOnRampLink {
     error: {
         code: string;
         message: string;
     };
-    data: {
-        status: TxStatus;
-        onrampLink: string;
-    } | null;
+    data: OnRampResponse;
+}
+export interface PayResponseRouteCreated {
+    error: null;
+    data: RouteResponse;
 }
 export interface UserBalance {
     balances: WalletBalance[];
     total: string;
+}
+export interface UserBalancesResponse {
+    data: UserBalance | null;
+    error: string | null;
+}
+export interface WrappedDekResponse {
+    data: string | null;
+    error: null | string;
+}
+export interface TransactionsResponse {
+    data: string | null;
+    error: string | null;
 }

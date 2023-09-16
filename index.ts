@@ -11,9 +11,17 @@ import {
   WalletDoc,
   CreateRequest,
   iWebSDK,
-  PayError,
-  PayResponse,
   UserBalance,
+  UserBalancesResponse,
+  WalletResponse,
+  UserInfoResponse,
+  NftsInfoResponse,
+  TransactionsResponse,
+  ChargeUrlAndId,
+  WrappedDekResponse,
+  PayResponseOnRampLink,
+  PayResponseRouteCreated,
+  PayErrorResponse,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -295,7 +303,7 @@ class WebSDK implements iWebSDK {
     return requestOptions as CreateRequest;
   };
 
-  #fetchUserBalances = async (): Promise<UserBalance> => {
+  #fetchUserBalances = async (): Promise<UserBalance | never> => {
     try {
       const requestOptions = await this.#createRequest();
 
@@ -304,40 +312,44 @@ class WebSDK implements iWebSDK {
         requestOptions
       );
 
-      const data = await response.json();
-      if (this.user) this.user.balances = data.data;
-      return data.data;
+      const data = (await response.json()) as UserBalancesResponse;
+      console.log('data.data inside fetchUserBalances', data.data);
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.balances = data.data;
+      return data.data as UserBalance;
     } catch (error: any) {
       console.error('There was an error fetching user balances, error: ', error);
-      return { balances: [], total: '0' };
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchUserWallets = async (): Promise<WalletDoc[]> => {
+  #fetchUserWallets = async (): Promise<WalletDoc[] | never> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.wallets = data.data;
+      const data = (await response.json()) as WalletResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.wallets = data.data;
       return data.data as WalletDoc[];
     } catch (error: any) {
       console.error('There was an error fetching user wallets, error: ', error);
-      return [];
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchUserInfo = async (): Promise<Info> => {
+  #fetchUserInfo = async (): Promise<Info | {} | Error> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.info = data.data;
-      return data.data;
+      const data = (await response.json()) as UserInfoResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.info = data.data;
+      return data.data as Info;
     } catch (error: any) {
       console.error('There was an error fetching user info, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
@@ -346,47 +358,59 @@ class WebSDK implements iWebSDK {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.nfts = data.data;
-      return data.data;
+      const data = (await response.json()) as NftsInfoResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.nfts = data.data;
+      return data.data as NftsInfo[];
     } catch (error: any) {
       console.error('There was an error fetching user nfts, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #getWrappedDek = async () => {
-    if (this.#wrappedDek && this.#wrappedDekExpiration > Date.now()) return this.#wrappedDek;
+  #getWrappedDek = async (): Promise<string | null> => {
+    console.log(
+      this.#wrappedDek,
+      this.#wrappedDekExpiration * 1000,
+      Date.now(),
+      'is expired',
+      this.#wrappedDekExpiration * 1000 < Date.now()
+    );
+    if (this.#wrappedDek && this.#wrappedDekExpiration * 1000 > Date.now()) return this.#wrappedDek;
     try {
       const requestOptions = await this.#createRequest('POST');
 
       const response = await fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
 
-      const data = await response.json();
-      this.#wrappedDek = data.data;
-      this.#wrappedDekExpiration = (await decodeJWT(this.#wrappedDek)).exp * 1000;
-      return data.data;
+      const data = (await response.json()) as WrappedDekResponse;
+      if (data.error) throw new Error(data.error);
+      if (data.data) {
+        this.#wrappedDek = data.data;
+        this.#wrappedDekExpiration = (await decodeJWT(this.#wrappedDek)).exp * 1000;
+      }
+      return data.data as string;
     } catch (error: any) {
       console.error('There was an error getting wrapped dek, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchTransactions = async (): Promise<string> => {
+  #fetchTransactions = async (): Promise<string | undefined> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/transactions`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.transactions = data.data;
-      return data.data;
+      const data = (await response.json()) as TransactionsResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.transactions = data.data;
+      return data.data as string;
     } catch (error: any) {
       console.error('There was an error getting transactions, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  createCharge = async (charge: ChargeReqBody): Promise<ChargeResponse> => {
+  createCharge = async (charge: ChargeReqBody): Promise<ChargeUrlAndId | null> => {
     try {
       const requestOptions = await this.#createRequest(
         'POST',
@@ -395,18 +419,27 @@ class WebSDK implements iWebSDK {
       );
 
       const response = await fetch(`${this.baseUrl}/createCharge`, requestOptions);
-
-      const data = await response.json();
-      return data.data as ChargeResponse;
+      const data = (await response.json()) as ChargeResponse;
+      if (data.error) throw new Error(data.error);
+      return data.data as ChargeUrlAndId;
     } catch (error: any) {
       console.error('There was an error creating your transaction, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  pay = async ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => {
-    const payFn = async () => {
+  pay = async ({
+    toAddress,
+    chain,
+    symbol,
+    amount,
+    tokenAddress,
+  }: Transaction): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse> => {
+    const payFn = async (): Promise<
+      PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse
+    > => {
       const wrappedDek = await this.#getWrappedDek();
+      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
 
       const requestOptions = await this.#createRequest('POST', {
         wrappedDek,
@@ -418,45 +451,52 @@ class WebSDK implements iWebSDK {
       });
 
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
-      const data = await response.json();
-      return data.data;
+      return (await response.json()) as
+        | PayResponseRouteCreated
+        | PayResponseOnRampLink
+        | PayErrorResponse;
     };
     try {
-      await this.checkTokenAndExecuteFunction(payFn);
+      return await this.checkTokenAndExecuteFunction(payFn);
     } catch (error: any) {
       console.error('There was an processing your payment, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  payCharge = async (transactionId: string): Promise<PayError | PayResponse> => {
-    const payChargeFn = async (): Promise<PayError | PayResponse> => {
+  payCharge = async (
+    transactionId: string
+  ): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse> => {
+    const payChargeFn = async (): Promise<
+      PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse
+    > => {
       const wrappedDek = await this.#getWrappedDek();
-
+      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
-      const data = await response.json();
-      console.log('payCharge data', data);
-      return data;
+      return (await response.json()) as
+        | PayResponseRouteCreated
+        | PayResponseOnRampLink
+        | PayErrorResponse;
     };
     try {
       return await this.checkTokenAndExecuteFunction(payChargeFn);
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  getWallets = (forceRefresh?: boolean): Promise<WalletDoc[]> =>
+  getWallets = (forceRefresh?: boolean): Promise<WalletDoc[] | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserWallets, this.user?.wallets, forceRefresh);
 
-  getUserInfo = (forceRefresh?: boolean): Promise<Info> =>
+  getUserInfo = (forceRefresh?: boolean): Promise<Info | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserInfo, this.user?.info, forceRefresh);
 
-  getBalances = (forceRefresh?: boolean): Promise<UserBalance> =>
+  getBalances = (forceRefresh?: boolean): Promise<UserBalance | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserBalances, this.user?.balances, forceRefresh);
 
-  getNfts = (forceRefresh?: boolean): Promise<NftsInfo[]> =>
+  getNfts = (forceRefresh?: boolean): Promise<NftsInfo[] | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
 
   getTransactions = async (
@@ -471,7 +511,7 @@ class WebSDK implements iWebSDK {
       getSent: true,
       forceRefresh: false,
     }
-  ): Promise<Transaction[]> => {
+  ): Promise<Transaction[] | Error> => {
     // Get all transactions encoded
     let { quantity, getReceived, getSent, forceRefresh } = props;
     if (quantity === undefined) quantity = 0;
@@ -484,7 +524,7 @@ class WebSDK implements iWebSDK {
       this.user?.transactions,
       forceRefresh
     );
-
+    if (!encoded) throw new Error("Couldn't get transactions");
     // Decode JWT payload to get raw transactions
     const { transactions } = await decodeJWT(encoded);
     let response = transactions;
@@ -537,12 +577,12 @@ class WebSDK implements iWebSDK {
     return iframe;
   }
 
-  isTokenExpired = async () => {
+  isTokenExpired = async (): Promise<boolean> => {
     if (!this.#credentials) {
       const user = await this.#oauth2Client?.getUser();
       if (user) {
         return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
-      }
+      } else return true;
     }
     return this.#credentials?.expires_at
       ? this.#credentials.expires_at < Math.floor(Date.now() / 1000)
