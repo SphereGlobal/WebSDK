@@ -28,10 +28,18 @@ declare class WebSDK implements iWebSDK {
     createCharge: (charge: ChargeReqBody) => Promise<ChargeUrlAndId | null>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
-    getWallets: (forceRefresh?: boolean) => Promise<WalletDoc[] | Error>;
-    getUserInfo: (forceRefresh?: boolean) => Promise<Info | Error>;
-    getBalances: (forceRefresh?: boolean) => Promise<UserBalance | Error>;
-    getNfts: (forceRefresh?: boolean) => Promise<NftsInfo[] | Error>;
+    getWallets: ({ forceRefresh }?: {
+        forceRefresh?: boolean | undefined;
+    }) => Promise<WalletDoc[] | Error>;
+    getUserInfo: ({ forceRefresh }?: {
+        forceRefresh?: boolean | undefined;
+    }) => Promise<Info | Error>;
+    getBalances: ({ forceRefresh }?: {
+        forceRefresh?: boolean | undefined;
+    }) => Promise<UserBalance | Error>;
+    getNfts: ({ forceRefresh }?: {
+        forceRefresh?: boolean | undefined;
+    }) => Promise<NftsInfo[] | Error>;
     getTransactions: (props?: {
         quantity: number;
         getReceived: boolean;

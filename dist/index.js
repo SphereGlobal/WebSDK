@@ -144,7 +144,10 @@ class WebSDK {
                     return null;
             }
             catch (error) {
-                console.error('There was an error loggin inside handleAuth, error: ', error);
+                // this happens because it tries a login although there is no session/user
+                // this par is used with the login.Redirect
+                if (!error.message.includes('state'))
+                    console.error('There was an error loggin, error: ', error);
                 return error;
             }
         });
@@ -210,7 +213,7 @@ class WebSDK {
                 return handleAuth;
             }
             catch (error) {
-                console.error('There was an error logging inside handleCallback, error: ', error);
+                console.error('There was an error login, error: ', error);
                 return error;
             }
         });
@@ -237,6 +240,11 @@ class WebSDK {
                             this.user.uid = authResult.profile.sub;
                         else
                             this.user = { uid: authResult.profile.sub };
+                        this.getUserInfo();
+                        this.getTransactions();
+                        this.getNfts();
+                        this.getBalances();
+                        this.getWallets();
                         return authResult;
                     }
                     else
@@ -445,10 +453,10 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         });
-        this.getWallets = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.wallets, forceRefresh); };
-        this.getUserInfo = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.info, forceRefresh); };
-        this.getBalances = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.balances, forceRefresh); };
-        this.getNfts = (forceRefresh) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.nfts, forceRefresh); };
+        this.getWallets = ({ forceRefresh } = { forceRefresh: false }) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.wallets, forceRefresh); };
+        this.getUserInfo = ({ forceRefresh } = { forceRefresh: false }) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.info, forceRefresh); };
+        this.getBalances = ({ forceRefresh } = { forceRefresh: false }) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.balances, forceRefresh); };
+        this.getNfts = ({ forceRefresh } = { forceRefresh: false }) => { var _a; return this.checkTokenAndExecuteFunction(__classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f"), (_a = this.user) === null || _a === void 0 ? void 0 : _a.nfts, forceRefresh); };
         this.getTransactions = (props = {
             quantity: 0,
             getReceived: true,
@@ -564,8 +572,7 @@ class WebSDK {
                     return data;
                 }
                 else {
-                    this.logout();
-                    throw new Error('The session is expired, please login again');
+                    throw new Error('There is no user login or session is expired, please login again');
                 }
             }
         });

@@ -129,7 +129,6 @@ class WebSDK implements iWebSDK {
   handleAuth = async () => {
     try {
       const authResult: any = await this.#oauth2Client?.signinCallback();
-
       if (authResult) {
         this.#credentials = {
           accessToken: authResult.access_token,
@@ -151,7 +150,10 @@ class WebSDK implements iWebSDK {
         return authResult;
       } else return null;
     } catch (error: any) {
-      console.error('There was an error loggin inside handleAuth, error: ', error);
+      // this happens because it tries a login although there is no session/user
+      // this par is used with the login.Redirect
+      if (!error.message.includes('state'))
+        console.error('There was an error loggin, error: ', error);
       return error;
     }
   };
@@ -206,12 +208,10 @@ class WebSDK implements iWebSDK {
     try {
       const persistence = await this.handlePersistence();
       if (persistence) return persistence;
-
       const handleAuth = await this.handleAuth();
       return handleAuth;
     } catch (error) {
-      console.error('There was an error logging inside handleCallback, error: ', error);
-
+      console.error('There was an error login, error: ', error);
       return error;
     }
   };
@@ -226,7 +226,6 @@ class WebSDK implements iWebSDK {
         const authResult = await this.#oauth2Client?.signinPopup({
           extraQueryParams: { audience: this.#audience },
         });
-
         if (authResult) {
           this.#credentials = {
             accessToken: authResult.access_token,
@@ -236,6 +235,12 @@ class WebSDK implements iWebSDK {
           };
           if (this.user) this.user.uid = authResult.profile.sub;
           else this.user = { uid: authResult.profile.sub };
+          this.getUserInfo();
+          this.getTransactions();
+          this.getNfts();
+          this.getBalances();
+          this.getWallets();
+
           return authResult;
         } else return null;
       } catch (error: any) {
@@ -470,16 +475,24 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  getWallets = (forceRefresh?: boolean): Promise<WalletDoc[] | Error> =>
+  getWallets = (
+    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
+  ): Promise<WalletDoc[] | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserWallets, this.user?.wallets, forceRefresh);
 
-  getUserInfo = (forceRefresh?: boolean): Promise<Info | Error> =>
+  getUserInfo = (
+    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
+  ): Promise<Info | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserInfo, this.user?.info, forceRefresh);
 
-  getBalances = (forceRefresh?: boolean): Promise<UserBalance | Error> =>
+  getBalances = (
+    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
+  ): Promise<UserBalance | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserBalances, this.user?.balances, forceRefresh);
 
-  getNfts = (forceRefresh?: boolean): Promise<NftsInfo[] | Error> =>
+  getNfts = (
+    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
+  ): Promise<NftsInfo[] | Error> =>
     this.checkTokenAndExecuteFunction(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
 
   getTransactions = async (
@@ -624,8 +637,7 @@ class WebSDK implements iWebSDK {
         const data = await fn(forceRefresh);
         return data;
       } else {
-        this.logout();
-        throw new Error('The session is expired, please login again');
+        throw new Error('There is no user login or session is expired, please login again');
       }
     }
   };
