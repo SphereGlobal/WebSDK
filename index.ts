@@ -3,10 +3,25 @@ import {
   ChargeResponse,
   Credentials,
   Environments,
+  Info,
   LoginBehavior,
+  NftsInfo,
   Transaction,
   User,
+  WalletDoc,
+  CreateRequest,
   iWebSDK,
+  UserBalance,
+  UserBalancesResponse,
+  WalletResponse,
+  UserInfoResponse,
+  NftsInfoResponse,
+  TransactionsResponse,
+  ChargeUrlAndId,
+  WrappedDekResponse,
+  PayResponseOnRampLink,
+  PayResponseRouteCreated,
+  PayErrorResponse,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -21,24 +36,24 @@ class WebSDK implements iWebSDK {
 
   loginType: LoginBehavior = LoginBehavior.REDIRECT;
   clientId?: string;
-  clientSecret?: string;
   redirectUri?: string;
   apiKey?: string;
-  baseUrl?: string;
-  user?: User = {};
-  credentials?: Credentials | null;
+  user?: User | null | undefined = undefined;
+  #credentials?: Credentials | null;
   #environment: Environments = Environments.PRODUCTION;
   #oauth2Client?: UserManager;
   #wrappedDek: string = '';
+  #wrappedDekExpiration: number = 0;
 
   #domainDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/';
   #audienceDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com';
   #domainProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
   #audienceProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
 
-  // by default, points to "DEVELOPMENT" environment
-  #domain: string = this.#domainDev;
-  #audience: string = this.#audienceDev;
+  // by default, points to "PRODUCTION" environment
+  #domain: string = this.#domainProd;
+  #audience: string = this.#audienceProd;
+  baseUrl?: string = 'https://api-olgsdff53q-uc.a.run.app';
 
   #pwaDevUrl = 'http://localhost:19006';
   #pwaStagingUrl = 'https://sphereonewallet.web.app';
@@ -46,11 +61,6 @@ class WebSDK implements iWebSDK {
 
   setClientId = (clientId: string) => {
     this.clientId = clientId;
-    return this;
-  };
-
-  setClientSecret = (clientSecret: string) => {
-    this.clientSecret = clientSecret;
     return this;
   };
 
@@ -93,17 +103,17 @@ class WebSDK implements iWebSDK {
     if (!this.clientId) throw new Error('Missing clientId');
     if (!this.redirectUri) throw new Error('Missing redirectUri');
     if (!this.apiKey) throw new Error('Missing apiKey');
-    if (!this.baseUrl) throw new Error('Missing baseUrl');
     if (WebSDK.instance) return WebSDK.instance;
 
     this.#oauth2Client = new UserManager({
       authority: this.#domain as string,
       client_id: this.clientId as string,
-      client_secret: this.clientSecret as string,
       redirect_uri: this.redirectUri as string,
       response_type: 'code',
       post_logout_redirect_uri: this.redirectUri as string,
       userStore: window ? new WebStorageStateStore({ store: window.localStorage }) : undefined,
+      scope: 'openid offline_access',
+      automaticSilentRenew: true,
     });
 
     WebSDK.instance = this;
@@ -111,32 +121,37 @@ class WebSDK implements iWebSDK {
   };
 
   clear = () => {
-    this.user = {};
-    this.credentials = null;
+    this.user = null;
+    this.#credentials = null;
     this.#wrappedDek = '';
   };
 
   handleAuth = async () => {
     try {
-      const authResult: any = await new Promise(async (resolve, reject) => {
-        try {
-          const user = await this.#oauth2Client?.signinCallback();
-          resolve(user);
-        } catch (error: any) {
-          reject(error);
-        }
-      });
+      const authResult: any = await this.#oauth2Client?.signinCallback();
 
       if (authResult) {
-        this.credentials = {
+        this.#credentials = {
           accessToken: authResult.access_token,
           idToken: authResult.id_token,
+          refreshToken: authResult.refresh_token,
+          expires_at: authResult.expires_at,
         };
-        if (this.user) this.user.uid = authResult.profile.sub;
+
+        if (this.user) {
+          this.user.uid = authResult.profile?.sub;
+        } else this.user = { uid: authResult.profile?.sub };
+        // Load information in state
+        this.getUserInfo();
+        this.getTransactions();
+        this.getNfts();
+        this.getBalances();
+        this.getWallets();
+
         return authResult;
       } else return null;
     } catch (error: any) {
-      console.error('There was an error loggin in, error: ', error);
+      console.error('There was an error loggin inside handleAuth, error: ', error);
       return error;
     }
   };
@@ -144,12 +159,46 @@ class WebSDK implements iWebSDK {
   handlePersistence = async () => {
     const persistence = await this.#oauth2Client?.getUser();
     if (persistence) {
-      this.credentials = {
-        accessToken: persistence.access_token,
-        idToken: persistence.id_token as string,
-      };
-      if (this.user) this.user.uid = persistence.profile.sub;
-      return persistence;
+      const isExpired = await this.isTokenExpired();
+      if (!isExpired) {
+        this.#credentials = {
+          accessToken: persistence.access_token,
+          idToken: persistence.id_token as string,
+          refreshToken: persistence.refresh_token,
+          expires_at: persistence.expires_at ?? 0,
+        };
+        if (this.user) this.user.uid = persistence.profile.sub;
+        else this.user = { uid: persistence.profile.sub };
+        // Load information in state
+        this.getUserInfo();
+        this.getTransactions();
+        this.getNfts();
+        this.getBalances();
+        this.getWallets();
+
+        return persistence;
+      } else {
+        const refreshed = await this.refreshToken();
+        if (refreshed) {
+          this.#credentials = {
+            accessToken: refreshed.access_token,
+            idToken: refreshed.id_token as string,
+            refreshToken: refreshed.refresh_token,
+            expires_at: refreshed.expires_at ?? 0,
+          };
+          if (this.user) this.user.uid = refreshed.profile.sub;
+          else this.user = { uid: refreshed.profile.sub };
+          // Load information in state
+          this.getUserInfo();
+          this.getTransactions();
+          this.getNfts();
+          this.getBalances();
+          this.getWallets();
+          return refreshed;
+        } else {
+          return null;
+        }
+      }
     } else return null;
   };
 
@@ -161,14 +210,15 @@ class WebSDK implements iWebSDK {
       const handleAuth = await this.handleAuth();
       return handleAuth;
     } catch (error) {
-      console.error('There was an error logging in , error: ', error);
+      console.error('There was an error logging inside handleCallback, error: ', error);
+
       return error;
     }
   };
 
   login = async () => {
     if (this.loginType === LoginBehavior.REDIRECT) {
-      this.#oauth2Client?.signinRedirect({
+      await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
       });
     } else {
@@ -178,31 +228,43 @@ class WebSDK implements iWebSDK {
         });
 
         if (authResult) {
-          this.credentials = {
+          this.#credentials = {
             accessToken: authResult.access_token,
             idToken: authResult.id_token as string,
+            refreshToken: authResult.refresh_token,
+            expires_at: authResult.expires_at ?? 0,
           };
           if (this.user) this.user.uid = authResult.profile.sub;
+          else this.user = { uid: authResult.profile.sub };
           return authResult;
         } else return null;
       } catch (error: any) {
-        console.error('There was an error logging in , error: ', error);
+        console.error('There was an error logging inside login, error: ', error);
         return error;
       }
     }
   };
 
-  logout = () => {
-    if (typeof window === 'undefined') return;
-    this.#oauth2Client?.signoutSilent();
-    window.location.replace(this.redirectUri as string);
-    this.clear();
+  logout = async () => {
+    try {
+      if (typeof window === 'undefined') return;
+      this.#oauth2Client?.signoutSilent();
+      this.#oauth2Client?.removeUser();
+      window.location.replace(this.redirectUri as string);
+      this.clear();
+    } catch (e) {
+      console.error('error logging out', e);
+    }
   };
 
-  #createRequest = async (method: string = 'GET', body: any = {}, headers: any = {}) => {
+  #createRequest = async (
+    method: 'GET' | 'POST' = 'GET',
+    body: { [key: string]: any } = {},
+    headers: Headers | {} = {}
+  ): Promise<CreateRequest> => {
     const myHeaders = new Headers();
     myHeaders.append('Content-Type', 'application/json');
-    myHeaders.append('Authorization', `Bearer ${this.credentials?.accessToken}`);
+    myHeaders.append('Authorization', `Bearer ${this.#credentials?.accessToken}`);
 
     if (Object.keys(headers).length) {
       for (const [key, value] of Object.entries(headers)) {
@@ -210,7 +272,7 @@ class WebSDK implements iWebSDK {
       }
     }
 
-    let requestOptions: any = {};
+    let requestOptions: CreateRequest | {} = {};
 
     if (method === 'GET') {
       requestOptions = {
@@ -229,10 +291,10 @@ class WebSDK implements iWebSDK {
       };
     }
 
-    return requestOptions;
+    return requestOptions as CreateRequest;
   };
 
-  #fetchUserBalances = async () => {
+  #fetchUserBalances = async (): Promise<UserBalance | never> => {
     try {
       const requestOptions = await this.#createRequest();
 
@@ -241,87 +303,105 @@ class WebSDK implements iWebSDK {
         requestOptions
       );
 
-      const data = await response.json();
-      if (this.user) this.user.balances = data.data;
-      return data.data;
+      const data = (await response.json()) as UserBalancesResponse;
+      console.log('data.data inside fetchUserBalances', data.data);
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.balances = data.data;
+      return data.data as UserBalance;
     } catch (error: any) {
       console.error('There was an error fetching user balances, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchUserWallets = async () => {
+  #fetchUserWallets = async (): Promise<WalletDoc[] | never> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.wallets = data.data;
-      return data.data;
+      const data = (await response.json()) as WalletResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.wallets = data.data;
+      return data.data as WalletDoc[];
     } catch (error: any) {
       console.error('There was an error fetching user wallets, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchUserInfo = async () => {
+  #fetchUserInfo = async (): Promise<Info | {} | Error> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.info = data.data;
-      return data.data;
+      const data = (await response.json()) as UserInfoResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.info = data.data;
+      return data.data as Info;
     } catch (error: any) {
       console.error('There was an error fetching user info, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchUserNfts = async () => {
+  #fetchUserNfts = async (): Promise<NftsInfo[]> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
 
-      const data = await response.json();
-      if (this.user) this.user.nfts = data.data;
-      return data.data;
+      const data = (await response.json()) as NftsInfoResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.nfts = data.data;
+      return data.data as NftsInfo[];
     } catch (error: any) {
       console.error('There was an error fetching user nfts, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #getWrappedDek = async () => {
-    if (this.#wrappedDek) return this.#wrappedDek;
+  #getWrappedDek = async (): Promise<string | null> => {
+    console.log(
+      this.#wrappedDek,
+      this.#wrappedDekExpiration * 1000,
+      Date.now(),
+      'is expired',
+      this.#wrappedDekExpiration * 1000 < Date.now()
+    );
+    if (this.#wrappedDek && this.#wrappedDekExpiration * 1000 > Date.now()) return this.#wrappedDek;
     try {
       const requestOptions = await this.#createRequest('POST');
 
       const response = await fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
 
-      const data = await response.json();
-      this.#wrappedDek = data.data;
-      return data.data;
+      const data = (await response.json()) as WrappedDekResponse;
+      if (data.error) throw new Error(data.error);
+      if (data.data) {
+        this.#wrappedDek = data.data;
+        this.#wrappedDekExpiration = (await decodeJWT(this.#wrappedDek)).exp * 1000;
+      }
+      return data.data as string;
     } catch (error: any) {
       console.error('There was an error getting wrapped dek, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  #fetchTransactions = async () => {
+  #fetchTransactions = async (): Promise<string | undefined> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/transactions`, requestOptions);
 
-      const data = await response.json();
-      return data.data;
+      const data = (await response.json()) as TransactionsResponse;
+      if (data.error) throw new Error(data.error);
+      if (this.user && data.data) this.user.transactions = data.data;
+      return data.data as string;
     } catch (error: any) {
       console.error('There was an error getting transactions, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  createCharge = async (charge: ChargeReqBody) => {
+  createCharge = async (charge: ChargeReqBody): Promise<ChargeUrlAndId | null> => {
     try {
       const requestOptions = await this.#createRequest(
         'POST',
@@ -330,18 +410,27 @@ class WebSDK implements iWebSDK {
       );
 
       const response = await fetch(`${this.baseUrl}/createCharge`, requestOptions);
-
-      const data = await response.json();
-      return data.data as ChargeResponse;
+      const data = (await response.json()) as ChargeResponse;
+      if (data.error) throw new Error(data.error);
+      return data.data as ChargeUrlAndId;
     } catch (error: any) {
       console.error('There was an error creating your transaction, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  pay = async ({ toAddress, chain, symbol, amount, tokenAddress }: Transaction) => {
-    try {
+  pay = async ({
+    toAddress,
+    chain,
+    symbol,
+    amount,
+    tokenAddress,
+  }: Transaction): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse> => {
+    const payFn = async (): Promise<
+      PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse
+    > => {
       const wrappedDek = await this.#getWrappedDek();
+      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
 
       const requestOptions = await this.#createRequest('POST', {
         wrappedDek,
@@ -353,36 +442,80 @@ class WebSDK implements iWebSDK {
       });
 
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
-      const data = await response.json();
-      return data.data;
+      return (await response.json()) as
+        | PayResponseRouteCreated
+        | PayResponseOnRampLink
+        | PayErrorResponse;
+    };
+    try {
+      return await this.checkTokenAndExecuteFunction(payFn);
     } catch (error: any) {
       console.error('There was an processing your payment, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  payCharge = async (transactionId: string) => {
-    try {
+  payCharge = async (
+    transactionId: string
+  ): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse> => {
+    const payChargeFn = async (): Promise<
+      PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse
+    > => {
       const wrappedDek = await this.#getWrappedDek();
-
+      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
       const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
-      const data = await response.json();
-      return data;
+      return (await response.json()) as
+        | PayResponseRouteCreated
+        | PayResponseOnRampLink
+        | PayErrorResponse;
+    };
+    try {
+      return await this.checkTokenAndExecuteFunction(payChargeFn);
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
-      return error;
+      throw new Error(error.message || error);
     }
   };
 
-  getTransactions = async (
-    quantity = 0,
-    getReceived = true,
-    getSent = true
-  ): Promise<Transaction[]> => {
-    // Get all transactions encoded
-    const encoded = await this.#fetchTransactions();
+  getWallets = (forceRefresh?: boolean): Promise<WalletDoc[] | Error> =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserWallets, this.user?.wallets, forceRefresh);
 
+  getUserInfo = (forceRefresh?: boolean): Promise<Info | Error> =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserInfo, this.user?.info, forceRefresh);
+
+  getBalances = (forceRefresh?: boolean): Promise<UserBalance | Error> =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserBalances, this.user?.balances, forceRefresh);
+
+  getNfts = (forceRefresh?: boolean): Promise<NftsInfo[] | Error> =>
+    this.checkTokenAndExecuteFunction(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
+
+  getTransactions = async (
+    props: {
+      quantity: number;
+      getReceived: boolean;
+      getSent: boolean;
+      forceRefresh: boolean;
+    } = {
+      quantity: 0,
+      getReceived: true,
+      getSent: true,
+      forceRefresh: false,
+    }
+  ): Promise<Transaction[] | Error> => {
+    // Get all transactions encoded
+    let { quantity, getReceived, getSent, forceRefresh } = props;
+    if (quantity === undefined) quantity = 0;
+    if (getReceived === undefined) getReceived = true;
+    if (getSent === undefined) getSent = true;
+    if (forceRefresh === undefined) forceRefresh = false;
+
+    const encoded = await this.checkTokenAndExecuteFunction(
+      this.#fetchTransactions,
+      this.user?.transactions,
+      forceRefresh
+    );
+    if (!encoded) throw new Error("Couldn't get transactions");
     // Decode JWT payload to get raw transactions
     const { transactions } = await decodeJWT(encoded);
     let response = transactions;
@@ -405,38 +538,14 @@ class WebSDK implements iWebSDK {
         amount: t.total || t.commodityAmount,
         tokenAddress: t.tokenAddress || null,
         nft: {
-          img: t.itemInfo.imageUrl,
-          name: t.itemInfo.name,
-          address: t.address,
-        }
-      }
-    })
+          img: t.itemInfo?.imageUrl,
+          name: t.itemInfo?.name,
+          address: t?.address,
+        },
+      };
+    });
 
-    return txs
-  };
-
-  getWallets = async () => {
-    if (this.user?.wallets) return this.user.wallets;
-    const wallets = await this.#fetchUserWallets();
-    return wallets;
-  };
-
-  getUserInfo = async () => {
-    if (this.user?.info) return this.user.info;
-    const userInfo = await this.#fetchUserInfo();
-    return userInfo;
-  };
-
-  getBalances = async () => {
-    if (this.user?.balances) return this.user.balances;
-    const balances = await this.#fetchUserBalances();
-    return balances;
-  };
-
-  getNfts = async () => {
-    if (this.user?.nfts) return this.user.nfts;
-    const nfts = await this.#fetchUserNfts();
-    return nfts;
+    return txs;
   };
 
   createIframe(width: number, height: number) {
@@ -458,6 +567,76 @@ class WebSDK implements iWebSDK {
     iframe.height = height.toString();
     return iframe;
   }
+
+  isTokenExpired = async (): Promise<boolean> => {
+    if (!this.#credentials) {
+      const user = await this.#oauth2Client?.getUser();
+      if (user) {
+        return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
+      } else return true;
+    }
+    return this.#credentials?.expires_at
+      ? this.#credentials.expires_at < Math.floor(Date.now() / 1000)
+      : true;
+  };
+
+  refreshToken = async () => {
+    try {
+      const user = await this.#oauth2Client?.getUser();
+      if (
+        this.#credentials?.expires_at &&
+        this.#credentials?.expires_at > Math.floor(Date.now() / 1000)
+      ) {
+        return user;
+      }
+
+      if (!this.#credentials?.refreshToken && user) {
+        this.#credentials = {
+          refreshToken: user?.refresh_token,
+          accessToken: '',
+          idToken: '',
+          expires_at: 0,
+        };
+      }
+      if (this.#credentials?.refreshToken) {
+        const userRefreshed = await this.#oauth2Client?.signinSilent();
+        if (userRefreshed) {
+          this.#credentials = {
+            accessToken: userRefreshed.access_token,
+            idToken: userRefreshed.id_token as string,
+            refreshToken: userRefreshed.refresh_token,
+            expires_at: userRefreshed.expires_at ?? 0,
+          };
+          return userRefreshed;
+        } else return false;
+      }
+      return false;
+    } catch (e) {
+      console.error('There was an error refreshing the token, error: ', e);
+      return false;
+    }
+  };
+
+  checkTokenAndExecuteFunction = async (
+    fn: Function,
+    property: any = undefined,
+    forceRefresh: boolean = false
+  ) => {
+    if (!(await this.isTokenExpired())) {
+      if (property && !forceRefresh) return property;
+      const data = await fn(forceRefresh);
+      return data;
+    } else {
+      const refreshed = await this.refreshToken();
+      if (refreshed) {
+        const data = await fn(forceRefresh);
+        return data;
+      } else {
+        this.logout();
+        throw new Error('The session is expired, please login again');
+      }
+    }
+  };
 }
 
 export default WebSDK;
