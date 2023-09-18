@@ -36,7 +36,6 @@ class WebSDK implements iWebSDK {
 
   loginType: LoginBehavior = LoginBehavior.REDIRECT;
   clientId?: string;
-  clientSecret?: string;
   redirectUri?: string;
   apiKey?: string;
   user?: User | null | undefined = undefined;
@@ -62,11 +61,6 @@ class WebSDK implements iWebSDK {
 
   setClientId = (clientId: string) => {
     this.clientId = clientId;
-    return this;
-  };
-
-  setClientSecret = (clientSecret: string) => {
-    this.clientSecret = clientSecret;
     return this;
   };
 
@@ -114,7 +108,6 @@ class WebSDK implements iWebSDK {
     this.#oauth2Client = new UserManager({
       authority: this.#domain as string,
       client_id: this.clientId as string,
-      // client_secret: this.clientSecret as string,
       redirect_uri: this.redirectUri as string,
       response_type: 'code',
       post_logout_redirect_uri: this.redirectUri as string,
@@ -148,13 +141,12 @@ class WebSDK implements iWebSDK {
         if (this.user) {
           this.user.uid = authResult.profile?.sub;
         } else this.user = { uid: authResult.profile?.sub };
-        await Promise.all([
-          this.getUserInfo(),
-          this.getTransactions(),
-          this.getNfts(),
-          this.getBalances(),
-          this.getWallets(),
-        ]);
+        // Load information in state
+        this.getUserInfo();
+        this.getTransactions();
+        this.getNfts();
+        this.getBalances();
+        this.getWallets();
 
         return authResult;
       } else return null;
@@ -177,13 +169,12 @@ class WebSDK implements iWebSDK {
         };
         if (this.user) this.user.uid = persistence.profile.sub;
         else this.user = { uid: persistence.profile.sub };
-        await Promise.all([
-          this.getUserInfo(),
-          this.getTransactions(),
-          this.getNfts(),
-          this.getBalances(),
-          this.getWallets(),
-        ]);
+        // Load information in state
+        this.getUserInfo();
+        this.getTransactions();
+        this.getNfts();
+        this.getBalances();
+        this.getWallets();
 
         return persistence;
       } else {
@@ -197,13 +188,12 @@ class WebSDK implements iWebSDK {
           };
           if (this.user) this.user.uid = refreshed.profile.sub;
           else this.user = { uid: refreshed.profile.sub };
-          await Promise.all([
-            this.getUserInfo(),
-            this.getTransactions(),
-            this.getNfts(),
-            this.getBalances(),
-            this.getWallets(),
-          ]);
+          // Load information in state
+          this.getUserInfo();
+          this.getTransactions();
+          this.getNfts();
+          this.getBalances();
+          this.getWallets();
           return refreshed;
         } else {
           return null;
@@ -259,6 +249,7 @@ class WebSDK implements iWebSDK {
     try {
       if (typeof window === 'undefined') return;
       this.#oauth2Client?.signoutSilent();
+      this.#oauth2Client?.removeUser();
       window.location.replace(this.redirectUri as string);
       this.clear();
     } catch (e) {

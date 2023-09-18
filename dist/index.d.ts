@@ -8,13 +8,11 @@ declare class WebSDK implements iWebSDK {
     static instance: WebSDK | undefined;
     loginType: LoginBehavior;
     clientId?: string;
-    clientSecret?: string;
     redirectUri?: string;
     apiKey?: string;
     user?: User | null | undefined;
     baseUrl?: string;
     setClientId: (clientId: string) => this;
-    setClientSecret: (clientSecret: string) => this;
     setRedirectUri: (redirectUri: string) => this;
     setApiKey: (apiKey: string) => this;
     setBaseUrl: (baseUrl: string) => this;
