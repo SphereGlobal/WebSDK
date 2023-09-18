@@ -304,7 +304,6 @@ class WebSDK implements iWebSDK {
       );
 
       const data = (await response.json()) as UserBalancesResponse;
-      console.log('data.data inside fetchUserBalances', data.data);
       if (data.error) throw new Error(data.error);
       if (this.user && data.data) this.user.balances = data.data;
       return data.data as UserBalance;
@@ -360,13 +359,6 @@ class WebSDK implements iWebSDK {
   };
 
   #getWrappedDek = async (): Promise<string | null> => {
-    console.log(
-      this.#wrappedDek,
-      this.#wrappedDekExpiration * 1000,
-      Date.now(),
-      'is expired',
-      this.#wrappedDekExpiration * 1000 < Date.now()
-    );
     if (this.#wrappedDek && this.#wrappedDekExpiration * 1000 > Date.now()) return this.#wrappedDek;
     try {
       const requestOptions = await this.#createRequest('POST');

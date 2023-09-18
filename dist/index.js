@@ -294,7 +294,6 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
                 const response = yield fetch(`${this.baseUrl}/getFundsAvailable?refreshCache=true`, requestOptions);
                 const data = (yield response.json());
-                console.log('data.data inside fetchUserBalances', data.data);
                 if (data.error)
                     throw new Error(data.error);
                 if (this.user && data.data)
@@ -355,7 +354,6 @@ class WebSDK {
             }
         }));
         _WebSDK_getWrappedDek.set(this, () => __awaiter(this, void 0, void 0, function* () {
-            console.log(__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f"), __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") * 1000, Date.now(), 'is expired', __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") * 1000 < Date.now());
             if (__classPrivateFieldGet(this, _WebSDK_wrappedDek, "f") && __classPrivateFieldGet(this, _WebSDK_wrappedDekExpiration, "f") * 1000 > Date.now())
                 return __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
             try {
