@@ -30,6 +30,9 @@ export enum SupportedChains {
   BINANCE = 'BINANCE',
   ARBITRUM = 'ARBITRUM',
   FANTOM = 'FANTOM',
+  EOSEVM = 'EOSEVM',
+  BASE = 'BASE',
+  FLOW = 'FLOW',
 }
 
 export interface Token {

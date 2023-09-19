@@ -25,7 +25,10 @@ export declare enum SupportedChains {
     AVALANCHE = "AVALANCHE",
     BINANCE = "BINANCE",
     ARBITRUM = "ARBITRUM",
-    FANTOM = "FANTOM"
+    FANTOM = "FANTOM",
+    EOSEVM = "EOSEVM",
+    BASE = "BASE",
+    FLOW = "FLOW"
 }
 export interface Token {
     symbol: string;

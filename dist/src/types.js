@@ -18,6 +18,9 @@ var SupportedChains;
     SupportedChains["BINANCE"] = "BINANCE";
     SupportedChains["ARBITRUM"] = "ARBITRUM";
     SupportedChains["FANTOM"] = "FANTOM";
+    SupportedChains["EOSEVM"] = "EOSEVM";
+    SupportedChains["BASE"] = "BASE";
+    SupportedChains["FLOW"] = "FLOW";
 })(SupportedChains || (exports.SupportedChains = SupportedChains = {}));
 var WalletTypes;
 (function (WalletTypes) {

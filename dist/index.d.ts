@@ -20,35 +20,31 @@ declare class WebSDK implements iWebSDK {
     setLoginType: (loginType?: LoginBehavior) => this;
     build: () => WebSDK | undefined;
     clear: () => void;
-    handleAuth: () => Promise<any>;
-    handlePersistence: () => Promise<import("oidc-client-ts").User | null>;
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;
     logout: () => Promise<void>;
-    createCharge: (charge: ChargeReqBody) => Promise<ChargeUrlAndId | null>;
+    createCharge: (charge: ChargeReqBody) => Promise<ChargeUrlAndId>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     getWallets: ({ forceRefresh }?: {
         forceRefresh?: boolean | undefined;
-    }) => Promise<WalletDoc[] | Error>;
+    }) => Promise<WalletDoc[]>;
     getUserInfo: ({ forceRefresh }?: {
         forceRefresh?: boolean | undefined;
-    }) => Promise<Info | Error>;
+    }) => Promise<Info>;
     getBalances: ({ forceRefresh }?: {
         forceRefresh?: boolean | undefined;
-    }) => Promise<UserBalance | Error>;
+    }) => Promise<UserBalance>;
     getNfts: ({ forceRefresh }?: {
         forceRefresh?: boolean | undefined;
-    }) => Promise<NftsInfo[] | Error>;
+    }) => Promise<NftsInfo[]>;
     getTransactions: (props?: {
         quantity: number;
         getReceived: boolean;
         getSent: boolean;
         forceRefresh: boolean;
-    }) => Promise<Transaction[] | Error>;
+    }) => Promise<Transaction[]>;
     createIframe(width: number, height: number): HTMLIFrameElement;
     isTokenExpired: () => Promise<boolean>;
-    refreshToken: () => Promise<false | import("oidc-client-ts").User | null | undefined>;
-    checkTokenAndExecuteFunction: (fn: Function, property?: any, forceRefresh?: boolean) => Promise<any>;
 }
 export default WebSDK;
