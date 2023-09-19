@@ -468,7 +468,6 @@ class WebSDK {
         },
       };
     });
-
     return txs;
   };
 

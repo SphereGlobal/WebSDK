@@ -304,6 +304,18 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         }));
+        _WebSDK_fetchTransactions.set(this, () => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this);
+                const response = yield fetch(`${this.baseUrl}/transactions`, requestOptions);
+                const data = yield response.json();
+                return data.data;
+            }
+            catch (error) {
+                console.error('There was an error getting transactions, error: ', error);
+                return error;
+            }
+        }));
         this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
             var _k;
             try {
