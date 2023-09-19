@@ -37,7 +37,7 @@ export interface Token {
     logoURI: string;
     chain: SupportedChains;
 }
-export interface WalletDoc {
+export interface Wallet {
     address: string;
     publicKey: string;
     privateKey: string;
@@ -47,33 +47,52 @@ export interface WalletDoc {
     starkPrivateKey?: string;
 }
 export interface WalletResponse {
-    data: WalletDoc[] | null;
+    data: Wallet[] | null;
     error: string | null;
 }
 export declare enum WalletTypes {
     EOA = "EOA",
     SMART_WALLET = "SmartWallet"
 }
-export interface iWebSDK {
-    loginType: 'REDIRECT' | 'POPUP';
-    providerUid?: string;
-    clientId?: string;
-    redirectUri?: string;
-    baseUrl: string;
-    apiKey?: string;
+export declare abstract class IWebSDK {
+    #private;
+    protected loginType: LoginBehavior;
+    protected clientId: string;
+    protected redirectUri: string;
+    protected apiKey: string;
+    protected baseUrl: string;
     user: User | null;
-    credentials?: Credentials | null;
-    PROJECT_ID?: string;
+    pwaProdUrl: string;
+    constructor(clientId: string, redirectUri: string, baseUrl: string, apiKey: string, loginType?: LoginBehavior);
+    abstract clear(): void;
+    abstract handleCallback(): Promise<User | null>;
+    abstract login(): Promise<void>;
+    abstract logout(): Promise<void>;
+    abstract createCharge(charge: ChargeReqBody): Promise<ChargeUrlAndId>;
+    abstract pay({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+    abstract payCharge(transactionId: string): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+    abstract getWallets({ forceRefresh }: ForceRefresh): Promise<Wallet[]>;
+    abstract getUserInfo({ forceRefresh }: ForceRefresh): Promise<UserInfo>;
+    abstract getBalances({ forceRefresh }: ForceRefresh): Promise<UserBalance>;
+    abstract getNfts({ forceRefresh }: ForceRefresh): Promise<NftsInfo[]>;
+    abstract getTransactions(props: {
+        quantity: number;
+        getReceived: boolean;
+        getSent: boolean;
+        forceRefresh: boolean;
+    }): Promise<Transaction[]>;
+    abstract createIframe(width: number, height: number): HTMLIFrameElement;
+    abstract isTokenExpired(): Promise<boolean>;
 }
 export interface User {
-    info?: Info;
-    wallets?: WalletDoc[];
+    info?: UserInfo;
+    wallets?: Wallet[];
     balances?: UserBalance;
     nfts?: NftsInfo[];
     uid?: string;
     transactions?: string;
 }
-export interface Info {
+export interface UserInfo {
     uid: string;
     signedUp: boolean;
     waitlistPoints: number;
@@ -89,7 +108,7 @@ export interface Info {
     profilePicture: string;
 }
 export interface UserInfoResponse {
-    data: Info | null;
+    data: UserInfo | null;
     error: string | null;
 }
 export interface Credentials {
@@ -97,6 +116,12 @@ export interface Credentials {
     idToken: string;
     refreshToken?: string;
     expires_at: number;
+}
+export interface LoadCredentialsParams {
+    access_token: string;
+    idToken?: string;
+    refresh_token?: string;
+    expires_at?: number;
 }
 export interface Transaction {
     date?: Date;
@@ -278,7 +303,7 @@ export interface BridgeResponse {
     error: string | null;
 }
 export type ChainWallets = {
-    [chain in SupportedChains]: WalletDoc;
+    [chain in SupportedChains]: Wallet;
 };
 export interface BridgeResponseData {
     quote: BridgeQuote;
@@ -389,4 +414,7 @@ export interface WrappedDekResponse {
 export interface TransactionsResponse {
     data: string | null;
     error: string | null;
+}
+export interface ForceRefresh {
+    forceRefresh?: boolean;
 }

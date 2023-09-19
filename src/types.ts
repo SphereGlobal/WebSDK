@@ -1,4 +1,5 @@
 import { BigNumber } from '@ethersproject/bignumber';
+import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
 export interface WalletBalance {
   price: number; // usdc amount bigint
@@ -43,7 +44,7 @@ export interface Token {
   chain: SupportedChains;
 }
 
-export interface WalletDoc {
+export interface Wallet {
   address: string;
   publicKey: string;
   privateKey: string;
@@ -53,7 +54,7 @@ export interface WalletDoc {
   starkPrivateKey?: string;
 }
 export interface WalletResponse {
-  data: WalletDoc[] | null;
+  data: Wallet[] | null;
   error: string | null;
 }
 export enum WalletTypes {
@@ -61,28 +62,128 @@ export enum WalletTypes {
   SMART_WALLET = 'SmartWallet',
 }
 
-export interface iWebSDK {
-  loginType: 'REDIRECT' | 'POPUP';
-  providerUid?: string;
-  clientId?: string;
-  redirectUri?: string;
-  baseUrl: string;
-  apiKey?: string;
-  user: User | null;
-  credentials?: Credentials | null;
-  PROJECT_ID?: string;
+// export interface iWebSDK {
+//   loginType: LoginBehavior;
+//   clientId: string;
+//   redirectUri: string;
+//   baseUrl: string;
+//   apiKey: string;
+//   user: User | null;
+// }
+
+export abstract class IWebSDK {
+  protected loginType: LoginBehavior;
+  protected clientId: string;
+  protected redirectUri: string;
+  protected apiKey: string;
+  protected baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
+  public user: User | null = null;
+  public pwaProdUrl = 'https://wallet.sphereone.xyz';
+  // #oauth2Client?: UserManager;
+  // #wrappedDek: string = '';
+  // #wrappedDekExpiration: number = 0;
+  // #domain: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
+  // #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
+  // #credentials: Credentials | null = null;
+
+  constructor(
+    clientId: string,
+    redirectUri: string,
+    baseUrl: string,
+    apiKey: string,
+    loginType: LoginBehavior = LoginBehavior.REDIRECT
+  ) {
+    this.clientId = clientId;
+    this.redirectUri = redirectUri;
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
+    this.loginType = loginType;
+  }
+
+  abstract clear(): void;
+
+  #loadCredentials = async ({
+    access_token,
+    idToken,
+    refresh_token,
+    expires_at,
+  }: LoadCredentialsParams) => Promise<void>;
+
+  #handleAuth = async () => Promise<User | null>;
+
+  #handlePersistence = async () => Promise<User | null>;
+
+  abstract handleCallback(): Promise<User | null>;
+
+  abstract login(): Promise<void>;
+
+  abstract logout(): Promise<void>;
+
+  #createRequest = async (
+    method: 'GET' | 'POST' = 'GET',
+    body: { [key: string]: any } = {},
+    headers: Headers | {} = {}
+  ) => Promise<CreateRequest>;
+
+  #fetchUserBalances = async () => Promise<UserBalance>;
+
+  #fetchUserWallets = async () => Promise<Wallet[]>;
+
+  #fetchUserInfo = async () => Promise<UserInfo>;
+  #fetchUserNfts = async () => Promise<NftsInfo[]>;
+  #getWrappedDek = async () => Promise<string>;
+  #fetchTransactions = async () => Promise<string>;
+
+  abstract createCharge(charge: ChargeReqBody): Promise<ChargeUrlAndId>;
+
+  abstract pay({
+    toAddress,
+    chain,
+    symbol,
+    amount,
+    tokenAddress,
+  }: Transaction): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+
+  abstract payCharge(
+    transactionId: string
+  ): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+
+  abstract getWallets({ forceRefresh }: ForceRefresh): Promise<Wallet[]>;
+
+  abstract getUserInfo({ forceRefresh }: ForceRefresh): Promise<UserInfo>;
+
+  abstract getBalances({ forceRefresh }: ForceRefresh): Promise<UserBalance>;
+
+  abstract getNfts({ forceRefresh }: ForceRefresh): Promise<NftsInfo[]>;
+
+  abstract getTransactions(props: {
+    quantity: number;
+    getReceived: boolean;
+    getSent: boolean;
+    forceRefresh: boolean;
+  }): Promise<Transaction[]>;
+
+  abstract createIframe(width: number, height: number): HTMLIFrameElement;
+
+  abstract isTokenExpired(): Promise<boolean>;
+
+  #refreshToken = async () => Promise<User | null | boolean>;
+
+  #getData = (fn: () => Promise<any>, property: any, forceRefresh: boolean = true) => Promise<any>;
+
+  #loadUserData = () => Promise<void>;
 }
 
 export interface User {
-  info?: Info;
-  wallets?: WalletDoc[];
+  info?: UserInfo;
+  wallets?: Wallet[];
   balances?: UserBalance;
   nfts?: NftsInfo[];
   uid?: string;
   transactions?: string; // this data comes as a JWT
 }
 
-export interface Info {
+export interface UserInfo {
   uid: string;
   signedUp: boolean;
   waitlistPoints: number;
@@ -98,7 +199,7 @@ export interface Info {
   profilePicture: string;
 }
 export interface UserInfoResponse {
-  data: Info | null;
+  data: UserInfo | null;
   error: string | null;
 }
 
@@ -107,6 +208,13 @@ export interface Credentials {
   idToken: string;
   refreshToken?: string;
   expires_at: number;
+}
+
+export interface LoadCredentialsParams {
+  access_token: string;
+  idToken?: string;
+  refresh_token?: string;
+  expires_at?: number;
 }
 
 export interface Transaction {
@@ -308,7 +416,7 @@ export interface BridgeResponse {
 }
 
 export type ChainWallets = {
-  [chain in SupportedChains]: WalletDoc;
+  [chain in SupportedChains]: Wallet;
 };
 
 export interface BridgeResponseData {
@@ -425,4 +533,8 @@ export interface WrappedDekResponse {
 export interface TransactionsResponse {
   data: string | null; // this data comes as a JWT
   error: string | null;
+}
+
+export interface ForceRefresh {
+  forceRefresh?: boolean;
 }

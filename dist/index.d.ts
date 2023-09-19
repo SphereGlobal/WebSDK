@@ -1,24 +1,14 @@
-import { ChargeReqBody, Environments, Info, LoginBehavior, NftsInfo, Transaction, User, WalletDoc, iWebSDK, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh, IWebSDK } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
-declare class WebSDK implements iWebSDK {
+declare class WebSDK extends IWebSDK {
     #private;
     static instance: WebSDK | undefined;
-    loginType: LoginBehavior;
-    clientId?: string;
-    redirectUri?: string;
-    apiKey?: string;
     user: User | null;
     baseUrl: string;
-    setClientId: (clientId: string) => this;
-    setRedirectUri: (redirectUri: string) => this;
-    setApiKey: (apiKey: string) => this;
-    setBaseUrl: (baseUrl: string) => this;
-    setEnvironment: (environment?: Environments) => this;
-    setLoginType: (loginType?: LoginBehavior) => this;
-    build: () => WebSDK | undefined;
+    constructor(redirectUri: string, apiKey: string, clientId: string, loginType?: LoginBehavior);
     clear: () => void;
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;
@@ -26,18 +16,10 @@ declare class WebSDK implements iWebSDK {
     createCharge: (charge: ChargeReqBody) => Promise<ChargeUrlAndId>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
-    getWallets: ({ forceRefresh }?: {
-        forceRefresh?: boolean | undefined;
-    }) => Promise<WalletDoc[]>;
-    getUserInfo: ({ forceRefresh }?: {
-        forceRefresh?: boolean | undefined;
-    }) => Promise<Info>;
-    getBalances: ({ forceRefresh }?: {
-        forceRefresh?: boolean | undefined;
-    }) => Promise<UserBalance>;
-    getNfts: ({ forceRefresh }?: {
-        forceRefresh?: boolean | undefined;
-    }) => Promise<NftsInfo[]>;
+    getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
+    getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
+    getBalances: ({ forceRefresh }?: ForceRefresh) => Promise<UserBalance>;
+    getNfts: ({ forceRefresh }?: ForceRefresh) => Promise<NftsInfo[]>;
     getTransactions: (props?: {
         quantity: number;
         getReceived: boolean;

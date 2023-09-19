@@ -2,15 +2,13 @@ import {
   ChargeReqBody,
   ChargeResponse,
   Credentials,
-  Environments,
-  Info,
+  UserInfo,
   LoginBehavior,
   NftsInfo,
   Transaction,
   User,
-  WalletDoc,
+  Wallet,
   CreateRequest,
-  iWebSDK,
   UserBalance,
   UserBalancesResponse,
   WalletResponse,
@@ -22,6 +20,9 @@ import {
   PayResponseOnRampLink,
   PayResponseRouteCreated,
   PayErrorResponse,
+  LoadCredentialsParams,
+  ForceRefresh,
+  IWebSDK,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -31,80 +32,25 @@ export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 
-class WebSDK implements iWebSDK {
+class WebSDK extends IWebSDK {
   static instance: WebSDK | undefined = undefined;
-
-  loginType: LoginBehavior = LoginBehavior.REDIRECT;
-  clientId?: string;
-  redirectUri?: string;
-  apiKey?: string;
-  user: User | null = null;
-  #credentials?: Credentials | null;
-  #environment: Environments = Environments.PRODUCTION;
+  public user: User | null = null;
+  #credentials: Credentials | null = null;
   #oauth2Client?: UserManager;
   #wrappedDek: string = '';
   #wrappedDekExpiration: number = 0;
-
-  #domainDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com/';
-  #audienceDev: string = 'https://mystifying-tesla-384ltxo1rt.projects.oryapis.com';
-  #domainProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
-  #audienceProd: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
-
-  // by default, points to "PRODUCTION" environment
-  #domain: string = this.#domainProd;
-  #audience: string = this.#audienceProd;
+  #domain: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
+  #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
+  #pwaProdUrl = 'https://wallet.sphereone.xyz';
   baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
 
-  #pwaDevUrl = 'http://localhost:19006';
-  #pwaStagingUrl = 'https://sphereonewallet.web.app';
-  #pwaProdUrl = 'https://wallet.sphereone.xyz';
-
-  setClientId = (clientId: string) => {
-    this.clientId = clientId;
-    return this;
-  };
-
-  setRedirectUri = (redirectUri: string) => {
-    this.redirectUri = redirectUri;
-    return this;
-  };
-
-  setApiKey = (apiKey: string) => {
-    this.apiKey = apiKey;
-    return this;
-  };
-
-  setBaseUrl = (baseUrl: string) => {
-    // trim and remove trailing slash `/`
-    const newBaseUrl = baseUrl.trim();
-    this.baseUrl = newBaseUrl.endsWith('/') ? newBaseUrl.slice(0, -1) : newBaseUrl;
-    return this;
-  };
-
-  setEnvironment = (environment: Environments = Environments.PRODUCTION) => {
-    this.#environment = environment;
-    if (environment === Environments.DEVELOPMENT || environment === Environments.STAGING) {
-      this.#domain = this.#domainDev;
-      this.#audience = this.#audienceDev;
-    } else {
-      this.#domain = this.#domainProd;
-      this.#audience = this.#audienceProd;
-    }
-    return this;
-  };
-
-  setLoginType = (loginType: LoginBehavior = LoginBehavior.REDIRECT) => {
-    this.loginType = loginType;
-    return this;
-  };
-
-  build = () => {
-    if (typeof window === 'undefined') return;
-    if (!this.clientId) throw new Error('Missing clientId');
-    if (!this.redirectUri) throw new Error('Missing redirectUri');
-    if (!this.apiKey) throw new Error('Missing apiKey');
-    if (WebSDK.instance) return WebSDK.instance;
-
+  constructor(
+    redirectUri: string,
+    apiKey: string,
+    clientId: string,
+    loginType: LoginBehavior = LoginBehavior.REDIRECT
+  ) {
+    super(clientId, loginType, redirectUri, apiKey);
     this.#oauth2Client = new UserManager({
       authority: this.#domain as string,
       client_id: this.clientId as string,
@@ -115,10 +61,8 @@ class WebSDK implements iWebSDK {
       scope: 'openid offline_access',
       automaticSilentRenew: true,
     });
-
     WebSDK.instance = this;
-    return WebSDK.instance as WebSDK;
-  };
+  }
 
   clear = () => {
     this.user = null;
@@ -126,16 +70,20 @@ class WebSDK implements iWebSDK {
     this.#wrappedDek = '';
   };
 
+  #loadCredentials({ access_token, idToken, refresh_token, expires_at }: LoadCredentialsParams) {
+    this.#credentials = {
+      accessToken: access_token,
+      idToken: idToken ?? '',
+      refreshToken: refresh_token,
+      expires_at: expires_at ?? 0,
+    };
+  }
+
   #handleAuth = async () => {
     try {
       const authResult: any = await this.#oauth2Client?.signinCallback();
       if (authResult) {
-        this.#credentials = {
-          accessToken: authResult.access_token,
-          idToken: authResult.id_token,
-          refreshToken: authResult.refresh_token,
-          expires_at: authResult.expires_at,
-        };
+        this.#loadCredentials(authResult);
 
         if (this.user) {
           this.user.uid = authResult.profile?.sub;
@@ -160,12 +108,7 @@ class WebSDK implements iWebSDK {
     if (persistence) {
       const isExpired = await this.isTokenExpired();
       if (!isExpired) {
-        this.#credentials = {
-          accessToken: persistence.access_token,
-          idToken: persistence.id_token as string,
-          refreshToken: persistence.refresh_token,
-          expires_at: persistence.expires_at ?? 0,
-        };
+        this.#loadCredentials(persistence);
         if (this.user) this.user.uid = persistence.profile.sub;
         else this.user = { uid: persistence.profile.sub };
         // Load information in state
@@ -175,12 +118,7 @@ class WebSDK implements iWebSDK {
       } else {
         const refreshed = await this.#refreshToken();
         if (refreshed) {
-          this.#credentials = {
-            accessToken: refreshed.access_token,
-            idToken: refreshed.id_token as string,
-            refreshToken: refreshed.refresh_token,
-            expires_at: refreshed.expires_at ?? 0,
-          };
+          this.#loadCredentials(refreshed);
           if (this.user) this.user.uid = refreshed.profile.sub;
           else this.user = { uid: refreshed.profile.sub };
           // Load information in state
@@ -217,12 +155,7 @@ class WebSDK implements iWebSDK {
           extraQueryParams: { audience: this.#audience },
         });
         if (authResult) {
-          this.#credentials = {
-            accessToken: authResult.access_token,
-            idToken: authResult.id_token as string,
-            refreshToken: authResult.refresh_token,
-            expires_at: authResult.expires_at ?? 0,
-          };
+          this.#loadCredentials(authResult);
           if (this.user) this.user.uid = authResult.profile.sub;
           else this.user = { uid: authResult.profile.sub };
 
@@ -313,7 +246,7 @@ class WebSDK implements iWebSDK {
     }
   };
 
-  #fetchUserWallets = async (): Promise<WalletDoc[]> => {
+  #fetchUserWallets = async (): Promise<Wallet[]> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
@@ -321,14 +254,14 @@ class WebSDK implements iWebSDK {
       const data = (await response.json()) as WalletResponse;
       if (data.error) throw new Error(data.error);
       if (this.user && data.data) this.user.wallets = data.data;
-      return data.data as WalletDoc[];
+      return data.data as Wallet[];
     } catch (error: any) {
       console.error('There was an error fetching user wallets, error: ', error);
       throw new Error(error.message || error);
     }
   };
 
-  #fetchUserInfo = async (): Promise<Info> => {
+  #fetchUserInfo = async (): Promise<UserInfo> => {
     try {
       const requestOptions = await this.#createRequest();
       const response = await fetch(`${this.baseUrl}/user`, requestOptions);
@@ -336,7 +269,7 @@ class WebSDK implements iWebSDK {
       const data = (await response.json()) as UserInfoResponse;
       if (data.error) throw new Error(data.error);
       if (this.user && data.data) this.user.info = data.data;
-      return data.data as Info;
+      return data.data as UserInfo;
     } catch (error: any) {
       console.error('There was an error fetching user info, error: ', error);
       throw new Error(error.message || error);
@@ -461,22 +394,20 @@ class WebSDK implements iWebSDK {
   };
 
   getWallets = async (
-    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
-  ): Promise<WalletDoc[]> =>
-    this.#getData(this.#fetchUserWallets, this.user?.wallets, forceRefresh);
+    { forceRefresh }: ForceRefresh = { forceRefresh: false }
+  ): Promise<Wallet[]> => this.#getData(this.#fetchUserWallets, this.user?.wallets, forceRefresh);
 
   getUserInfo = async (
-    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
-  ): Promise<Info> => this.#getData(this.#fetchUserInfo, this.user?.info, forceRefresh);
+    { forceRefresh }: ForceRefresh = { forceRefresh: false }
+  ): Promise<UserInfo> => this.#getData(this.#fetchUserInfo, this.user?.info, forceRefresh);
 
   getBalances = async (
-    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
+    { forceRefresh }: ForceRefresh = { forceRefresh: false }
   ): Promise<UserBalance> =>
     this.#getData(this.#fetchUserBalances, this.user?.balances, forceRefresh);
 
-  getNfts = async (
-    { forceRefresh }: { forceRefresh?: boolean } = { forceRefresh: false }
-  ): Promise<NftsInfo[]> => this.#getData(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
+  getNfts = async ({ forceRefresh }: ForceRefresh = { forceRefresh: false }): Promise<NftsInfo[]> =>
+    this.#getData(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
 
   getTransactions = async (
     props: {
@@ -538,19 +469,7 @@ class WebSDK implements iWebSDK {
 
   createIframe(width: number, height: number) {
     const iframe = document.createElement('iframe');
-    switch (this.#environment) {
-      case Environments.DEVELOPMENT:
-        iframe.src = this.#pwaDevUrl;
-        break;
-
-      case Environments.STAGING:
-        iframe.src = this.#pwaStagingUrl;
-        break;
-
-      default:
-        iframe.src = this.#pwaProdUrl;
-        break;
-    }
+    iframe.src = this.#pwaProdUrl;
     iframe.width = width.toString();
     iframe.height = height.toString();
     return iframe;
@@ -579,22 +498,12 @@ class WebSDK implements iWebSDK {
       }
 
       if (!this.#credentials?.refreshToken && user) {
-        this.#credentials = {
-          refreshToken: user?.refresh_token,
-          accessToken: '',
-          idToken: '',
-          expires_at: 0,
-        };
+        this.#loadCredentials(user);
       }
       if (this.#credentials?.refreshToken) {
         const userRefreshed = await this.#oauth2Client?.signinSilent();
         if (userRefreshed) {
-          this.#credentials = {
-            accessToken: userRefreshed.access_token,
-            idToken: userRefreshed.id_token as string,
-            refreshToken: userRefreshed.refresh_token,
-            expires_at: userRefreshed.expires_at ?? 0,
-          };
+          this.#loadCredentials(userRefreshed);
           return userRefreshed;
         } else return false;
       }
