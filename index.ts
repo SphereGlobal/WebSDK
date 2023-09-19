@@ -336,7 +336,6 @@ class WebSDK implements iWebSDK {
       const data = (await response.json()) as UserInfoResponse;
       if (data.error) throw new Error(data.error);
       if (this.user && data.data) this.user.info = data.data;
-      console.log('data.data in userInfo', data.data);
       return data.data as Info;
     } catch (error: any) {
       console.error('There was an error fetching user info, error: ', error);
