@@ -53,7 +53,7 @@ class WebSDK implements iWebSDK {
   // by default, points to "PRODUCTION" environment
   #domain: string = this.#domainProd;
   #audience: string = this.#audienceProd;
-  baseUrl?: string = 'https://api-olgsdff53q-uc.a.run.app';
+  baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
 
   #pwaDevUrl = 'http://localhost:19006';
   #pwaStagingUrl = 'https://sphereonewallet.web.app';

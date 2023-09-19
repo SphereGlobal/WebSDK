@@ -11,7 +11,7 @@ declare class WebSDK implements iWebSDK {
     redirectUri?: string;
     apiKey?: string;
     user?: User | null | undefined;
-    baseUrl?: string;
+    baseUrl: string;
     setClientId: (clientId: string) => this;
     setRedirectUri: (redirectUri: string) => this;
     setApiKey: (apiKey: string) => this;

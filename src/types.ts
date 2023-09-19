@@ -23,7 +23,6 @@ export enum SupportedChains {
   ETHEREUM = 'ETHEREUM',
   SOLANA = 'SOLANA',
   POLYGON = 'POLYGON',
-  GNOSIS = 'GNOSIS',
   OPTIMISM = 'OPTIMISM',
   IMMUTABLE = 'IMMUTABLE',
   AVALANCHE = 'AVALANCHE',
@@ -67,7 +66,7 @@ export interface iWebSDK {
   providerUid?: string;
   clientId?: string;
   redirectUri?: string;
-  baseUrl?: string;
+  baseUrl: string;
   apiKey?: string;
   user?: User | null | undefined;
   credentials?: Credentials | null;

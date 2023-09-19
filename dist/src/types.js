@@ -11,7 +11,6 @@ var SupportedChains;
     SupportedChains["ETHEREUM"] = "ETHEREUM";
     SupportedChains["SOLANA"] = "SOLANA";
     SupportedChains["POLYGON"] = "POLYGON";
-    SupportedChains["GNOSIS"] = "GNOSIS";
     SupportedChains["OPTIMISM"] = "OPTIMISM";
     SupportedChains["IMMUTABLE"] = "IMMUTABLE";
     SupportedChains["AVALANCHE"] = "AVALANCHE";
