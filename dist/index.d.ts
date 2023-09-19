@@ -5,7 +5,6 @@ export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 declare class WebSDK {
     #private;
-    static instance: WebSDK | undefined;
     user: User | null;
     private clientId;
     private redirectUri;

@@ -32,7 +32,6 @@ export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 
 class WebSDK {
-  static instance: WebSDK | undefined = undefined;
   public user: User | null = null;
   private clientId: string;
   private redirectUri: string;
@@ -68,7 +67,6 @@ class WebSDK {
       scope: 'openid offline_access',
       automaticSilentRenew: true,
     });
-    WebSDK.instance = this;
   }
 
   clear = () => {

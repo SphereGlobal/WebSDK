@@ -469,7 +469,6 @@ class WebSDK {
             scope: 'openid offline_access',
             automaticSilentRenew: true,
         }), "f");
-        WebSDK.instance = this;
     }
     createIframe(width, height) {
         const iframe = document.createElement('iframe');
@@ -493,5 +492,4 @@ _WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebS
     this.getBalances();
     this.getWallets();
 };
-WebSDK.instance = undefined;
 exports.default = WebSDK;
