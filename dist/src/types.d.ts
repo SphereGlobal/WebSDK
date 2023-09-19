@@ -61,7 +61,7 @@ export interface iWebSDK {
     redirectUri?: string;
     baseUrl: string;
     apiKey?: string;
-    user?: User | null | undefined;
+    user: User | null;
     credentials?: Credentials | null;
     PROJECT_ID?: string;
 }

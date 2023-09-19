@@ -37,7 +37,7 @@ class WebSDK {
     constructor() {
         _WebSDK_instances.add(this);
         this.loginType = types_1.LoginBehavior.REDIRECT;
-        this.user = undefined;
+        this.user = null;
         _WebSDK_credentials.set(this, void 0);
         _WebSDK_environment.set(this, types_1.Environments.PRODUCTION);
         _WebSDK_oauth2Client.set(this, void 0);
@@ -331,7 +331,6 @@ class WebSDK {
                     throw new Error(data.error);
                 if (this.user && data.data)
                     this.user.info = data.data;
-                console.log('data.data in userInfo', data.data);
                 return data.data;
             }
             catch (error) {

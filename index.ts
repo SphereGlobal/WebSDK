@@ -38,7 +38,7 @@ class WebSDK implements iWebSDK {
   clientId?: string;
   redirectUri?: string;
   apiKey?: string;
-  user?: User | null | undefined = undefined;
+  user: User | null = null;
   #credentials?: Credentials | null;
   #environment: Environments = Environments.PRODUCTION;
   #oauth2Client?: UserManager;
