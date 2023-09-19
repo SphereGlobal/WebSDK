@@ -54,36 +54,6 @@ export declare enum WalletTypes {
     EOA = "EOA",
     SMART_WALLET = "SmartWallet"
 }
-export declare abstract class IWebSDK {
-    #private;
-    protected loginType: LoginBehavior;
-    protected clientId: string;
-    protected redirectUri: string;
-    protected apiKey: string;
-    protected baseUrl: string;
-    user: User | null;
-    pwaProdUrl: string;
-    constructor(clientId: string, redirectUri: string, baseUrl: string, apiKey: string, loginType?: LoginBehavior);
-    abstract clear(): void;
-    abstract handleCallback(): Promise<User | null>;
-    abstract login(): Promise<void>;
-    abstract logout(): Promise<void>;
-    abstract createCharge(charge: ChargeReqBody): Promise<ChargeUrlAndId>;
-    abstract pay({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
-    abstract payCharge(transactionId: string): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
-    abstract getWallets({ forceRefresh }: ForceRefresh): Promise<Wallet[]>;
-    abstract getUserInfo({ forceRefresh }: ForceRefresh): Promise<UserInfo>;
-    abstract getBalances({ forceRefresh }: ForceRefresh): Promise<UserBalance>;
-    abstract getNfts({ forceRefresh }: ForceRefresh): Promise<NftsInfo[]>;
-    abstract getTransactions(props: {
-        quantity: number;
-        getReceived: boolean;
-        getSent: boolean;
-        forceRefresh: boolean;
-    }): Promise<Transaction[]>;
-    abstract createIframe(width: number, height: number): HTMLIFrameElement;
-    abstract isTokenExpired(): Promise<boolean>;
-}
 export interface User {
     info?: UserInfo;
     wallets?: Wallet[];

@@ -1,14 +1,17 @@
-import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh, IWebSDK } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
-declare class WebSDK extends IWebSDK {
+declare class WebSDK {
     #private;
     static instance: WebSDK | undefined;
     user: User | null;
-    baseUrl: string;
-    constructor(redirectUri: string, apiKey: string, clientId: string, loginType?: LoginBehavior);
+    private clientId;
+    private redirectUri;
+    private apiKey;
+    private loginType;
+    constructor(clientId: string, redirectUri: string, apiKey: string, loginType?: LoginBehavior);
     clear: () => void;
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;

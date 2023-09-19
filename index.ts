@@ -22,7 +22,6 @@ import {
   PayErrorResponse,
   LoadCredentialsParams,
   ForceRefresh,
-  IWebSDK,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -32,9 +31,14 @@ export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 
-class WebSDK extends IWebSDK {
+class WebSDK {
   static instance: WebSDK | undefined = undefined;
   public user: User | null = null;
+  private clientId: string;
+  private redirectUri: string;
+  private apiKey: string;
+  private loginType: LoginBehavior = LoginBehavior.REDIRECT;
+
   #credentials: Credentials | null = null;
   #oauth2Client?: UserManager;
   #wrappedDek: string = '';
@@ -42,15 +46,18 @@ class WebSDK extends IWebSDK {
   #domain: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
   #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
-  baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
+  #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
 
   constructor(
+    clientId: string,
     redirectUri: string,
     apiKey: string,
-    clientId: string,
     loginType: LoginBehavior = LoginBehavior.REDIRECT
   ) {
-    super(clientId, loginType, redirectUri, apiKey);
+    this.clientId = clientId;
+    this.redirectUri = redirectUri;
+    this.apiKey = apiKey;
+    this.loginType = loginType;
     this.#oauth2Client = new UserManager({
       authority: this.#domain as string,
       client_id: this.clientId as string,
@@ -232,7 +239,7 @@ class WebSDK extends IWebSDK {
       const requestOptions = await this.#createRequest();
 
       const response = await fetch(
-        `${this.baseUrl}/getFundsAvailable?refreshCache=true`,
+        `${this.#baseUrl}/getFundsAvailable?refreshCache=true`,
         requestOptions
       );
 
@@ -249,7 +256,7 @@ class WebSDK extends IWebSDK {
   #fetchUserWallets = async (): Promise<Wallet[]> => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.baseUrl}/user/wallets`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/user/wallets`, requestOptions);
 
       const data = (await response.json()) as WalletResponse;
       if (data.error) throw new Error(data.error);
@@ -264,7 +271,7 @@ class WebSDK extends IWebSDK {
   #fetchUserInfo = async (): Promise<UserInfo> => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.baseUrl}/user`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/user`, requestOptions);
 
       const data = (await response.json()) as UserInfoResponse;
       if (data.error) throw new Error(data.error);
@@ -279,7 +286,7 @@ class WebSDK extends IWebSDK {
   #fetchUserNfts = async (): Promise<NftsInfo[]> => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.baseUrl}/getNftsAvailable`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/getNftsAvailable`, requestOptions);
 
       const data = (await response.json()) as NftsInfoResponse;
       if (data.error) throw new Error(data.error);
@@ -296,7 +303,7 @@ class WebSDK extends IWebSDK {
     try {
       const requestOptions = await this.#createRequest('POST');
 
-      const response = await fetch(`${this.baseUrl}/createOrRecoverAccount`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/createOrRecoverAccount`, requestOptions);
 
       const data = (await response.json()) as WrappedDekResponse;
       if (data.error) throw new Error(data.error);
@@ -314,7 +321,7 @@ class WebSDK extends IWebSDK {
   #fetchTransactions = async (): Promise<string> => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.baseUrl}/transactions`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/transactions`, requestOptions);
 
       const data = (await response.json()) as TransactionsResponse;
       if (data.error) throw new Error(data.error);
@@ -334,7 +341,7 @@ class WebSDK extends IWebSDK {
         { 'x-api-key': this.apiKey ?? '' }
       );
 
-      const response = await fetch(`${this.baseUrl}/createCharge`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/createCharge`, requestOptions);
       const data = (await response.json()) as ChargeResponse;
       if (data.error) throw new Error(data.error);
       return data.data as ChargeUrlAndId;
@@ -364,7 +371,7 @@ class WebSDK extends IWebSDK {
         tokenAddress,
       });
 
-      const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
       return (await response.json()) as
         | PayResponseRouteCreated
         | PayResponseOnRampLink
@@ -382,7 +389,7 @@ class WebSDK extends IWebSDK {
       const wrappedDek = await this.#getWrappedDek();
       if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
-      const response = await fetch(`${this.baseUrl}/pay`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
       return (await response.json()) as
         | PayResponseRouteCreated
         | PayResponseOnRampLink
