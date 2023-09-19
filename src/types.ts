@@ -189,7 +189,6 @@ export interface UserInfo {
   waitlistPoints: number;
   email?: string;
   currency: string;
-  invitedBy: null | string;
   countryFlag: string;
   referralLink: string;
   countryCode: string;
