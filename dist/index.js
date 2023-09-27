@@ -465,7 +465,9 @@ class WebSDK {
             redirect_uri: this.redirectUri,
             response_type: 'code',
             post_logout_redirect_uri: this.redirectUri,
-            userStore: window ? new oidc_client_ts_1.WebStorageStateStore({ store: window.localStorage }) : undefined,
+            userStore: typeof window !== 'undefined'
+                ? new oidc_client_ts_1.WebStorageStateStore({ store: window.localStorage })
+                : undefined,
             scope: 'openid offline_access',
             automaticSilentRenew: true,
         }), "f");
