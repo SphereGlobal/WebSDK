@@ -22,6 +22,7 @@ import {
   PayErrorResponse,
   LoadCredentialsParams,
   ForceRefresh,
+  SupportedChains,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -46,6 +47,7 @@ class WebSDK {
   #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
+  scope: string = 'openid email offline_access profile';
 
   constructor(
     clientId: string,
@@ -67,10 +69,18 @@ class WebSDK {
         typeof window !== 'undefined'
           ? new WebStorageStateStore({ store: window.localStorage })
           : undefined,
-      scope: 'openid offline_access',
+      scope: this.scope,
       automaticSilentRenew: true,
     });
   }
+
+  getAccessToken = (): string => {
+    return this.#credentials?.accessToken ?? '';
+  };
+
+  getIdToken = (): string => {
+    return this.#credentials?.idToken ?? '';
+  };
 
   clear = () => {
     this.user = null;
@@ -78,10 +88,10 @@ class WebSDK {
     this.#wrappedDek = '';
   };
 
-  #loadCredentials({ access_token, idToken, refresh_token, expires_at }: LoadCredentialsParams) {
+  #loadCredentials({ access_token, id_token, refresh_token, expires_at }: LoadCredentialsParams) {
     this.#credentials = {
       accessToken: access_token,
-      idToken: idToken ?? '',
+      idToken: id_token ?? '',
       refreshToken: refresh_token,
       expires_at: expires_at ?? 0,
     };
@@ -143,9 +153,9 @@ class WebSDK {
   handleCallback = async () => {
     try {
       const persistence = await this.#handlePersistence();
-      if (persistence) return persistence;
+      if (persistence) return { ...persistence, refresh_token: null };
       const handleAuth = await this.#handleAuth();
-      return handleAuth;
+      return { ...handleAuth, refresh_token: null };
     } catch (error) {
       console.error('There was an error login, error: ', error);
       return error;
@@ -156,11 +166,13 @@ class WebSDK {
     if (this.loginType === LoginBehavior.REDIRECT) {
       await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
+        scope: this.scope,
       });
     } else {
       try {
         const authResult = await this.#oauth2Client?.signinPopup({
           extraQueryParams: { audience: this.#audience },
+          scope: this.scope,
         });
         if (authResult) {
           this.#loadCredentials(authResult);
@@ -170,7 +182,7 @@ class WebSDK {
           // Load information in state
           this.#loadUserData();
 
-          return authResult;
+          return { ...authResult, refresh_token: null };
         } else return null;
       } catch (error: any) {
         console.error('There was an error logging inside login, error: ', error);
@@ -537,6 +549,34 @@ class WebSDK {
     this.getBalances();
     this.getWallets();
   }
+
+  addWallet = async ({
+    walletAddress,
+    chains,
+    label,
+  }: {
+    walletAddress: string;
+    chains: SupportedChains[];
+    label?: string;
+  }): Promise<{ data: string; error: null }> => {
+    try {
+      if (!walletAddress || !chains)
+        throw new Error('Missing parameters, walletAddress and chains should be added');
+      const requestOptions = await this.#createRequest(
+        'POST',
+        { walletAddress, chains, label },
+        {
+          'x-api-key': this.apiKey,
+        }
+      );
+      const response = await fetch(`${this.#baseUrl}/addWallet`, requestOptions);
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('There was an error adding a wallet, error: ', error);
+      throw new Error(error.message || error);
+    }
+  };
 }
 
 export default WebSDK;
