@@ -22,6 +22,7 @@ import {
   PayErrorResponse,
   LoadCredentialsParams,
   ForceRefresh,
+  SupportedChains,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -38,7 +39,7 @@ class WebSDK {
   private apiKey: string;
   private loginType: LoginBehavior = LoginBehavior.REDIRECT;
 
-  #credentials: Credentials | null = null;
+  credentials: Credentials | null = null;
   #oauth2Client?: UserManager;
   #wrappedDek: string = '';
   #wrappedDekExpiration: number = 0;
@@ -46,6 +47,8 @@ class WebSDK {
   #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
+  #refreshToken: string | undefined = undefined;
+  scope: string = 'openid email offline_access profile';
 
   constructor(
     clientId: string,
@@ -67,24 +70,24 @@ class WebSDK {
         typeof window !== 'undefined'
           ? new WebStorageStateStore({ store: window.localStorage })
           : undefined,
-      scope: 'openid offline_access',
+      scope: this.scope,
       automaticSilentRenew: true,
     });
   }
 
   clear = () => {
     this.user = null;
-    this.#credentials = null;
+    this.credentials = null;
     this.#wrappedDek = '';
   };
 
-  #loadCredentials({ access_token, idToken, refresh_token, expires_at }: LoadCredentialsParams) {
-    this.#credentials = {
+  #loadCredentials({ access_token, id_token, refresh_token, expires_at }: LoadCredentialsParams) {
+    this.credentials = {
       accessToken: access_token,
-      idToken: idToken ?? '',
-      refreshToken: refresh_token,
+      idToken: id_token ?? '',
       expires_at: expires_at ?? 0,
     };
+    this.#refreshToken = refresh_token;
   }
 
   #handleAuth = async () => {
@@ -124,7 +127,7 @@ class WebSDK {
 
         return persistence;
       } else {
-        const refreshed = await this.#refreshToken();
+        const refreshed = await this.#refreshTokenFunc();
         if (refreshed) {
           this.#loadCredentials(refreshed);
           if (this.user) this.user.uid = refreshed.profile.sub;
@@ -143,9 +146,9 @@ class WebSDK {
   handleCallback = async () => {
     try {
       const persistence = await this.#handlePersistence();
-      if (persistence) return persistence;
+      if (persistence) return { ...persistence, refresh_token: null };
       const handleAuth = await this.#handleAuth();
-      return handleAuth;
+      return { ...handleAuth, refresh_token: null };
     } catch (error) {
       console.error('There was an error login, error: ', error);
       return error;
@@ -156,11 +159,13 @@ class WebSDK {
     if (this.loginType === LoginBehavior.REDIRECT) {
       await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
+        scope: this.scope,
       });
     } else {
       try {
         const authResult = await this.#oauth2Client?.signinPopup({
           extraQueryParams: { audience: this.#audience },
+          scope: this.scope,
         });
         if (authResult) {
           this.#loadCredentials(authResult);
@@ -170,7 +175,7 @@ class WebSDK {
           // Load information in state
           this.#loadUserData();
 
-          return authResult;
+          return { ...authResult, refresh_token: null };
         } else return null;
       } catch (error: any) {
         console.error('There was an error logging inside login, error: ', error);
@@ -198,14 +203,14 @@ class WebSDK {
   ): Promise<CreateRequest> => {
     // check if access token is valid or can be refresh
     if (await this.isTokenExpired()) {
-      const refreshToken = await this.#refreshToken();
+      const refreshToken = await this.#refreshTokenFunc();
       if (!refreshToken)
         throw new Error('The user is not login or the session is expired, please login again');
     }
 
     const myHeaders = new Headers();
     myHeaders.append('Content-Type', 'application/json');
-    myHeaders.append('Authorization', `Bearer ${this.#credentials?.accessToken}`);
+    myHeaders.append('Authorization', `Bearer ${this.credentials?.accessToken}`);
 
     if (Object.keys(headers).length) {
       for (const [key, value] of Object.entries(headers)) {
@@ -483,31 +488,31 @@ class WebSDK {
   }
 
   isTokenExpired = async (): Promise<boolean> => {
-    if (!this.#credentials) {
+    if (!this.credentials) {
       const user = await this.#oauth2Client?.getUser();
       if (user) {
         return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
       } else return true;
     }
-    return this.#credentials?.expires_at
-      ? this.#credentials.expires_at < Math.floor(Date.now() / 1000)
+    return this.credentials?.expires_at
+      ? this.credentials.expires_at < Math.floor(Date.now() / 1000)
       : true;
   };
 
-  #refreshToken = async () => {
+  #refreshTokenFunc = async () => {
     try {
       const user = await this.#oauth2Client?.getUser();
       if (
-        this.#credentials?.expires_at &&
-        this.#credentials?.expires_at > Math.floor(Date.now() / 1000)
+        this.credentials?.expires_at &&
+        this.credentials?.expires_at > Math.floor(Date.now() / 1000)
       ) {
         return user;
       }
 
-      if (!this.#credentials?.refreshToken && user) {
+      if (!this.#refreshToken && user) {
         this.#loadCredentials(user);
       }
-      if (this.#credentials?.refreshToken) {
+      if (this.#refreshToken) {
         const userRefreshed = await this.#oauth2Client?.signinSilent();
         if (userRefreshed) {
           this.#loadCredentials(userRefreshed);
@@ -537,6 +542,34 @@ class WebSDK {
     this.getBalances();
     this.getWallets();
   }
+
+  addWallet = async ({
+    walletAddress,
+    chains,
+    label,
+  }: {
+    walletAddress: string;
+    chains: SupportedChains[];
+    label?: string;
+  }): Promise<{ data: string; error: null }> => {
+    try {
+      if (!walletAddress || !chains)
+        throw new Error('Missing parameters, walletAddress and chains should be added');
+      const requestOptions = await this.#createRequest(
+        'POST',
+        { walletAddress, chains, label },
+        {
+          'x-api-key': this.apiKey,
+        }
+      );
+      const response = await fetch(`${this.#baseUrl}/addWallet`, requestOptions);
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error('There was an error adding a wallet, error: ', error);
+      throw new Error(error.message || error);
+    }
+  };
 }
 
 export default WebSDK;

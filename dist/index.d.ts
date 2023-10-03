@@ -1,4 +1,4 @@
-import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh } from './src/types';
+import { ChargeReqBody, Credentials, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh, SupportedChains } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -10,6 +10,8 @@ declare class WebSDK {
     private redirectUri;
     private apiKey;
     private loginType;
+    credentials: Credentials | null;
+    scope: string;
     constructor(clientId: string, redirectUri: string, apiKey: string, loginType?: LoginBehavior);
     clear: () => void;
     handleCallback: () => Promise<any>;
@@ -30,5 +32,13 @@ declare class WebSDK {
     }) => Promise<Transaction[]>;
     createIframe(width: number, height: number): HTMLIFrameElement;
     isTokenExpired: () => Promise<boolean>;
+    addWallet: ({ walletAddress, chains, label, }: {
+        walletAddress: string;
+        chains: SupportedChains[];
+        label?: string | undefined;
+    }) => Promise<{
+        data: string;
+        error: null;
+    }>;
 }
 export default WebSDK;
