@@ -114,11 +114,10 @@ class WebSDK {
     } catch (error: any) {
       // this happens because it tries a login although there is no session/user
       // this par is used with the login.Redirect
-      if (!error.message.includes('state')) {
-        console.error('There was an error logging, error: ', error);
-        this.user = null;
+      if (error.message.includes('state')) {
         return null;
-      } else throw new Error(error.message || error);
+      }
+      throw new Error(error.message || error);
     }
   };
 
@@ -156,6 +155,7 @@ class WebSDK {
       const persistence = await this.#handlePersistence();
       if (persistence) return { ...persistence, refresh_token: null };
       const handleAuth = await this.#handleAuth();
+      console.log('handleAuth', handleAuth);
       if (handleAuth) return { ...handleAuth, refresh_token: null };
       else return null;
     } catch (error) {
