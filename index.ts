@@ -39,7 +39,7 @@ class WebSDK {
   private apiKey: string;
   private loginType: LoginBehavior = LoginBehavior.REDIRECT;
 
-  credentials: Credentials | null = null;
+  #credentials: Credentials | null = null;
   #oauth2Client?: UserManager;
   #wrappedDek: string = '';
   #wrappedDekExpiration: number = 0;
@@ -47,7 +47,6 @@ class WebSDK {
   #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
-  #refreshToken: string | undefined = undefined;
   scope: string = 'openid email offline_access profile';
 
   constructor(
@@ -75,19 +74,27 @@ class WebSDK {
     });
   }
 
+  getAccessToken = (): string => {
+    return this.#credentials?.accessToken ?? '';
+  };
+
+  getIdToken = (): string => {
+    return this.#credentials?.idToken ?? '';
+  };
+
   clear = () => {
     this.user = null;
-    this.credentials = null;
+    this.#credentials = null;
     this.#wrappedDek = '';
   };
 
   #loadCredentials({ access_token, id_token, refresh_token, expires_at }: LoadCredentialsParams) {
-    this.credentials = {
+    this.#credentials = {
       accessToken: access_token,
       idToken: id_token ?? '',
+      refreshToken: refresh_token,
       expires_at: expires_at ?? 0,
     };
-    this.#refreshToken = refresh_token;
   }
 
   #handleAuth = async () => {
@@ -127,7 +134,7 @@ class WebSDK {
 
         return persistence;
       } else {
-        const refreshed = await this.#refreshTokenFunc();
+        const refreshed = await this.#refreshToken();
         if (refreshed) {
           this.#loadCredentials(refreshed);
           if (this.user) this.user.uid = refreshed.profile.sub;
@@ -203,14 +210,14 @@ class WebSDK {
   ): Promise<CreateRequest> => {
     // check if access token is valid or can be refresh
     if (await this.isTokenExpired()) {
-      const refreshToken = await this.#refreshTokenFunc();
+      const refreshToken = await this.#refreshToken();
       if (!refreshToken)
         throw new Error('The user is not login or the session is expired, please login again');
     }
 
     const myHeaders = new Headers();
     myHeaders.append('Content-Type', 'application/json');
-    myHeaders.append('Authorization', `Bearer ${this.credentials?.accessToken}`);
+    myHeaders.append('Authorization', `Bearer ${this.#credentials?.accessToken}`);
 
     if (Object.keys(headers).length) {
       for (const [key, value] of Object.entries(headers)) {
@@ -488,31 +495,31 @@ class WebSDK {
   }
 
   isTokenExpired = async (): Promise<boolean> => {
-    if (!this.credentials) {
+    if (!this.#credentials) {
       const user = await this.#oauth2Client?.getUser();
       if (user) {
         return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
       } else return true;
     }
-    return this.credentials?.expires_at
-      ? this.credentials.expires_at < Math.floor(Date.now() / 1000)
+    return this.#credentials?.expires_at
+      ? this.#credentials.expires_at < Math.floor(Date.now() / 1000)
       : true;
   };
 
-  #refreshTokenFunc = async () => {
+  #refreshToken = async () => {
     try {
       const user = await this.#oauth2Client?.getUser();
       if (
-        this.credentials?.expires_at &&
-        this.credentials?.expires_at > Math.floor(Date.now() / 1000)
+        this.#credentials?.expires_at &&
+        this.#credentials?.expires_at > Math.floor(Date.now() / 1000)
       ) {
         return user;
       }
 
-      if (!this.#refreshToken && user) {
+      if (!this.#credentials?.refreshToken && user) {
         this.#loadCredentials(user);
       }
-      if (this.#refreshToken) {
+      if (this.#credentials?.refreshToken) {
         const userRefreshed = await this.#oauth2Client?.signinSilent();
         if (userRefreshed) {
           this.#loadCredentials(userRefreshed);

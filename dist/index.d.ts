@@ -1,4 +1,4 @@
-import { ChargeReqBody, Credentials, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh, SupportedChains } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, PayResponseOnRampLink, PayResponseRouteCreated, PayErrorResponse, ForceRefresh, SupportedChains } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -10,9 +10,10 @@ declare class WebSDK {
     private redirectUri;
     private apiKey;
     private loginType;
-    credentials: Credentials | null;
     scope: string;
     constructor(clientId: string, redirectUri: string, apiKey: string, loginType?: LoginBehavior);
+    getAccessToken: () => string;
+    getIdToken: () => string;
     clear: () => void;
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;

@@ -83,6 +83,7 @@ export interface UserInfoResponse {
 export interface Credentials {
     accessToken: string;
     idToken: string;
+    refreshToken?: string;
     expires_at: number;
 }
 export interface LoadCredentialsParams {
