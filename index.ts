@@ -113,12 +113,11 @@ class WebSDK {
       } else return null;
     } catch (error: any) {
       // this happens because it tries a login although there is no session/user
-      // this par is used with the login.Redirect
-      if (!error.message.includes('state')) {
-        console.error('There was an error logging, error: ', error);
-        this.user = null;
+      // this piece of code is used with the login.Redirect
+      if (error.message.includes('state')) {
         return null;
-      } else throw new Error(error.message || error);
+      }
+      throw new Error(error.message || JSON.stringify(error));
     }
   };
 
