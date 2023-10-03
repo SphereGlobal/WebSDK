@@ -80,11 +80,11 @@ class WebSDK {
             }
             catch (error) {
                 // this happens because it tries a login although there is no session/user
-                // this par is used with the login.Redirect
+                // this piece of code is used with the login.Redirect
                 if (error.message.includes('state')) {
                     return null;
                 }
-                throw new Error(error.message || error);
+                throw new Error(error.message || JSON.stringify(error));
             }
         }));
         _WebSDK_handlePersistence.set(this, () => __awaiter(this, void 0, void 0, function* () {
@@ -128,7 +128,6 @@ class WebSDK {
                 if (persistence)
                     return Object.assign(Object.assign({}, persistence), { refresh_token: null });
                 const handleAuth = yield __classPrivateFieldGet(this, _WebSDK_handleAuth, "f").call(this);
-                console.log('handleAuth', handleAuth);
                 if (handleAuth)
                     return Object.assign(Object.assign({}, handleAuth), { refresh_token: null });
                 else
