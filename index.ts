@@ -349,12 +349,12 @@ class WebSDK {
 
   createCharge = async ({
     chargeData,
-    isDirectTransfer,
-    isTest,
+    isDirectTransfer = false,
+    isTest = false,
   }: {
-    chargeData?: ChargeReqBody;
-    isDirectTransfer: boolean;
-    isTest: boolean;
+    chargeData: ChargeReqBody;
+    isDirectTransfer?: boolean;
+    isTest?: boolean;
   }): Promise<ChargeUrlAndId> => {
     try {
       const requestOptions = await this.#createRequest(

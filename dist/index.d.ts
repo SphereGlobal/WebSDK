@@ -19,9 +19,9 @@ declare class WebSDK {
     login: () => Promise<any>;
     logout: () => Promise<void>;
     createCharge: ({ chargeData, isDirectTransfer, isTest, }: {
-        chargeData?: ChargeReqBody | undefined;
-        isDirectTransfer: boolean;
-        isTest: boolean;
+        chargeData: ChargeReqBody;
+        isDirectTransfer?: boolean | undefined;
+        isTest?: boolean | undefined;
     }) => Promise<ChargeUrlAndId>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
