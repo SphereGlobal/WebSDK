@@ -18,7 +18,7 @@ declare class WebSDK {
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;
     logout: () => Promise<void>;
-    createCharge: ({ chargeData, isDirectTransfer, isTest, }?: {
+    createCharge: ({ chargeData, isDirectTransfer, isTest, }: {
         chargeData?: ChargeReqBody | undefined;
         isDirectTransfer: boolean;
         isTest: boolean;

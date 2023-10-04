@@ -318,7 +318,7 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         }));
-        this.createCharge = ({ chargeData, isDirectTransfer, isTest, } = { isDirectTransfer: false, isTest: false }) => __awaiter(this, void 0, void 0, function* () {
+        this.createCharge = ({ chargeData, isDirectTransfer, isTest, }) => __awaiter(this, void 0, void 0, function* () {
             var _k;
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData, isDirectTransfer, isTest }, { 'x-api-key': (_k = this.apiKey) !== null && _k !== void 0 ? _k : '' });
