@@ -318,10 +318,10 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         }));
-        this.createCharge = (charge, isDirectTransfer = false) => __awaiter(this, void 0, void 0, function* () {
+        this.createCharge = (charge, isDirectTransfer = false, isTest = false) => __awaiter(this, void 0, void 0, function* () {
             var _k;
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge, isDirectTransfer }, { 'x-api-key': (_k = this.apiKey) !== null && _k !== void 0 ? _k : '' });
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge, isDirectTransfer, isTest }, { 'x-api-key': (_k = this.apiKey) !== null && _k !== void 0 ? _k : '' });
                 const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/createCharge`, requestOptions);
                 const data = (yield response.json());
                 if (data.error)
