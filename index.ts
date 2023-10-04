@@ -348,14 +348,20 @@ class WebSDK {
   };
 
   createCharge = async (
-    charge: ChargeReqBody,
-    isDirectTransfer: boolean = false,
-    isTest: boolean = false
+    {
+      chargeData,
+      isDirectTransfer,
+      isTest,
+    }: {
+      chargeData?: ChargeReqBody;
+      isDirectTransfer: boolean;
+      isTest: boolean;
+    } = { isDirectTransfer: false, isTest: false }
   ): Promise<ChargeUrlAndId> => {
     try {
       const requestOptions = await this.#createRequest(
         'POST',
-        { chargeData: charge, isDirectTransfer, isTest },
+        { chargeData, isDirectTransfer, isTest },
         { 'x-api-key': this.apiKey ?? '' }
       );
 
