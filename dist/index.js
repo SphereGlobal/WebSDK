@@ -46,6 +46,15 @@ class WebSDK {
         _WebSDK_audience.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
         _WebSDK_baseUrl.set(this, 'https://api-olgsdff53q-uc.a.run.app');
+        this.scope = 'openid email offline_access profile';
+        this.getAccessToken = () => {
+            var _a, _b;
+            return (_b = (_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken) !== null && _b !== void 0 ? _b : '';
+        };
+        this.getIdToken = () => {
+            var _a, _b;
+            return (_b = (_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.idToken) !== null && _b !== void 0 ? _b : '';
+        };
         this.clear = () => {
             this.user = null;
             __classPrivateFieldSet(this, _WebSDK_credentials, null, "f");
@@ -71,11 +80,11 @@ class WebSDK {
             }
             catch (error) {
                 // this happens because it tries a login although there is no session/user
-                // this par is used with the login.Redirect
-                if (!error.message.includes('state'))
-                    console.error('There was an error loggin, error: ', error);
-                this.user = null;
-                return error;
+                // this piece of code is used with the login.Redirect
+                if (error.message.includes('state')) {
+                    return null;
+                }
+                throw new Error(error.message || JSON.stringify(error));
             }
         }));
         _WebSDK_handlePersistence.set(this, () => __awaiter(this, void 0, void 0, function* () {
@@ -117,9 +126,12 @@ class WebSDK {
             try {
                 const persistence = yield __classPrivateFieldGet(this, _WebSDK_handlePersistence, "f").call(this);
                 if (persistence)
-                    return persistence;
+                    return Object.assign(Object.assign({}, persistence), { refresh_token: null });
                 const handleAuth = yield __classPrivateFieldGet(this, _WebSDK_handleAuth, "f").call(this);
-                return handleAuth;
+                if (handleAuth)
+                    return Object.assign(Object.assign({}, handleAuth), { refresh_token: null });
+                else
+                    return null;
             }
             catch (error) {
                 console.error('There was an error login, error: ', error);
@@ -131,12 +143,14 @@ class WebSDK {
             if (this.loginType === types_1.LoginBehavior.REDIRECT) {
                 yield ((_e = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _e === void 0 ? void 0 : _e.signinRedirect({
                     extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
+                    scope: this.scope,
                 }));
             }
             else {
                 try {
                     const authResult = yield ((_f = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _f === void 0 ? void 0 : _f.signinPopup({
                         extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
+                        scope: this.scope,
                     }));
                     if (authResult) {
                         __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadCredentials).call(this, authResult);
@@ -146,7 +160,7 @@ class WebSDK {
                             this.user = { uid: authResult.profile.sub };
                         // Load information in state
                         __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadUserData).call(this);
-                        return authResult;
+                        return Object.assign(Object.assign({}, authResult), { refresh_token: null });
                     }
                     else
                         return null;
@@ -304,10 +318,10 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         }));
-        this.createCharge = (charge) => __awaiter(this, void 0, void 0, function* () {
+        this.createCharge = ({ chargeData, isDirectTransfer = false, isTest = false, }) => __awaiter(this, void 0, void 0, function* () {
             var _k;
             try {
-                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData: charge }, { 'x-api-key': (_k = this.apiKey) !== null && _k !== void 0 ? _k : '' });
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { chargeData, isDirectTransfer, isTest }, { 'x-api-key': (_k = this.apiKey) !== null && _k !== void 0 ? _k : '' });
                 const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/createCharge`, requestOptions);
                 const data = (yield response.json());
                 if (data.error)
@@ -455,6 +469,22 @@ class WebSDK {
             else
                 return fn();
         });
+        this.addWallet = ({ walletAddress, chains, label, }) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (!walletAddress || !chains)
+                    throw new Error('Missing parameters, walletAddress and chains should be added');
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { walletAddress, chains, label }, {
+                    'x-api-key': this.apiKey,
+                });
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/addWallet`, requestOptions);
+                const data = yield response.json();
+                return data;
+            }
+            catch (error) {
+                console.error('There was an error adding a wallet, error: ', error);
+                throw new Error(error.message || error);
+            }
+        });
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.apiKey = apiKey;
@@ -468,7 +498,7 @@ class WebSDK {
             userStore: typeof window !== 'undefined'
                 ? new oidc_client_ts_1.WebStorageStateStore({ store: window.localStorage })
                 : undefined,
-            scope: 'openid offline_access',
+            scope: this.scope,
             automaticSilentRenew: true,
         }), "f");
     }
@@ -480,10 +510,10 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_wrappedDekExpiration = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_handleAuth = new WeakMap(), _WebSDK_handlePersistence = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap(), _WebSDK_refreshToken = new WeakMap(), _WebSDK_getData = new WeakMap(), _WebSDK_instances = new WeakSet(), _WebSDK_loadCredentials = function _WebSDK_loadCredentials({ access_token, idToken, refresh_token, expires_at }) {
+_WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_wrappedDekExpiration = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_handleAuth = new WeakMap(), _WebSDK_handlePersistence = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap(), _WebSDK_refreshToken = new WeakMap(), _WebSDK_getData = new WeakMap(), _WebSDK_instances = new WeakSet(), _WebSDK_loadCredentials = function _WebSDK_loadCredentials({ access_token, id_token, refresh_token, expires_at }) {
     __classPrivateFieldSet(this, _WebSDK_credentials, {
         accessToken: access_token,
-        idToken: idToken !== null && idToken !== void 0 ? idToken : '',
+        idToken: id_token !== null && id_token !== void 0 ? id_token : '',
         refreshToken: refresh_token,
         expires_at: expires_at !== null && expires_at !== void 0 ? expires_at : 0,
     }, "f");

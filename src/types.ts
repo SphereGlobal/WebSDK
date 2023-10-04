@@ -99,7 +99,7 @@ export interface Credentials {
 
 export interface LoadCredentialsParams {
   access_token: string;
-  idToken?: string;
+  id_token?: string;
   refresh_token?: string;
   expires_at?: number;
 }
