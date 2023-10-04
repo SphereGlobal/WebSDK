@@ -18,7 +18,7 @@ declare class WebSDK {
     handleCallback: () => Promise<any>;
     login: () => Promise<any>;
     logout: () => Promise<void>;
-    createCharge: (charge: ChargeReqBody) => Promise<ChargeUrlAndId>;
+    createCharge: (charge: ChargeReqBody, isDirectTransfer?: boolean) => Promise<ChargeUrlAndId>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
