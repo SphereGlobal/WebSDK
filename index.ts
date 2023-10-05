@@ -441,10 +441,10 @@ class WebSDK {
 
   getTransactions = async (
     props: {
-      quantity: number;
-      getReceived: boolean;
-      getSent: boolean;
-      forceRefresh: boolean;
+      quantity?: number;
+      getReceived?: boolean;
+      getSent?: boolean;
+      forceRefresh?: boolean;
     } = {
       quantity: 0,
       getReceived: true,
