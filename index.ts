@@ -169,6 +169,7 @@ class WebSDK {
   };
 
   login = async () => {
+    await this.logout(false);
     if (this.loginType === LoginBehavior.REDIRECT) {
       await this.#oauth2Client?.signinRedirect({
         extraQueryParams: { audience: this.#audience },
@@ -197,12 +198,12 @@ class WebSDK {
     }
   };
 
-  logout = async () => {
+  logout = async (withPageReload = true) => {
     try {
       if (typeof window === 'undefined') return;
       this.#oauth2Client?.signoutSilent();
       this.#oauth2Client?.removeUser();
-      window.location.replace(this.redirectUri as string);
+      withPageReload && window.location.replace(this.redirectUri as string);
       this.clear();
     } catch (e) {
       console.error('error logging out', e);
@@ -445,10 +446,10 @@ class WebSDK {
 
   getTransactions = async (
     props: {
-      quantity: number;
-      getReceived: boolean;
-      getSent: boolean;
-      forceRefresh: boolean;
+      quantity?: number;
+      getReceived?: boolean;
+      getSent?: boolean;
+      forceRefresh?: boolean;
     } = {
       quantity: 0,
       getReceived: true,

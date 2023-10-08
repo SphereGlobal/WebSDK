@@ -144,6 +144,7 @@ class WebSDK {
         });
         this.login = () => __awaiter(this, void 0, void 0, function* () {
             var _e, _f;
+            yield this.logout(false);
             if (this.loginType === types_1.LoginBehavior.REDIRECT) {
                 yield ((_e = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _e === void 0 ? void 0 : _e.signinRedirect({
                     extraQueryParams: { audience: __classPrivateFieldGet(this, _WebSDK_audience, "f") },
@@ -175,14 +176,14 @@ class WebSDK {
                 }
             }
         });
-        this.logout = () => __awaiter(this, void 0, void 0, function* () {
+        this.logout = (withPageReload = true) => __awaiter(this, void 0, void 0, function* () {
             var _g, _h;
             try {
                 if (typeof window === 'undefined')
                     return;
                 (_g = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _g === void 0 ? void 0 : _g.signoutSilent();
                 (_h = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _h === void 0 ? void 0 : _h.removeUser();
-                window.location.replace(this.redirectUri);
+                withPageReload && window.location.replace(this.redirectUri);
                 this.clear();
             }
             catch (e) {
