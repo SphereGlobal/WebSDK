@@ -15,7 +15,7 @@ declare class WebSDK {
     getAccessToken: () => string;
     getIdToken: () => string;
     clear: () => void;
-    handleCallback: () => Promise<any>;
+    handleCallback: (url?: string, state?: string) => Promise<any>;
     login: () => Promise<any>;
     logout: () => Promise<void>;
     createCharge: ({ chargeData, isDirectTransfer, isTest, }: {

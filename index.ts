@@ -97,9 +97,14 @@ class WebSDK {
     };
   }
 
-  #handleAuth = async () => {
+  #handleAuth = async (url?: string, state?: string) => {
     try {
-      const authResult: any = await this.#oauth2Client?.signinCallback();
+      if (state) {
+        const id = JSON.parse(state).id;
+        localStorage.setItem(`oidc.${id}`, state);
+      }
+      const authResult: any = await this.#oauth2Client?.signinCallback(url);
+
       if (authResult) {
         this.#loadCredentials(authResult);
 
@@ -150,11 +155,11 @@ class WebSDK {
     } else return null;
   };
 
-  handleCallback = async () => {
+  handleCallback = async (url?: string, state?: string) => {
     try {
       const persistence = await this.#handlePersistence();
       if (persistence) return { ...persistence, refresh_token: null };
-      const handleAuth = await this.#handleAuth();
+      const handleAuth = await this.#handleAuth(url, state);
       if (handleAuth) return { ...handleAuth, refresh_token: null };
       else return null;
     } catch (error) {
