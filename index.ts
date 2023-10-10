@@ -97,22 +97,13 @@ class WebSDK {
     };
   }
 
-  #handleAuth = async (url?: string, state?: string) => {
+  #handleAuth = async (url?: string) => {
     try {
-      if (window.location.href.includes('ory')) {
-        localStorage.setItem('oryUrl', window.location.href);
-      }
-      if (state) {
-        const id = JSON.parse(state).id;
-        localStorage.setItem(`oidc.${id}`, state);
-      }
-      const authResult: any = await this.#oauth2Client?.signinCallback(
-        localStorage.getItem('oryUrl') ?? url
-      );
+      // if url is undefined (default behavior) it will take the url from window.location.href
+      const authResult: any = await this.#oauth2Client?.signinCallback(url);
 
       if (authResult) {
         this.#loadCredentials(authResult);
-
         if (this.user) {
           this.user.uid = authResult.profile?.sub;
         } else this.user = { uid: authResult.profile?.sub };
@@ -160,11 +151,11 @@ class WebSDK {
     } else return null;
   };
 
-  handleCallback = async (url?: string, state?: string) => {
+  handleCallback = async (url?: string) => {
     try {
       const persistence = await this.#handlePersistence();
       if (persistence) return { ...persistence, refresh_token: null };
-      const handleAuth = await this.#handleAuth(url, state);
+      const handleAuth = await this.#handleAuth(url);
       if (handleAuth) return { ...handleAuth, refresh_token: null };
       else return null;
     } catch (error) {
