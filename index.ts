@@ -97,12 +97,13 @@ class WebSDK {
     };
   }
 
-  #handleAuth = async () => {
+  #handleAuth = async (url?: string) => {
     try {
-      const authResult: any = await this.#oauth2Client?.signinCallback();
+      // if url is undefined (default behavior) it will take the url from window.location.href
+      const authResult: any = await this.#oauth2Client?.signinCallback(url);
+
       if (authResult) {
         this.#loadCredentials(authResult);
-
         if (this.user) {
           this.user.uid = authResult.profile?.sub;
         } else this.user = { uid: authResult.profile?.sub };
@@ -150,11 +151,11 @@ class WebSDK {
     } else return null;
   };
 
-  handleCallback = async () => {
+  handleCallback = async (url?: string) => {
     try {
       const persistence = await this.#handlePersistence();
       if (persistence) return { ...persistence, refresh_token: null };
-      const handleAuth = await this.#handleAuth();
+      const handleAuth = await this.#handleAuth(url);
       if (handleAuth) return { ...handleAuth, refresh_token: null };
       else return null;
     } catch (error) {

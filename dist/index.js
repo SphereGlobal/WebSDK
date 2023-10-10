@@ -60,10 +60,11 @@ class WebSDK {
             __classPrivateFieldSet(this, _WebSDK_credentials, null, "f");
             __classPrivateFieldSet(this, _WebSDK_wrappedDek, '', "f");
         };
-        _WebSDK_handleAuth.set(this, () => __awaiter(this, void 0, void 0, function* () {
+        _WebSDK_handleAuth.set(this, (url) => __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
             try {
-                const authResult = yield ((_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signinCallback());
+                // if url is undefined (default behavior) it will take the url from window.location.href
+                const authResult = yield ((_a = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _a === void 0 ? void 0 : _a.signinCallback(url));
                 if (authResult) {
                     __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadCredentials).call(this, authResult);
                     if (this.user) {
@@ -122,12 +123,12 @@ class WebSDK {
             else
                 return null;
         }));
-        this.handleCallback = () => __awaiter(this, void 0, void 0, function* () {
+        this.handleCallback = (url) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const persistence = yield __classPrivateFieldGet(this, _WebSDK_handlePersistence, "f").call(this);
                 if (persistence)
                     return Object.assign(Object.assign({}, persistence), { refresh_token: null });
-                const handleAuth = yield __classPrivateFieldGet(this, _WebSDK_handleAuth, "f").call(this);
+                const handleAuth = yield __classPrivateFieldGet(this, _WebSDK_handleAuth, "f").call(this, url);
                 if (handleAuth)
                     return Object.assign(Object.assign({}, handleAuth), { refresh_token: null });
                 else
