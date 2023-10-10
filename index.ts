@@ -99,11 +99,16 @@ class WebSDK {
 
   #handleAuth = async (url?: string, state?: string) => {
     try {
+      if (window.location.href.includes('ory')) {
+        localStorage.setItem('oryUrl', window.location.href);
+      }
       if (state) {
         const id = JSON.parse(state).id;
         localStorage.setItem(`oidc.${id}`, state);
       }
-      const authResult: any = await this.#oauth2Client?.signinCallback(url);
+      const authResult: any = await this.#oauth2Client?.signinCallback(
+        localStorage.getItem('oryUrl') ?? url
+      );
 
       if (authResult) {
         this.#loadCredentials(authResult);
