@@ -359,13 +359,20 @@ class WebSDK {
     isTest?: boolean;
   }): Promise<ChargeUrlAndId> => {
     try {
-      const requestOptions = await this.#createRequest(
-        'POST',
-        { chargeData, isDirectTransfer, isTest },
-        { 'x-api-key': this.apiKey ?? '' }
-      );
+      // this endpoint doesn't need to have an a valid access token as header
+      const myHeaders = new Headers();
+      myHeaders.append('Content-Type', 'application/json');
+      myHeaders.append('x-api-key', this.apiKey);
+      const response = await fetch(`${this.#baseUrl}/createCharge`, {
+        headers: { ...myHeaders },
+        method: 'POST',
+        body: JSON.stringify({
+          chargeData,
+          isDirectTransfer,
+          isTest,
+        }),
+      });
 
-      const response = await fetch(`${this.#baseUrl}/createCharge`, requestOptions);
       const data = (await response.json()) as ChargeResponse;
       if (data.error) throw new Error(data.error);
       return data.data as ChargeUrlAndId;
