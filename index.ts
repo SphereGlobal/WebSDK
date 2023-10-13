@@ -443,7 +443,7 @@ class WebSDK {
         if (
           onRampResponse.error?.code === 'empty-balances' ||
           onRampResponse.error?.code === 'insufficient-balances' ||
-          onRampResponse.error?.message.includes('Not sufficient funds to bridge')
+          onRampResponse.error?.message?.includes('Not sufficient funds to bridge')
         ) {
           const onrampLink = onRampResponse.data?.onrampLink;
           throw new PayError({

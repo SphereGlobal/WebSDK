@@ -389,7 +389,7 @@ class WebSDK {
             }
         });
         this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
-            var _p, _q, _r, _s;
+            var _p, _q, _r, _s, _t;
             try {
                 const wrappedDek = yield __classPrivateFieldGet(this, _WebSDK_getWrappedDek, "f").call(this);
                 if (!wrappedDek)
@@ -401,8 +401,8 @@ class WebSDK {
                     const onRampResponse = res;
                     if (((_p = onRampResponse.error) === null || _p === void 0 ? void 0 : _p.code) === 'empty-balances' ||
                         ((_q = onRampResponse.error) === null || _q === void 0 ? void 0 : _q.code) === 'insufficient-balances' ||
-                        ((_r = onRampResponse.error) === null || _r === void 0 ? void 0 : _r.message.includes('Not sufficient funds to bridge'))) {
-                        const onrampLink = (_s = onRampResponse.data) === null || _s === void 0 ? void 0 : _s.onrampLink;
+                        ((_s = (_r = onRampResponse.error) === null || _r === void 0 ? void 0 : _r.message) === null || _s === void 0 ? void 0 : _s.includes('Not sufficient funds to bridge'))) {
+                        const onrampLink = (_t = onRampResponse.data) === null || _t === void 0 ? void 0 : _t.onrampLink;
                         throw new types_1.PayError({
                             message: 'insufficient balances',
                             onrampLink: onrampLink,
@@ -427,17 +427,17 @@ class WebSDK {
                     throw new Error(error);
             }
         });
-        this.getWallets = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _t; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_t = this.user) === null || _t === void 0 ? void 0 : _t.wallets, forceRefresh); });
-        this.getUserInfo = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _u; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_u = this.user) === null || _u === void 0 ? void 0 : _u.info, forceRefresh); });
-        this.getBalances = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _v; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f"), (_v = this.user) === null || _v === void 0 ? void 0 : _v.balances, forceRefresh); });
-        this.getNfts = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _w; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f"), (_w = this.user) === null || _w === void 0 ? void 0 : _w.nfts, forceRefresh); });
+        this.getWallets = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _u; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_u = this.user) === null || _u === void 0 ? void 0 : _u.wallets, forceRefresh); });
+        this.getUserInfo = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _v; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_v = this.user) === null || _v === void 0 ? void 0 : _v.info, forceRefresh); });
+        this.getBalances = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _w; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f"), (_w = this.user) === null || _w === void 0 ? void 0 : _w.balances, forceRefresh); });
+        this.getNfts = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _x; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f"), (_x = this.user) === null || _x === void 0 ? void 0 : _x.nfts, forceRefresh); });
         this.getTransactions = (props = {
             quantity: 0,
             getReceived: true,
             getSent: true,
             forceRefresh: false,
         }) => __awaiter(this, void 0, void 0, function* () {
-            var _x;
+            var _y;
             // Get all transactions encoded
             let { quantity, getReceived, getSent, forceRefresh } = props;
             if (quantity === undefined)
@@ -450,7 +450,7 @@ class WebSDK {
                 forceRefresh = false;
             if (!getSent && !getReceived)
                 throw new Error('getSent and getReceived cannot be both false');
-            const encoded = yield __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchTransactions, "f"), (_x = this.user) === null || _x === void 0 ? void 0 : _x.transactions, forceRefresh);
+            const encoded = yield __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchTransactions, "f"), (_y = this.user) === null || _y === void 0 ? void 0 : _y.transactions, forceRefresh);
             if (!encoded)
                 throw new Error("Couldn't get transactions");
             // Decode JWT payload to get raw transactions
@@ -484,32 +484,32 @@ class WebSDK {
             return txs;
         });
         this.isTokenExpired = () => __awaiter(this, void 0, void 0, function* () {
-            var _y, _z;
+            var _z, _0;
             if (!__classPrivateFieldGet(this, _WebSDK_credentials, "f")) {
-                const user = yield ((_y = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _y === void 0 ? void 0 : _y.getUser());
+                const user = yield ((_z = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _z === void 0 ? void 0 : _z.getUser());
                 if (user) {
                     return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
                 }
                 else
                     return true;
             }
-            return ((_z = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _z === void 0 ? void 0 : _z.expires_at)
+            return ((_0 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _0 === void 0 ? void 0 : _0.expires_at)
                 ? __classPrivateFieldGet(this, _WebSDK_credentials, "f").expires_at < Math.floor(Date.now() / 1000)
                 : true;
         });
         _WebSDK_refreshToken.set(this, () => __awaiter(this, void 0, void 0, function* () {
-            var _0, _1, _2, _3, _4, _5;
+            var _1, _2, _3, _4, _5, _6;
             try {
-                const user = yield ((_0 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _0 === void 0 ? void 0 : _0.getUser());
-                if (((_1 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _1 === void 0 ? void 0 : _1.expires_at) &&
-                    ((_2 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _2 === void 0 ? void 0 : _2.expires_at) > Math.floor(Date.now() / 1000)) {
+                const user = yield ((_1 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _1 === void 0 ? void 0 : _1.getUser());
+                if (((_2 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _2 === void 0 ? void 0 : _2.expires_at) &&
+                    ((_3 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _3 === void 0 ? void 0 : _3.expires_at) > Math.floor(Date.now() / 1000)) {
                     return user;
                 }
-                if (!((_3 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _3 === void 0 ? void 0 : _3.refreshToken) && user) {
+                if (!((_4 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _4 === void 0 ? void 0 : _4.refreshToken) && user) {
                     __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadCredentials).call(this, user);
                 }
-                if ((_4 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _4 === void 0 ? void 0 : _4.refreshToken) {
-                    const userRefreshed = yield ((_5 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _5 === void 0 ? void 0 : _5.signinSilent());
+                if ((_5 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _5 === void 0 ? void 0 : _5.refreshToken) {
+                    const userRefreshed = yield ((_6 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _6 === void 0 ? void 0 : _6.signinSilent());
                     if (userRefreshed) {
                         __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadCredentials).call(this, userRefreshed);
                         return userRefreshed;
