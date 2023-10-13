@@ -403,7 +403,6 @@ class WebSDK {
                     }
                 }
                 else {
-                    console.log('payResponse', payResponse);
                     debugger;
                     return payResponse;
                 }
@@ -434,6 +433,8 @@ class WebSDK {
                 getSent = true;
             if (forceRefresh === undefined)
                 forceRefresh = false;
+            if (!getSent && !getReceived)
+                throw new Error('getSent and getReceived cannot be both false');
             const encoded = yield __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchTransactions, "f"), (_x = this.user) === null || _x === void 0 ? void 0 : _x.transactions, forceRefresh);
             if (!encoded)
                 throw new Error("Couldn't get transactions");

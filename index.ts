@@ -20,11 +20,11 @@ import {
   LoadCredentialsParams,
   ForceRefresh,
   SupportedChains,
-  TxStatus,
   PayResponse,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
+import jwtDecode from 'jwt-decode';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
@@ -443,7 +443,6 @@ class WebSDK {
           return { data: null, error: payResponse?.error?.message || payResponse?.error };
         }
       } else {
-        console.log('payResponse', payResponse);
         debugger;
         return payResponse;
       }
@@ -488,6 +487,8 @@ class WebSDK {
     if (getReceived === undefined) getReceived = true;
     if (getSent === undefined) getSent = true;
     if (forceRefresh === undefined) forceRefresh = false;
+
+    if (!getSent && !getReceived) throw new Error('getSent and getReceived cannot be both false');
 
     const encoded = await this.#getData(
       this.#fetchTransactions,
