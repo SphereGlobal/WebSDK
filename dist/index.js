@@ -357,27 +357,35 @@ class WebSDK {
                     tokenAddress,
                 });
                 const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/pay`, requestOptions);
-                const payResponse = yield response.json();
-                if (payResponse.error) {
-                    if (((_k = payResponse.error) === null || _k === void 0 ? void 0 : _k.code) === 'empty-balances' ||
-                        ((_l = payResponse.error) === null || _l === void 0 ? void 0 : _l.code) === 'insufficient-balances' ||
-                        ((_m = payResponse.error) === null || _m === void 0 ? void 0 : _m.message.includes('Not sufficient funds to bridge'))) {
-                        return {
-                            data: Object.assign({}, payResponse.data),
-                            error: 'insufficient balances',
-                        };
+                const res = yield response.json();
+                if (res.error) {
+                    const onRampResponse = res;
+                    if (((_k = onRampResponse.error) === null || _k === void 0 ? void 0 : _k.code) === 'empty-balances' ||
+                        ((_l = onRampResponse.error) === null || _l === void 0 ? void 0 : _l.code) === 'insufficient-balances' ||
+                        ((_m = onRampResponse.error) === null || _m === void 0 ? void 0 : _m.message.includes('Not sufficient funds to bridge'))) {
+                        const onrampLink = (_o = onRampResponse.data) === null || _o === void 0 ? void 0 : _o.onrampLink;
+                        throw new types_1.PayError({
+                            message: 'insufficient balances',
+                            onrampLink: onrampLink,
+                        });
                     }
                     else {
-                        return { data: null, error: ((_o = payResponse === null || payResponse === void 0 ? void 0 : payResponse.error) === null || _o === void 0 ? void 0 : _o.message) || (payResponse === null || payResponse === void 0 ? void 0 : payResponse.error) };
+                        const errorResponse = res;
+                        throw new Error(`Payment failed: ${errorResponse.error}`);
                     }
                 }
                 else {
-                    return payResponse;
+                    const payResponse = res.data;
+                    return Object.assign({}, payResponse);
                 }
             }
             catch (error) {
-                console.error('There was an processing your payment, error: ', error);
-                throw new Error(error.message || error);
+                console.error('There was an error paying this transaction, error: ', error);
+                if (error instanceof types_1.PayError) {
+                    throw error;
+                }
+                else
+                    throw new Error(error);
             }
         });
         this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
@@ -388,28 +396,35 @@ class WebSDK {
                     throw new Error('There was an error getting the wrapped dek');
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek, transactionId });
                 const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/pay`, requestOptions);
-                const payResponse = yield response.json();
-                if (payResponse.error) {
-                    if (((_p = payResponse.error) === null || _p === void 0 ? void 0 : _p.code) === 'empty-balances' ||
-                        ((_q = payResponse.error) === null || _q === void 0 ? void 0 : _q.code) === 'insufficient-balances' ||
-                        ((_r = payResponse.error) === null || _r === void 0 ? void 0 : _r.message.includes('Not sufficient funds to bridge'))) {
-                        return {
-                            data: Object.assign({}, payResponse.data),
-                            error: 'insufficient balances',
-                        };
+                const res = yield response.json();
+                if (res.error) {
+                    const onRampResponse = res;
+                    if (((_p = onRampResponse.error) === null || _p === void 0 ? void 0 : _p.code) === 'empty-balances' ||
+                        ((_q = onRampResponse.error) === null || _q === void 0 ? void 0 : _q.code) === 'insufficient-balances' ||
+                        ((_r = onRampResponse.error) === null || _r === void 0 ? void 0 : _r.message.includes('Not sufficient funds to bridge'))) {
+                        const onrampLink = (_s = onRampResponse.data) === null || _s === void 0 ? void 0 : _s.onrampLink;
+                        throw new types_1.PayError({
+                            message: 'insufficient balances',
+                            onrampLink: onrampLink,
+                        });
                     }
                     else {
-                        return { data: null, error: ((_s = payResponse === null || payResponse === void 0 ? void 0 : payResponse.error) === null || _s === void 0 ? void 0 : _s.message) || (payResponse === null || payResponse === void 0 ? void 0 : payResponse.error) };
+                        const errorResponse = res;
+                        throw new Error(`Payment failed: ${errorResponse.error}`);
                     }
                 }
                 else {
-                    debugger;
-                    return payResponse;
+                    const payResponse = res.data;
+                    return Object.assign({}, payResponse);
                 }
             }
             catch (error) {
                 console.error('There was an error paying this transaction, error: ', error);
-                return { data: null, error: error.message || error };
+                if (error instanceof types_1.PayError) {
+                    throw error;
+                }
+                else
+                    throw new Error(error);
             }
         });
         this.getWallets = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _t; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_t = this.user) === null || _t === void 0 ? void 0 : _t.wallets, forceRefresh); });

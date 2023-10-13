@@ -350,16 +350,42 @@ export interface RouteResponse {
     status: TxStatus;
     route: Route;
 }
-export type PayResponse = {
-    error: 'insufficient balances';
+export interface PayErrorResponse {
+    error: string | {
+        code: string;
+        message: string;
+    };
+    data: null;
+}
+export interface PayResponseOnRampLink {
+    error: {
+        code: string;
+        message: string;
+    };
     data: OnRampResponse;
-} | {
+}
+export interface SDKPayResponseOnRampLink {
+    data: {
+        onrampLink: string;
+        status: TxStatus.PENDING;
+    };
+    error: 'insufficient balances';
+}
+export interface PayResponseRouteCreated {
     error: null;
     data: RouteResponse;
-} | {
-    error: string;
-    data: null;
-};
+}
+export interface PayResponse {
+    status: TxStatus;
+    route: Route;
+}
+export declare class PayError extends Error {
+    onrampLink?: string;
+    constructor({ message, onrampLink }: {
+        message: string;
+        onrampLink?: string;
+    });
+}
 export interface UserBalance {
     balances: WalletBalance[];
     total: string;

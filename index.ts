@@ -21,10 +21,13 @@ import {
   ForceRefresh,
   SupportedChains,
   PayResponse,
+  PayError,
+  PayResponseOnRampLink,
+  PayErrorResponse,
+  PayResponseRouteCreated,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
-import jwtDecode from 'jwt-decode';
 
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
@@ -399,26 +402,32 @@ class WebSDK {
       });
 
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
-      const payResponse = await response.json();
-      if (payResponse.error) {
+      const res = await response.json();
+      if (res.error) {
+        const onRampResponse = res as PayResponseOnRampLink;
         if (
-          payResponse.error?.code === 'empty-balances' ||
-          payResponse.error?.code === 'insufficient-balances' ||
-          payResponse.error?.message.includes('Not sufficient funds to bridge')
+          onRampResponse.error?.code === 'empty-balances' ||
+          onRampResponse.error?.code === 'insufficient-balances' ||
+          onRampResponse.error?.message.includes('Not sufficient funds to bridge')
         ) {
-          return {
-            data: { ...payResponse.data },
-            error: 'insufficient balances',
-          };
+          const onrampLink = onRampResponse.data?.onrampLink;
+          throw new PayError({
+            message: 'insufficient balances',
+            onrampLink: onrampLink,
+          });
         } else {
-          return { data: null, error: payResponse?.error?.message || payResponse?.error };
+          const errorResponse = res as PayErrorResponse;
+          throw new Error(`Payment failed: ${errorResponse.error}`);
         }
       } else {
-        return payResponse;
+        const payResponse = (res as PayResponseRouteCreated).data;
+        return { ...payResponse } as PayResponse;
       }
     } catch (error: any) {
-      console.error('There was an processing your payment, error: ', error);
-      throw new Error(error.message || error);
+      console.error('There was an error paying this transaction, error: ', error);
+      if (error instanceof PayError) {
+        throw error;
+      } else throw new Error(error);
     }
   };
 
@@ -428,27 +437,32 @@ class WebSDK {
       if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
-      const payResponse = await response.json();
-      if (payResponse.error) {
+      const res = await response.json();
+      if (res.error) {
+        const onRampResponse = res as PayResponseOnRampLink;
         if (
-          payResponse.error?.code === 'empty-balances' ||
-          payResponse.error?.code === 'insufficient-balances' ||
-          payResponse.error?.message.includes('Not sufficient funds to bridge')
+          onRampResponse.error?.code === 'empty-balances' ||
+          onRampResponse.error?.code === 'insufficient-balances' ||
+          onRampResponse.error?.message.includes('Not sufficient funds to bridge')
         ) {
-          return {
-            data: { ...payResponse.data },
-            error: 'insufficient balances',
-          };
+          const onrampLink = onRampResponse.data?.onrampLink;
+          throw new PayError({
+            message: 'insufficient balances',
+            onrampLink: onrampLink,
+          });
         } else {
-          return { data: null, error: payResponse?.error?.message || payResponse?.error };
+          const errorResponse = res as PayErrorResponse;
+          throw new Error(`Payment failed: ${errorResponse.error}`);
         }
       } else {
-        debugger;
-        return payResponse;
+        const payResponse = (res as PayResponseRouteCreated).data;
+        return { ...payResponse } as PayResponse;
       }
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
-      return { data: null, error: error.message || error };
+      if (error instanceof PayError) {
+        throw error;
+      } else throw new Error(error);
     }
   };
 
