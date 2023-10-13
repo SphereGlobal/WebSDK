@@ -394,10 +394,6 @@ export interface PayResponseOnRampLink {
   error: { code: string; message: string };
   data: OnRampResponse;
 }
-export interface SDKPayResponseOnRampLink {
-  data: { onrampLink: string; status: TxStatus.PENDING };
-  error: 'insufficient balances';
-}
 export interface PayResponseRouteCreated {
   error: null;
   data: RouteResponse;
