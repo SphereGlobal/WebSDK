@@ -387,25 +387,11 @@ export interface RouteResponse {
   status: TxStatus;
   route: Route;
 }
-export interface PayErrorResponse {
-  error: string | { code: string; message: string };
-  data: null;
-}
 
-export interface PayResponseOnRampLink {
-  error: { code: string; message: string };
-  data: OnRampResponse;
-}
-export interface SDKPayResponseOnRampLink {
-  data: { onrampLink: string; status: TxStatus.PENDING };
-  error: 'insufficient balances';
-}
-
-export interface PayResponseRouteCreated {
-  error: null;
-  data: RouteResponse;
-}
-
+export type PayResponse =
+  | { error: 'insufficient balances'; data: OnRampResponse }
+  | { error: null; data: RouteResponse }
+  | { error: string; data: null };
 export interface UserBalance {
   balances: WalletBalance[];
   total: string;
