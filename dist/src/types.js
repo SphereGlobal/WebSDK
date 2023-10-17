@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TransferType = exports.BridgeServices = exports.RouteActionType = exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
+exports.PayError = exports.TransferType = exports.BridgeServices = exports.RouteActionType = exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
 var LoginBehavior;
 (function (LoginBehavior) {
     LoginBehavior["REDIRECT"] = "REDIRECT";
@@ -62,3 +62,11 @@ var TransferType;
     TransferType["ERC20"] = "ERC20";
     TransferType["SPL"] = "SPL";
 })(TransferType || (exports.TransferType = TransferType = {}));
+class PayError extends Error {
+    constructor({ message, onrampLink }) {
+        super(message);
+        this.name = 'PayError';
+        this.onrampLink = onrampLink;
+    }
+}
+exports.PayError = PayError;
