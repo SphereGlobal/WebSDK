@@ -17,12 +17,14 @@ import {
   TransactionsResponse,
   ChargeUrlAndId,
   WrappedDekResponse,
-  PayResponseOnRampLink,
-  PayResponseRouteCreated,
-  PayErrorResponse,
   LoadCredentialsParams,
   ForceRefresh,
   SupportedChains,
+  PayResponse,
+  PayError,
+  PayResponseOnRampLink,
+  PayErrorResponse,
+  PayResponseRouteCreated,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -359,13 +361,17 @@ class WebSDK {
     isTest?: boolean;
   }): Promise<ChargeUrlAndId> => {
     try {
-      const requestOptions = await this.#createRequest(
-        'POST',
-        { chargeData, isDirectTransfer, isTest },
-        { 'x-api-key': this.apiKey ?? '' }
-      );
+      // this endpoint doesn't need to have an a valid access token as header
+      const response = await fetch(`${this.#baseUrl}/createCharge`, {
+        headers: { 'x-api-key': this.apiKey, 'Content-Type': 'application/json' },
+        method: 'POST',
+        body: JSON.stringify({
+          chargeData,
+          isDirectTransfer,
+          isTest,
+        }),
+      });
 
-      const response = await fetch(`${this.#baseUrl}/createCharge`, requestOptions);
       const data = (await response.json()) as ChargeResponse;
       if (data.error) throw new Error(data.error);
       return data.data as ChargeUrlAndId;
@@ -381,7 +387,7 @@ class WebSDK {
     symbol,
     amount,
     tokenAddress,
-  }: Transaction): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse> => {
+  }: Transaction): Promise<PayResponse> => {
     try {
       const wrappedDek = await this.#getWrappedDek();
       if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
@@ -396,31 +402,67 @@ class WebSDK {
       });
 
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
-      return (await response.json()) as
-        | PayResponseRouteCreated
-        | PayResponseOnRampLink
-        | PayErrorResponse;
+      const res = await response.json();
+      if (res.error) {
+        const onRampResponse = res as PayResponseOnRampLink;
+        if (
+          onRampResponse.error?.code === 'empty-balances' ||
+          onRampResponse.error?.code === 'insufficient-balances' ||
+          onRampResponse.error?.message.includes('Not sufficient funds to bridge')
+        ) {
+          const onrampLink = onRampResponse.data?.onrampLink;
+          throw new PayError({
+            message: 'insufficient balances',
+            onrampLink: onrampLink,
+          });
+        } else {
+          const errorResponse = res as PayErrorResponse;
+          throw new Error(`Payment failed: ${errorResponse.error}`);
+        }
+      } else {
+        const payResponse = (res as PayResponseRouteCreated).data;
+        return { ...payResponse } as PayResponse;
+      }
     } catch (error: any) {
-      console.error('There was an processing your payment, error: ', error);
-      throw new Error(error.message || error);
+      console.error('There was an error paying this transaction, error: ', error);
+      if (error instanceof PayError) {
+        throw error;
+      } else throw new Error(error);
     }
   };
 
-  payCharge = async (
-    transactionId: string
-  ): Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse> => {
+  payCharge = async (transactionId: string): Promise<PayResponse> => {
     try {
       const wrappedDek = await this.#getWrappedDek();
       if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
       const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
-      return (await response.json()) as
-        | PayResponseRouteCreated
-        | PayResponseOnRampLink
-        | PayErrorResponse;
+      const res = await response.json();
+      if (res.error) {
+        const onRampResponse = res as PayResponseOnRampLink;
+        if (
+          onRampResponse.error?.code === 'empty-balances' ||
+          onRampResponse.error?.code === 'insufficient-balances' ||
+          onRampResponse.error?.message?.includes('Not sufficient funds to bridge')
+        ) {
+          const onrampLink = onRampResponse.data?.onrampLink;
+          throw new PayError({
+            message: 'insufficient balances',
+            onrampLink: onrampLink,
+          });
+        } else {
+          const errorResponse = res as PayErrorResponse;
+          throw new Error(`Payment failed: ${errorResponse.error}`);
+        }
+      } else {
+        const payResponse = (res as PayResponseRouteCreated).data;
+        return { ...payResponse } as PayResponse;
+      }
     } catch (error: any) {
       console.error('There was an error paying this transaction, error: ', error);
-      throw new Error(error.message || error);
+      if (error instanceof PayError) {
+        throw error;
+      } else throw new Error(error);
     }
   };
 
@@ -459,6 +501,8 @@ class WebSDK {
     if (getReceived === undefined) getReceived = true;
     if (getSent === undefined) getSent = true;
     if (forceRefresh === undefined) forceRefresh = false;
+
+    if (!getSent && !getReceived) throw new Error('getSent and getReceived cannot be both false');
 
     const encoded = await this.#getData(
       this.#fetchTransactions,

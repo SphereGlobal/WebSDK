@@ -1,19 +1,4 @@
-import {
-  ChargeReqBody,
-  UserInfo,
-  LoginBehavior,
-  NftsInfo,
-  Transaction,
-  User,
-  Wallet,
-  UserBalance,
-  ChargeUrlAndId,
-  PayResponseOnRampLink,
-  PayResponseRouteCreated,
-  PayErrorResponse,
-  ForceRefresh,
-  SupportedChains,
-} from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -38,8 +23,8 @@ declare class WebSDK {
         isDirectTransfer?: boolean | undefined;
         isTest?: boolean | undefined;
     }) => Promise<ChargeUrlAndId>;
-    pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
-    payCharge: (transactionId: string) => Promise<PayResponseRouteCreated | PayResponseOnRampLink | PayErrorResponse>;
+    pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponse>;
+    payCharge: (transactionId: string) => Promise<PayResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
     getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
     getBalances: ({ forceRefresh }?: ForceRefresh) => Promise<UserBalance>;
