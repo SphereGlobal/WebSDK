@@ -368,6 +368,17 @@ export interface PayResponseRouteCreated {
     error: null;
     data: RouteResponse;
 }
+export interface PayResponse {
+    status: TxStatus;
+    route: Route;
+}
+export declare class PayError extends Error {
+    onrampLink?: string;
+    constructor({ message, onrampLink }: {
+        message: string;
+        onrampLink?: string;
+    });
+}
 export interface UserBalance {
     balances: WalletBalance[];
     total: string;

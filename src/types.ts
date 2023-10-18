@@ -382,7 +382,6 @@ export interface OnRampResponse {
   status: TxStatus;
   onrampLink: string;
 }
-
 export interface RouteResponse {
   status: TxStatus;
   route: Route;
@@ -391,17 +390,28 @@ export interface PayErrorResponse {
   error: string | { code: string; message: string };
   data: null;
 }
-
 export interface PayResponseOnRampLink {
   error: { code: string; message: string };
   data: OnRampResponse;
 }
-
 export interface PayResponseRouteCreated {
   error: null;
   data: RouteResponse;
 }
+export interface PayResponse {
+  status: TxStatus;
+  route: Route;
+}
 
+export class PayError extends Error {
+  onrampLink?: string;
+
+  constructor({ message, onrampLink }: { message: string; onrampLink?: string }) {
+    super(message);
+    this.name = 'PayError';
+    this.onrampLink = onrampLink;
+  }
+}
 export interface UserBalance {
   balances: WalletBalance[];
   total: string;
