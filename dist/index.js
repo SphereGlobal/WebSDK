@@ -371,7 +371,9 @@ class WebSDK {
                     }
                     else {
                         const errorResponse = res;
-                        throw new Error(`Payment failed: ${errorResponse.error}`);
+                        throw new Error(`Payment failed: ${typeof errorResponse.error === 'string'
+                            ? errorResponse.error
+                            : errorResponse.error.message || errorResponse.error.code}`);
                     }
                 }
                 else {
@@ -410,7 +412,9 @@ class WebSDK {
                     }
                     else {
                         const errorResponse = res;
-                        throw new Error(`Payment failed: ${errorResponse.error}`);
+                        throw new Error(`Payment failed: ${typeof errorResponse.error === 'string'
+                            ? errorResponse.error
+                            : errorResponse.error.message || errorResponse.error.code}`);
                     }
                 }
                 else {
