@@ -417,7 +417,13 @@ class WebSDK {
           });
         } else {
           const errorResponse = res as PayErrorResponse;
-          throw new Error(`Payment failed: ${errorResponse.error}`);
+          throw new Error(
+            `Payment failed: ${
+              typeof errorResponse.error === 'string'
+                ? errorResponse.error
+                : errorResponse.error.message || errorResponse.error.code
+            }`
+          );
         }
       } else {
         const payResponse = (res as PayResponseRouteCreated).data;
@@ -452,7 +458,13 @@ class WebSDK {
           });
         } else {
           const errorResponse = res as PayErrorResponse;
-          throw new Error(`Payment failed: ${errorResponse.error}`);
+          throw new Error(
+            `Payment failed: ${
+              typeof errorResponse.error === 'string'
+                ? errorResponse.error
+                : errorResponse.error.message || errorResponse.error.code
+            }`
+          );
         }
       } else {
         const payResponse = (res as PayResponseRouteCreated).data;
