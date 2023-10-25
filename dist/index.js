@@ -42,8 +42,8 @@ class WebSDK {
         _WebSDK_oauth2Client.set(this, void 0);
         _WebSDK_wrappedDek.set(this, '');
         _WebSDK_wrappedDekExpiration.set(this, 0);
-        _WebSDK_domain.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/');
-        _WebSDK_audience.set(this, 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com');
+        _WebSDK_domain.set(this, 'https://auth.sphereone.xyz');
+        _WebSDK_audience.set(this, 'https://auth.sphereone.xyz');
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
         _WebSDK_baseUrl.set(this, 'https://api-olgsdff53q-uc.a.run.app');
         this.scope = 'openid email offline_access profile';
