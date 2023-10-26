@@ -45,8 +45,8 @@ class WebSDK {
   #oauth2Client?: UserManager;
   #wrappedDek: string = '';
   #wrappedDekExpiration: number = 0;
-  #domain: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com/';
-  #audience: string = 'https://relaxed-kirch-zjpimqs5qe.projects.oryapis.com';
+  #domain: string = 'https://auth.sphereone.xyz';
+  #audience: string = 'https://auth.sphereone.xyz';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
   scope: string = 'openid email offline_access profile';
