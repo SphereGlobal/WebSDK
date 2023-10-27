@@ -1,4 +1,4 @@
-import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse, GetRouteEstimationParams, PayRouteEstimate } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -35,6 +35,7 @@ declare class WebSDK {
         getSent?: boolean;
         forceRefresh?: boolean;
     }) => Promise<Transaction[]>;
+    getRouteEstimation: ({ transactionId, }: GetRouteEstimationParams) => Promise<PayRouteEstimate>;
     createIframe(width: number, height: number): HTMLIFrameElement;
     isTokenExpired: () => Promise<boolean>;
     addWallet: ({ walletAddress, chains, label, }: {

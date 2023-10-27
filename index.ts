@@ -25,10 +25,12 @@ import {
   PayResponseOnRampLink,
   PayErrorResponse,
   PayResponseRouteCreated,
+  PayRouteEstimateResponse,
+  GetRouteEstimationParams,
+  PayRouteEstimate,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
-
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -351,6 +353,23 @@ class WebSDK {
     }
   };
 
+  #estimateRoute = async ({
+    transactionId,
+  }: {
+    transactionId: string;
+  }): Promise<PayRouteEstimateResponse> => {
+    try {
+      const requestOptions = await this.#createRequest('POST', { transactionId });
+      const response = await fetch(`${this.#baseUrl}/pay/route`, requestOptions);
+      const data = (await response.json()) as PayRouteEstimateResponse;
+      return data;
+    } catch (e: any) {
+      // more for internal server errors or bad requests
+      console.error(`There was an error estimating the route for charge ${transactionId} because: ${e}`);
+      throw new Error(e.message || e);
+    }
+  };
+
   createCharge = async ({
     chargeData,
     isDirectTransfer = false,
@@ -551,6 +570,22 @@ class WebSDK {
       };
     });
     return txs;
+  };
+
+  getRouteEstimation = async ({
+    transactionId,
+  }: GetRouteEstimationParams): Promise<PayRouteEstimate> => {
+    try {
+      const response = await this.#estimateRoute({ transactionId });
+      if (response.error)
+        throw new Error(`Error Code: ${response.error.code}: ${response.error.message}`);
+      // NOTE: Bit redundant. If call successful, response.data should never be null. But maybe good to have?
+      if (!response.data) throw new Error('Route Estimation is null.');
+      return response.data;
+    } catch (e: any) {
+      // returning internal server errors and catching response error handling
+      throw new Error(e.message || e);
+    }
   };
 
   createIframe(width: number, height: number) {

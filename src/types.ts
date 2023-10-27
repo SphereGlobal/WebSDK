@@ -435,3 +435,41 @@ export interface TransactionsResponse {
 export interface ForceRefresh {
   forceRefresh?: boolean;
 }
+
+export interface GetRouteEstimationParams {
+  transactionId: string;
+}
+
+export interface GenericErrorCodeResponse {
+  code: string;
+  message: string;
+}
+
+export interface PayRouteEstimateResponse {
+  data: PayRouteEstimate | null;
+  error: GenericErrorCodeResponse | null;
+}
+
+export interface PayRouteEstimate {
+  txId: string; // transactionId
+  status: TxStatus; // TxStatus - WAITING, PROCESSING, COMPLETED, CANCELED, FAILED (should be PENDING)
+  total: number; // total amount initially received, not including other costs
+  estimation: PayRouteTotalEstimation;
+  to: PayRouteDestinationEstimate;
+  startTimestamp: number; // timestamp when response is sent back to client-side
+  limitTimestamp: number; // timestamp when this route is still valid, minimum
+}
+
+export interface PayRouteTotalEstimation {
+  costUsd: number; // cost (in usd) to make the transaction
+  timeEstimate: number; // in minutes, rough estimate (for 60 seconds)
+  gas: string; // gas for the transaction
+  route: string; // the route batches that will be executed
+}
+
+export interface PayRouteDestinationEstimate {
+  toAmount: string; // amount to be received
+  toAddress: string; // receiver address
+  toChain: string; // destination chain
+  toToken: Token; // extra token metadata
+}
