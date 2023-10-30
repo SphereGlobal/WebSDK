@@ -25,6 +25,7 @@ import {
   PayResponseOnRampLink,
   PayErrorResponse,
   PayResponseRouteCreated,
+  GenericSuccessResponse,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -43,8 +44,6 @@ class WebSDK {
 
   #credentials: Credentials | null = null;
   #oauth2Client?: UserManager;
-  #wrappedDek: string = '';
-  #wrappedDekExpiration: number = 0;
   #domain: string = 'https://auth.sphereone.xyz';
   #audience: string = 'https://auth.sphereone.xyz';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
@@ -87,7 +86,6 @@ class WebSDK {
   clear = () => {
     this.user = null;
     this.#credentials = null;
-    this.#wrappedDek = '';
   };
 
   #loadCredentials({ access_token, id_token, refresh_token, expires_at }: LoadCredentialsParams) {
@@ -316,19 +314,14 @@ class WebSDK {
     }
   };
 
-  #getWrappedDek = async (): Promise<string> => {
-    if (this.#wrappedDek && this.#wrappedDekExpiration * 1000 > Date.now()) return this.#wrappedDek;
+  #getWrappedDek = async ({ transactionId }: { transactionId: string }): Promise<string> => {
     try {
-      const requestOptions = await this.#createRequest('POST');
+      const requestOptions = await this.#createRequest('POST', { target: transactionId });
 
       const response = await fetch(`${this.#baseUrl}/createOrRecoverAccount`, requestOptions);
 
       const data = (await response.json()) as WrappedDekResponse;
       if (data.error) throw new Error(data.error);
-      if (data.data) {
-        this.#wrappedDek = data.data;
-        this.#wrappedDekExpiration = (await decodeJWT(this.#wrappedDek)).exp * 1000;
-      }
       return data.data as string;
     } catch (error: any) {
       console.error('There was an error getting wrapped dek, error: ', error);
@@ -348,6 +341,17 @@ class WebSDK {
     } catch (error: any) {
       console.error('There was an error getting transactions, error: ', error);
       throw new Error(error.message || error);
+    }
+  };
+
+  #addPinCode = async ({ pinCode }: { pinCode: string }): Promise<GenericSuccessResponse> => {
+    try {
+      const requestOptions = await this.#createRequest('POST', { pinCode });
+      const response = await fetch(`${this.#baseUrl}/add-pin-code`, requestOptions);
+      const data = await response.json();
+      return data as GenericSuccessResponse;
+    } catch (e: any) {
+      throw new Error(e.message || e);
     }
   };
 
@@ -389,7 +393,8 @@ class WebSDK {
     tokenAddress,
   }: Transaction): Promise<PayResponse> => {
     try {
-      const wrappedDek = await this.#getWrappedDek();
+      // TODO: since we're creating the charge for this one, I dunno what to pass for the target
+      const wrappedDek = await this.#getWrappedDek({ transactionId: '' });
       if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
 
       const requestOptions = await this.#createRequest('POST', {
@@ -437,11 +442,27 @@ class WebSDK {
     }
   };
 
-  payCharge = async (transactionId: string): Promise<PayResponse> => {
+  payCharge = async ({
+    transactionId,
+    pinCode,
+  }: {
+    transactionId: string;
+    pinCode: string;
+  }): Promise<PayResponse> => {
     try {
-      const wrappedDek = await this.#getWrappedDek();
-      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
-      const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
+      // check for Pin Code Setup
+      if (!this.checkIfPinCodeExists()) {
+        throw new Error(
+          "You don't have a Pin Code set up. You need to set up a Pin Code before proceeding with Paying."
+        );
+      }
+
+      const wrappedDek = await this.#getWrappedDek({ transactionId });
+      const requestOptions = await this.#createRequest('POST', {
+        pinCode,
+        transactionId,
+        wrappedDek,
+      });
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
       const res = await response.json();
       if (res.error) {
@@ -453,7 +474,7 @@ class WebSDK {
         ) {
           const onrampLink = onRampResponse.data?.onrampLink;
           throw new PayError({
-            message: 'insufficient balances',
+            message: onRampResponse.error?.code || onRampResponse.error?.message,
             onrampLink: onrampLink,
           });
         } else {
@@ -553,6 +574,16 @@ class WebSDK {
     return txs;
   };
 
+  setPinCode = async ({ pinCode }: { pinCode: string }): Promise<string> => {
+    try {
+      const response = await this.#addPinCode({ pinCode });
+      if (response.error) throw new Error(response.error);
+      return response.data as string;
+    } catch (e: any) {
+      throw new Error(e.message || e);
+    }
+  };
+
   createIframe(width: number, height: number) {
     const iframe = document.createElement('iframe');
     iframe.src = this.#pwaProdUrl;
@@ -571,6 +602,11 @@ class WebSDK {
     return this.#credentials?.expires_at
       ? this.#credentials.expires_at < Math.floor(Date.now() / 1000)
       : true;
+  };
+
+  checkIfPinCodeExists = (): boolean => {
+    const user = this.user?.info;
+    return user?.isPinCodeSetup ?? false;
   };
 
   #refreshToken = async () => {
