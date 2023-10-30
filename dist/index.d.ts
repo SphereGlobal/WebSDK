@@ -24,7 +24,10 @@ declare class WebSDK {
         isTest?: boolean | undefined;
     }) => Promise<ChargeUrlAndId>;
     pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponse>;
-    payCharge: (transactionId: string) => Promise<PayResponse>;
+    payCharge: ({ transactionId, pinCode, }: {
+        transactionId: string;
+        pinCode: string;
+    }) => Promise<PayResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
     getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
     getBalances: ({ forceRefresh }?: ForceRefresh) => Promise<UserBalance>;
@@ -35,8 +38,12 @@ declare class WebSDK {
         getSent?: boolean;
         forceRefresh?: boolean;
     }) => Promise<Transaction[]>;
+    setPinCode: ({ pinCode }: {
+        pinCode: string;
+    }) => Promise<string>;
     createIframe(width: number, height: number): HTMLIFrameElement;
     isTokenExpired: () => Promise<boolean>;
+    checkIfPinCodeExists: () => boolean;
     addWallet: ({ walletAddress, chains, label, }: {
         walletAddress: string;
         chains: SupportedChains[];

@@ -75,6 +75,7 @@ export interface UserInfo {
     username?: string;
     isMerchant: boolean;
     profilePicture: string;
+    isPinCodeSetup?: boolean;
 }
 export interface UserInfoResponse {
     data: UserInfo | null;
@@ -387,14 +388,18 @@ export interface UserBalancesResponse {
     data: UserBalance | null;
     error: string | null;
 }
-export interface WrappedDekResponse {
-    data: string | null;
-    error: null | string;
+export interface WrappedDekResponse extends GenericSuccessResponse {
 }
-export interface TransactionsResponse {
-    data: string | null;
-    error: string | null;
+export interface TransactionsResponse extends GenericSuccessResponse {
 }
 export interface ForceRefresh {
     forceRefresh?: boolean;
+}
+export interface GenericErrorCodeResponse {
+    code: string;
+    message: string;
+}
+export interface GenericSuccessResponse {
+    data: string | null;
+    error: string | null;
 }
