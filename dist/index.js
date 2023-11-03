@@ -501,47 +501,59 @@ class WebSDK {
             return txs;
         });
         this.getRouteEstimation = ({ transactionId, }) => __awaiter(this, void 0, void 0, function* () {
+            var _z;
             try {
                 const response = yield __classPrivateFieldGet(this, _WebSDK_estimateRoute, "f").call(this, { transactionId });
                 if (response.error)
                     throw new Error(`Error Code: ${response.error.code}: ${response.error.message}`);
-                // NOTE: Bit redundant. If call successful, response.data should never be null. But maybe good to have?
-                if (!response.data)
-                    throw new Error('Route Estimation is null.');
-                return response.data;
+                if ((_z = response.data) === null || _z === void 0 ? void 0 : _z.status) {
+                    const data = response.data;
+                    const onrampLink = data.onrampLink;
+                    throw new types_1.RouteEstimateError({
+                        message: 'Insufficient Balances',
+                        onrampLink: onrampLink,
+                    });
+                }
+                else {
+                    return response.data;
+                }
             }
             catch (e) {
                 // returning internal server errors and catching response error handling
-                throw new Error(e.message || e);
+                if (e instanceof types_1.RouteEstimateError) {
+                    throw e;
+                }
+                else
+                    throw new Error(e.message || e);
             }
         });
         this.isTokenExpired = () => __awaiter(this, void 0, void 0, function* () {
-            var _z, _0;
+            var _0, _1;
             if (!__classPrivateFieldGet(this, _WebSDK_credentials, "f")) {
-                const user = yield ((_z = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _z === void 0 ? void 0 : _z.getUser());
+                const user = yield ((_0 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _0 === void 0 ? void 0 : _0.getUser());
                 if (user) {
                     return user.expires_at ? user.expires_at < Math.floor(Date.now() / 1000) : true;
                 }
                 else
                     return true;
             }
-            return ((_0 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _0 === void 0 ? void 0 : _0.expires_at)
+            return ((_1 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _1 === void 0 ? void 0 : _1.expires_at)
                 ? __classPrivateFieldGet(this, _WebSDK_credentials, "f").expires_at < Math.floor(Date.now() / 1000)
                 : true;
         });
         _WebSDK_refreshToken.set(this, () => __awaiter(this, void 0, void 0, function* () {
-            var _1, _2, _3, _4, _5, _6;
+            var _2, _3, _4, _5, _6, _7;
             try {
-                const user = yield ((_1 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _1 === void 0 ? void 0 : _1.getUser());
-                if (((_2 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _2 === void 0 ? void 0 : _2.expires_at) &&
-                    ((_3 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _3 === void 0 ? void 0 : _3.expires_at) > Math.floor(Date.now() / 1000)) {
+                const user = yield ((_2 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _2 === void 0 ? void 0 : _2.getUser());
+                if (((_3 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _3 === void 0 ? void 0 : _3.expires_at) &&
+                    ((_4 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _4 === void 0 ? void 0 : _4.expires_at) > Math.floor(Date.now() / 1000)) {
                     return user;
                 }
-                if (!((_4 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _4 === void 0 ? void 0 : _4.refreshToken) && user) {
+                if (!((_5 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _5 === void 0 ? void 0 : _5.refreshToken) && user) {
                     __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadCredentials).call(this, user);
                 }
-                if ((_5 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _5 === void 0 ? void 0 : _5.refreshToken) {
-                    const userRefreshed = yield ((_6 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _6 === void 0 ? void 0 : _6.signinSilent());
+                if ((_6 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _6 === void 0 ? void 0 : _6.refreshToken) {
+                    const userRefreshed = yield ((_7 = __classPrivateFieldGet(this, _WebSDK_oauth2Client, "f")) === null || _7 === void 0 ? void 0 : _7.signinSilent());
                     if (userRefreshed) {
                         __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_loadCredentials).call(this, userRefreshed);
                         return userRefreshed;

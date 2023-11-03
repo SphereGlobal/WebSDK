@@ -28,6 +28,8 @@ import {
   PayRouteEstimateResponse,
   GetRouteEstimationParams,
   PayRouteEstimate,
+  OnRampResponse,
+  RouteEstimateError,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -579,12 +581,21 @@ class WebSDK {
       const response = await this.#estimateRoute({ transactionId });
       if (response.error)
         throw new Error(`Error Code: ${response.error.code}: ${response.error.message}`);
-      // NOTE: Bit redundant. If call successful, response.data should never be null. But maybe good to have?
-      if (!response.data) throw new Error('Route Estimation is null.');
-      return response.data;
+      if (response.data?.status) {
+        const data = (response.data as OnRampResponse);
+        const onrampLink = data.onrampLink;
+        throw new RouteEstimateError({
+          message: 'Insufficient Balances',
+          onrampLink: onrampLink,
+        });
+      } else {
+        return response.data as PayRouteEstimate;
+      }
     } catch (e: any) {
       // returning internal server errors and catching response error handling
-      throw new Error(e.message || e);
+      if (e instanceof RouteEstimateError) {
+        throw e;
+      } else throw new Error(e.message || e);
     }
   };
 

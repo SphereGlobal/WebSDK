@@ -412,6 +412,8 @@ export class PayError extends Error {
     this.onrampLink = onrampLink;
   }
 }
+
+export class RouteEstimateError extends PayError {}
 export interface UserBalance {
   balances: WalletBalance[];
   total: string;
@@ -446,7 +448,7 @@ export interface GenericErrorCodeResponse {
 }
 
 export interface PayRouteEstimateResponse {
-  data: PayRouteEstimate | null;
+  data: PayRouteEstimate | OnRampResponse | null;
   error: GenericErrorCodeResponse | null;
 }
 

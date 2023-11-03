@@ -379,6 +379,8 @@ export declare class PayError extends Error {
         onrampLink?: string;
     });
 }
+export declare class RouteEstimateError extends PayError {
+}
 export interface UserBalance {
     balances: WalletBalance[];
     total: string;
@@ -406,7 +408,7 @@ export interface GenericErrorCodeResponse {
     message: string;
 }
 export interface PayRouteEstimateResponse {
-    data: PayRouteEstimate | null;
+    data: PayRouteEstimate | OnRampResponse | null;
     error: GenericErrorCodeResponse | null;
 }
 export interface PayRouteEstimate {
