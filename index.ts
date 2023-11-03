@@ -579,23 +579,25 @@ class WebSDK {
   }: GetRouteEstimationParams): Promise<PayRouteEstimate> => {
     try {
       const response = await this.#estimateRoute({ transactionId });
-      if (response.error)
-        throw new Error(`Error Code: ${response.error.code}: ${response.error.message}`);
-      if (response.data?.status) {
-        const data = (response.data as OnRampResponse);
-        const onrampLink = data.onrampLink;
-        throw new RouteEstimateError({
-          message: 'Insufficient Balances',
-          onrampLink: onrampLink,
-        });
+      if (response.error) {
+        const error = response.error;
+        if (error.code === 'empty-balances' || error.code === 'insufficient-balances') {
+          const data = (response.data as OnRampResponse); 
+          const onrampLink = data.onrampLink;
+          throw new RouteEstimateError({
+            message: error.code, 
+            onrampLink: onrampLink,
+          });
+        } else {
+          throw new Error(`Error: ${error.code}: ${error.message}`);
+        }
       } else {
         return response.data as PayRouteEstimate;
       }
     } catch (e: any) {
       // returning internal server errors and catching response error handling
-      if (e instanceof RouteEstimateError) {
-        throw e;
-      } else throw new Error(e.message || e);
+      if (e instanceof RouteEstimateError) throw e;
+      else throw new Error(e.message || e);
     }
   };
 
