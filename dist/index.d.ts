@@ -11,6 +11,7 @@ declare class WebSDK {
     private apiKey;
     private loginType;
     scope: string;
+    pinCodeScreen: Window | null;
     constructor(clientId: string, redirectUri: string, apiKey: string, loginType?: LoginBehavior);
     getAccessToken: () => string;
     getIdToken: () => string;
@@ -23,8 +24,7 @@ declare class WebSDK {
         isDirectTransfer?: boolean | undefined;
         isTest?: boolean | undefined;
     }) => Promise<ChargeUrlAndId>;
-    pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponse>;
-    payCharge: (transactionId: string) => Promise<PayResponse>;
+    payCharge: (transactionId: string, DEK?: string) => Promise<PayResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
     getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
     getBalances: ({ forceRefresh }?: ForceRefresh) => Promise<UserBalance>;
@@ -46,5 +46,8 @@ declare class WebSDK {
         data: string;
         error: null;
     }>;
+    setDek: (DEK: string) => void;
+    addPinCode: () => void;
+    openPinCode: (chargeId: string) => void;
 }
 export default WebSDK;
