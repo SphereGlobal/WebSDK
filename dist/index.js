@@ -314,7 +314,7 @@ class WebSDK {
         _WebSDK_addPinCode.set(this, ({ pinCode }) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { pinCode });
-                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/add-pin-code`, requestOptions);
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/user/pincode`, requestOptions);
                 const data = yield response.json();
                 return data;
             }

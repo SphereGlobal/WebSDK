@@ -347,7 +347,7 @@ class WebSDK {
   #addPinCode = async ({ pinCode }: { pinCode: string }): Promise<GenericSuccessResponse> => {
     try {
       const requestOptions = await this.#createRequest('POST', { pinCode });
-      const response = await fetch(`${this.#baseUrl}/add-pin-code`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/user/pincode`, requestOptions);
       const data = await response.json();
       return data as GenericSuccessResponse;
     } catch (e: any) {
