@@ -46,8 +46,8 @@ declare class WebSDK {
         data: string;
         error: null;
     }>;
-    setDek: (DEK: string) => void;
     addPinCode: () => void;
     openPinCode: (chargeId: string) => void;
+    pinCodeHandler: () => void;
 }
 export default WebSDK;

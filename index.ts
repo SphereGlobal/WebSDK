@@ -645,10 +645,6 @@ class WebSDK {
     }
   };
 
-  setDek = (DEK: string) => {
-    this.#wrappedDek = DEK;
-  };
-
   addPinCode = () => {
     const width = 450;
     const height = 350;
@@ -675,6 +671,15 @@ class WebSDK {
       'Sphereone Pin Code',
       options
     );
+  };
+
+  pinCodeHandler = () => {
+    window.addEventListener('message', (event) => {
+      if (event.origin === this.#pinCodeUrl) {
+        const data = event.data;
+        if (data.data.code === 'DEK') this.#wrappedDek = data.data.share;
+      }
+    });
   };
 }
 

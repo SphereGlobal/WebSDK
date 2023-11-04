@@ -46,7 +46,7 @@ class WebSDK {
         _WebSDK_audience.set(this, 'https://auth.sphereone.xyz');
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
         _WebSDK_baseUrl.set(this, 'https://api-olgsdff53q-uc.a.run.app');
-        _WebSDK_pinCodeUrl.set(this, 'https://sphereone-pincode.web.app');
+        _WebSDK_pinCodeUrl.set(this, 'https://sphereone-pincode-verify.web.app');
         this.scope = 'openid email offline_access profile';
         this.pinCodeScreen = null;
         this.getAccessToken = () => {
@@ -396,6 +396,9 @@ class WebSDK {
                 else
                     throw new Error(error);
             }
+            finally {
+                __classPrivateFieldSet(this, _WebSDK_wrappedDek, '', "f");
+            }
         });
         this.getWallets = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _q; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserWallets, "f"), (_q = this.user) === null || _q === void 0 ? void 0 : _q.wallets, forceRefresh); });
         this.getUserInfo = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _r; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_r = this.user) === null || _r === void 0 ? void 0 : _r.info, forceRefresh); });
@@ -545,9 +548,6 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         });
-        this.setDek = (DEK) => {
-            __classPrivateFieldSet(this, _WebSDK_wrappedDek, DEK, "f");
-        };
         this.addPinCode = () => {
             var _a;
             const width = 450;
@@ -565,6 +565,15 @@ class WebSDK {
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
             this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'Sphereone Pin Code', options);
+        };
+        this.pinCodeHandler = () => {
+            window.addEventListener('message', (event) => {
+                if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
+                    const data = event.data;
+                    if (data.data.code === 'DEK')
+                        __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
+                }
+            });
         };
         this.clientId = clientId;
         this.redirectUri = redirectUri;
