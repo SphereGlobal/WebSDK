@@ -379,6 +379,8 @@ export declare class PayError extends Error {
         onrampLink?: string;
     });
 }
+export declare class RouteEstimateError extends PayError {
+}
 export interface UserBalance {
     balances: WalletBalance[];
     total: string;
@@ -397,4 +399,36 @@ export interface TransactionsResponse {
 }
 export interface ForceRefresh {
     forceRefresh?: boolean;
+}
+export interface GetRouteEstimationParams {
+    transactionId: string;
+}
+export interface GenericErrorCodeResponse {
+    code: string;
+    message: string;
+}
+export interface PayRouteEstimateResponse {
+    data: PayRouteEstimate | OnRampResponse | null;
+    error: GenericErrorCodeResponse | null;
+}
+export interface PayRouteEstimate {
+    txId: string;
+    status: TxStatus;
+    total: number;
+    estimation: PayRouteTotalEstimation;
+    to: PayRouteDestinationEstimate;
+    startTimestamp: number;
+    limitTimestamp: number;
+}
+export interface PayRouteTotalEstimation {
+    costUsd: number;
+    timeEstimate: number;
+    gas: string;
+    route: string;
+}
+export interface PayRouteDestinationEstimate {
+    toAmount: string;
+    toAddress: string;
+    toChain: string;
+    toToken: Token;
 }
