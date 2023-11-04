@@ -53,7 +53,7 @@ class WebSDK {
   #audience: string = 'https://auth.sphereone.xyz';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
-  #pinCodeUrl: string = 'https://sphereone-pincode.web.app';
+  #pinCodeUrl: string = 'https://sphereone-pincode-verify.web.app';
   scope: string = 'openid email offline_access profile';
   pinCodeScreen: Window | null = null;
 
@@ -446,6 +446,8 @@ class WebSDK {
       if (error instanceof PayError) {
         throw error;
       } else throw new Error(error);
+    } finally {
+      this.#wrappedDek = '';
     }
   };
 
