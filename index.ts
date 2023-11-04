@@ -406,11 +406,9 @@ class WebSDK {
     }
   };
 
-  payCharge = async (
-    transactionId: string,
-    DEK: string = this.#wrappedDek
-  ): Promise<PayResponse> => {
+  payCharge = async (transactionId: string): Promise<PayResponse> => {
     try {
+      const DEK = this.#wrappedDek;
       if (!DEK) throw new Error('There was an error getting the wrapped dek');
       const requestOptions = await this.#createRequest('POST', { wrappedDek: DEK, transactionId });
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);

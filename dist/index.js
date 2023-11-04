@@ -357,9 +357,10 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         });
-        this.payCharge = (transactionId, DEK = __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f")) => __awaiter(this, void 0, void 0, function* () {
+        this.payCharge = (transactionId) => __awaiter(this, void 0, void 0, function* () {
             var _k, _l, _m, _o, _p;
             try {
+                const DEK = __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
                 if (!DEK)
                     throw new Error('There was an error getting the wrapped dek');
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', { wrappedDek: DEK, transactionId });

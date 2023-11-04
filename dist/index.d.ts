@@ -24,7 +24,7 @@ declare class WebSDK {
         isDirectTransfer?: boolean | undefined;
         isTest?: boolean | undefined;
     }) => Promise<ChargeUrlAndId>;
-    payCharge: (transactionId: string, DEK?: string) => Promise<PayResponse>;
+    payCharge: (transactionId: string) => Promise<PayResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
     getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
     getBalances: ({ forceRefresh }?: ForceRefresh) => Promise<UserBalance>;
