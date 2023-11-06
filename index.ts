@@ -25,10 +25,14 @@ import {
   PayResponseOnRampLink,
   PayErrorResponse,
   PayResponseRouteCreated,
+  PayRouteEstimateResponse,
+  GetRouteEstimationParams,
+  PayRouteEstimate,
+  OnRampResponse,
+  RouteEstimateError,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
-
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -49,7 +53,9 @@ class WebSDK {
   #audience: string = 'https://auth.sphereone.xyz';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
+  #pinCodeUrl: string = 'https://sphereone-pincode-verify.web.app';
   scope: string = 'openid email offline_access profile';
+  pinCodeScreen: Window | null = null;
 
   constructor(
     clientId: string,
@@ -351,6 +357,25 @@ class WebSDK {
     }
   };
 
+  #estimateRoute = async ({
+    transactionId,
+  }: {
+    transactionId: string;
+  }): Promise<PayRouteEstimateResponse> => {
+    try {
+      const requestOptions = await this.#createRequest('POST', { transactionId });
+      const response = await fetch(`${this.#baseUrl}/pay/route`, requestOptions);
+      const data = (await response.json()) as PayRouteEstimateResponse;
+      return data;
+    } catch (e: any) {
+      // more for internal server errors or bad requests
+      console.error(
+        `There was an error estimating the route for charge ${transactionId} because: ${e}`
+      );
+      throw new Error(e.message || e);
+    }
+  };
+
   createCharge = async ({
     chargeData,
     isDirectTransfer = false,
@@ -381,67 +406,11 @@ class WebSDK {
     }
   };
 
-  pay = async ({
-    toAddress,
-    chain,
-    symbol,
-    amount,
-    tokenAddress,
-  }: Transaction): Promise<PayResponse> => {
-    try {
-      const wrappedDek = await this.#getWrappedDek();
-      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
-
-      const requestOptions = await this.#createRequest('POST', {
-        wrappedDek,
-        toAddress,
-        chain,
-        symbol,
-        amount,
-        tokenAddress,
-      });
-
-      const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
-      const res = await response.json();
-      if (res.error) {
-        const onRampResponse = res as PayResponseOnRampLink;
-        if (
-          onRampResponse.error?.code === 'empty-balances' ||
-          onRampResponse.error?.code === 'insufficient-balances' ||
-          onRampResponse.error?.message.includes('Not sufficient funds to bridge')
-        ) {
-          const onrampLink = onRampResponse.data?.onrampLink;
-          throw new PayError({
-            message: 'insufficient balances',
-            onrampLink: onrampLink,
-          });
-        } else {
-          const errorResponse = res as PayErrorResponse;
-          throw new Error(
-            `Payment failed: ${
-              typeof errorResponse.error === 'string'
-                ? errorResponse.error
-                : errorResponse.error.message || errorResponse.error.code
-            }`
-          );
-        }
-      } else {
-        const payResponse = (res as PayResponseRouteCreated).data;
-        return { ...payResponse } as PayResponse;
-      }
-    } catch (error: any) {
-      console.error('There was an error paying this transaction, error: ', error);
-      if (error instanceof PayError) {
-        throw error;
-      } else throw new Error(error);
-    }
-  };
-
   payCharge = async (transactionId: string): Promise<PayResponse> => {
     try {
-      const wrappedDek = await this.#getWrappedDek();
-      if (!wrappedDek) throw new Error('There was an error getting the wrapped dek');
-      const requestOptions = await this.#createRequest('POST', { wrappedDek, transactionId });
+      const DEK = this.#wrappedDek;
+      if (!DEK) throw new Error('There was an error getting the wrapped dek');
+      const requestOptions = await this.#createRequest('POST', { wrappedDek: DEK, transactionId });
       const response = await fetch(`${this.#baseUrl}/pay`, requestOptions);
       const res = await response.json();
       if (res.error) {
@@ -475,6 +444,8 @@ class WebSDK {
       if (error instanceof PayError) {
         throw error;
       } else throw new Error(error);
+    } finally {
+      this.#wrappedDek = '';
     }
   };
 
@@ -551,6 +522,33 @@ class WebSDK {
       };
     });
     return txs;
+  };
+
+  getRouteEstimation = async ({
+    transactionId,
+  }: GetRouteEstimationParams): Promise<PayRouteEstimate> => {
+    try {
+      const response = await this.#estimateRoute({ transactionId });
+      if (response.error) {
+        const error = response.error;
+        if (error.code === 'empty-balances' || error.code === 'insufficient-balances') {
+          const data = response.data as OnRampResponse;
+          const onrampLink = data.onrampLink;
+          throw new RouteEstimateError({
+            message: error.code,
+            onrampLink: onrampLink,
+          });
+        } else {
+          throw new Error(`Error: ${error.code}: ${error.message}`);
+        }
+      } else {
+        return response.data as PayRouteEstimate;
+      }
+    } catch (e: any) {
+      // returning internal server errors and catching response error handling
+      if (e instanceof RouteEstimateError) throw e;
+      else throw new Error(e.message || e);
+    }
   };
 
   createIframe(width: number, height: number) {
@@ -643,6 +641,43 @@ class WebSDK {
       console.error('There was an error adding a wallet, error: ', error);
       throw new Error(error.message || error);
     }
+  };
+
+  addPinCode = () => {
+    const width = 450;
+    const height = 350;
+    const left = (window.innerWidth - width) / 2 + window.screenX;
+    const top = (window.innerHeight - height) / 2 + window.screenY;
+    const options = `width=${width},height=${height},left=${left},top=${top}`;
+
+    this.pinCodeScreen = window.open(
+      `${this.#pinCodeUrl}/add?accessToken=${this.#credentials?.accessToken}`,
+      'Add Pin Code',
+      options
+    );
+  };
+
+  openPinCode = (chargeId: string) => {
+    const width = 450;
+    const height = 350;
+    const left = (window.innerWidth - width) / 2 + window.screenX;
+    const top = (window.innerHeight - height) / 2 + window.screenY;
+    const options = `width=${width},height=${height},left=${left},top=${top}`;
+
+    this.pinCodeScreen = window.open(
+      `${this.#pinCodeUrl}/?accessToken=${this.#credentials?.accessToken}&chargeId=${chargeId}`,
+      'Sphereone Pin Code',
+      options
+    );
+  };
+
+  pinCodeHandler = () => {
+    window.addEventListener('message', (event) => {
+      if (event.origin === this.#pinCodeUrl) {
+        const data = event.data;
+        if (data.data.code === 'DEK') this.#wrappedDek = data.data.share;
+      }
+    });
   };
 }
 
