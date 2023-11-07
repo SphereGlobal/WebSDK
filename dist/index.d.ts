@@ -1,4 +1,4 @@
-import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse, GetRouteEstimationParams, PayRouteEstimate } from './src/types';
 export { Environments as SphereEnvironment } from './src/types';
 export { SupportedChains } from './src/types';
 export { LoginBehavior } from './src/types';
@@ -11,6 +11,7 @@ declare class WebSDK {
     private apiKey;
     private loginType;
     scope: string;
+    pinCodeScreen: Window | null;
     constructor(clientId: string, redirectUri: string, apiKey: string, loginType?: LoginBehavior);
     getAccessToken: () => string;
     getIdToken: () => string;
@@ -23,7 +24,6 @@ declare class WebSDK {
         isDirectTransfer?: boolean | undefined;
         isTest?: boolean | undefined;
     }) => Promise<ChargeUrlAndId>;
-    pay: ({ toAddress, chain, symbol, amount, tokenAddress, }: Transaction) => Promise<PayResponse>;
     payCharge: (transactionId: string) => Promise<PayResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
     getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
@@ -35,6 +35,7 @@ declare class WebSDK {
         getSent?: boolean;
         forceRefresh?: boolean;
     }) => Promise<Transaction[]>;
+    getRouteEstimation: ({ transactionId, }: GetRouteEstimationParams) => Promise<PayRouteEstimate>;
     createIframe(width: number, height: number): HTMLIFrameElement;
     isTokenExpired: () => Promise<boolean>;
     addWallet: ({ walletAddress, chains, label, }: {
@@ -45,5 +46,8 @@ declare class WebSDK {
         data: string;
         error: null;
     }>;
+    addPinCode: () => void;
+    openPinCode: (chargeId: string) => void;
+    pinCodeHandler: () => void;
 }
 export default WebSDK;
