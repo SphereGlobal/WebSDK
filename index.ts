@@ -678,6 +678,8 @@ class WebSDK {
       this.getUserInfo({ forceRefresh: true });
     };
     window.addEventListener('message', (event) => {
+      console.log(`----->event from WebSDK origin: ${event.origin}`);
+      console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
       if (event.origin === this.#pinCodeUrl) {
         const data = event.data;
         if (data.data.code === 'DEK') {
