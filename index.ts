@@ -53,7 +53,8 @@ class WebSDK {
   #audience: string = 'https://auth.sphereone.xyz';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
-  #pinCodeUrl: string = 'https://sphereone-pincode-verify.web.app';
+  // #pinCodeUrl: string = 'https://pin.sphereone.xyz';
+  #pinCodeUrl: string = 'https://not-sphereone-pincode.web.app';
   scope: string = 'openid email offline_access profile';
   pinCodeScreen: Window | null = null;
 
@@ -672,10 +673,15 @@ class WebSDK {
   };
 
   pinCodeHandler = () => {
+    const refetchUserData = async () => {
+      this.getUserInfo({ forceRefresh: true });
+    };
     window.addEventListener('message', (event) => {
       if (event.origin === this.#pinCodeUrl) {
         const data = event.data;
         if (data.data.code === 'DEK') this.#wrappedDek = data.data.share;
+        else if (data.data.code === 'PIN') refetchUserData();
+        else {};
       }
     });
   };

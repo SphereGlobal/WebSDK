@@ -84,6 +84,7 @@ export interface UserInfo {
   username?: string;
   isMerchant: boolean;
   profilePicture: string;
+  isPinCodeSetup?: boolean;
 }
 export interface UserInfoResponse {
   data: UserInfo | null;
