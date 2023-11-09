@@ -681,14 +681,17 @@ class WebSDK {
       if (event.origin === this.#pinCodeUrl) {
         const data = event.data;
         if (data.data.code === 'DEK') {
+          // update user share
+          console.log(`--->from WebSDK - DEK: ${data.data.share}`);
+          this.#wrappedDek = data.data.share;
           // trigger callbac if it exists
           callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
-          // update user share
-          this.#wrappedDek = data.data.share;
         } else if (data.data.code === 'PIN') {
+          console.log(`--->from WebSDK - PIN: ${data.data.status}`);
           callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
           refetchUserData();
         } else {
+          console.log(`--->from WebSDK - SHIT`);
           callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
         };
       }
