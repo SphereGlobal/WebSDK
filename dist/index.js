@@ -568,18 +568,26 @@ class WebSDK {
             const options = `width=${width},height=${height},left=${left},top=${top}`;
             this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'Sphereone Pin Code', options);
         };
-        this.pinCodeHandler = () => {
+        this.pinCodeHandler = (callbacks) => {
             const refetchUserData = () => __awaiter(this, void 0, void 0, function* () {
                 this.getUserInfo({ forceRefresh: true });
             });
             window.addEventListener('message', (event) => {
                 if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
                     const data = event.data;
-                    if (data.data.code === 'DEK')
+                    if (data.data.code === 'DEK') {
+                        // trigger callbac if it exists
+                        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+                        // update user share
                         __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
-                    else if (data.data.code === 'PIN')
+                    }
+                    else if (data.data.code === 'PIN') {
+                        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
                         refetchUserData();
-                    else { }
+                    }
+                    else {
+                        callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
+                    }
                     ;
                 }
             });

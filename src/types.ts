@@ -476,3 +476,21 @@ export interface PayRouteDestinationEstimate {
   toChain: string; // destination chain
   toToken: Token; // extra token metadata
 }
+
+export interface ParsedRoute {
+  id: string;
+  batches: RouteBatch[];
+  status: string;
+  toToken: Token;
+  toAddress: string;
+  toChain: string;
+  toAmount: string;
+  estimate: Estimate;
+  fromUid: string;
+}
+
+export interface HandleCallback {
+  successCallback?: (...args: any) => void;
+  failCallback?: (...args: any) => void;
+  cancelCallback?: (...args: any) => void;
+};

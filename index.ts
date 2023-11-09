@@ -30,6 +30,7 @@ import {
   PayRouteEstimate,
   OnRampResponse,
   RouteEstimateError,
+  HandleCallback,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -672,16 +673,24 @@ class WebSDK {
     );
   };
 
-  pinCodeHandler = () => {
+  pinCodeHandler = (callbacks?: HandleCallback) => {
     const refetchUserData = async () => {
       this.getUserInfo({ forceRefresh: true });
     };
     window.addEventListener('message', (event) => {
       if (event.origin === this.#pinCodeUrl) {
         const data = event.data;
-        if (data.data.code === 'DEK') this.#wrappedDek = data.data.share;
-        else if (data.data.code === 'PIN') refetchUserData();
-        else {};
+        if (data.data.code === 'DEK') {
+          // trigger callbac if it exists
+          callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+          // update user share
+          this.#wrappedDek = data.data.share;
+        } else if (data.data.code === 'PIN') {
+          callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+          refetchUserData();
+        } else {
+          callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
+        };
       }
     });
   };
