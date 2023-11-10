@@ -495,3 +495,15 @@ export interface HandleCallback {
   failCallback?: (...args: any) => void;
   cancelCallback?: (...args: any) => void;
 };
+
+export enum BatchType {
+  TRANSFER = "TRANSFER",
+  SWAP = "SWAP",
+  BRIDGE = "BRIDGE"
+}
+
+export interface FormattedBatch {
+    type: BatchType;
+    title: string | null;
+    operations: string[];
+}
