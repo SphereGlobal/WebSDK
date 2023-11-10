@@ -500,9 +500,9 @@ export enum BatchType {
 }
 
 export interface FormattedBatch {
-    type: BatchType;
-    title: string | null;
-    operations: string[];
+  type: BatchType;
+  title: string | null;
+  operations: string[];
 }
 
 export interface BigNumberObj {

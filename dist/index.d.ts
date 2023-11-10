@@ -47,5 +47,6 @@ declare class WebSDK {
     addPinCode: () => void;
     openPinCode: (chargeId: string) => void;
     pinCodeHandler: (callbacks?: HandleCallback) => void;
+    removePinCodeHandler: (callbacks?: HandleCallback) => void;
 }
 export default WebSDK;

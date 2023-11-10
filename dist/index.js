@@ -33,7 +33,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _WebSDK_instances, _WebSDK_credentials, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_wrappedDekExpiration, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaProdUrl, _WebSDK_baseUrl, _WebSDK_pinCodeUrl, _WebSDK_loadCredentials, _WebSDK_handleAuth, _WebSDK_handlePersistence, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions, _WebSDK_estimateRoute, _WebSDK_refreshToken, _WebSDK_getData, _WebSDK_loadUserData;
+var _WebSDK_instances, _WebSDK_credentials, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_wrappedDekExpiration, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaProdUrl, _WebSDK_baseUrl, _WebSDK_pinCodeUrl, _WebSDK_loadCredentials, _WebSDK_handleAuth, _WebSDK_handlePersistence, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions, _WebSDK_estimateRoute, _WebSDK_refreshToken, _WebSDK_getData, _WebSDK_loadUserData, _WebSDK_pinCodeListener;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginButton = void 0;
 const types_1 = require("./src/types");
@@ -481,7 +481,7 @@ class WebSDK {
                         });
                     }
                     else {
-                        throw new Error(`Error: ${error.code}: ${error.message}`);
+                        throw new Error(`Error: ${error.message}`);
                     }
                 }
                 else {
@@ -577,34 +577,38 @@ class WebSDK {
             const options = `width=${width},height=${height},left=${left},top=${top}`;
             this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'Sphereone Pin Code', options);
         };
-        this.pinCodeHandler = (callbacks) => {
+        _WebSDK_pinCodeListener.set(this, (event, callbacks) => {
             const refetchUserData = () => __awaiter(this, void 0, void 0, function* () {
                 this.getUserInfo({ forceRefresh: true });
             });
-            window.addEventListener('message', (event) => {
-                console.log(`----->event from WebSDK origin: ${event.origin}`);
-                console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
-                if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
-                    const data = event.data;
-                    if (data.data.code === 'DEK') {
-                        // update user share
-                        console.log(`--->from WebSDK - DEK: ${data.data.share}`);
-                        __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
-                        // trigger callbac if it exists
-                        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
-                    }
-                    else if (data.data.code === 'PIN') {
-                        console.log(`--->from WebSDK - PIN: ${data.data.status}`);
-                        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
-                        refetchUserData();
-                    }
-                    else {
-                        console.log(`--->from WebSDK - SHIT`);
-                        callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
-                    }
-                    ;
+            console.log(`----->event from WebSDK origin: ${event.origin}`);
+            console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
+            if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
+                const data = event.data;
+                if (data.data.code === 'DEK') {
+                    // update user share
+                    console.log(`--->from WebSDK - DEK: ${data.data.share}`);
+                    __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
+                    // trigger callbac if it exists
+                    callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
                 }
-            });
+                else if (data.data.code === 'PIN') {
+                    console.log(`--->from WebSDK - PIN: ${data.data.status}`);
+                    callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+                    refetchUserData();
+                }
+                else {
+                    console.log(`--->from WebSDK - SHIT`);
+                    callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
+                }
+                ;
+            }
+        });
+        this.pinCodeHandler = (callbacks) => {
+            window.addEventListener('message', (event) => __classPrivateFieldGet(this, _WebSDK_pinCodeListener, "f").call(this, event, callbacks));
+        };
+        this.removePinCodeHandler = (callbacks) => {
+            window.removeEventListener('message', (event) => __classPrivateFieldGet(this, _WebSDK_pinCodeListener, "f").call(this, event, callbacks));
         };
         this.clientId = clientId;
         this.redirectUri = redirectUri;
@@ -631,7 +635,7 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_wrappedDekExpiration = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_pinCodeUrl = new WeakMap(), _WebSDK_handleAuth = new WeakMap(), _WebSDK_handlePersistence = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap(), _WebSDK_estimateRoute = new WeakMap(), _WebSDK_refreshToken = new WeakMap(), _WebSDK_getData = new WeakMap(), _WebSDK_instances = new WeakSet(), _WebSDK_loadCredentials = function _WebSDK_loadCredentials({ access_token, id_token, refresh_token, expires_at }) {
+_WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_wrappedDekExpiration = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_pinCodeUrl = new WeakMap(), _WebSDK_handleAuth = new WeakMap(), _WebSDK_handlePersistence = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap(), _WebSDK_estimateRoute = new WeakMap(), _WebSDK_refreshToken = new WeakMap(), _WebSDK_getData = new WeakMap(), _WebSDK_pinCodeListener = new WeakMap(), _WebSDK_instances = new WeakSet(), _WebSDK_loadCredentials = function _WebSDK_loadCredentials({ access_token, id_token, refresh_token, expires_at }) {
     __classPrivateFieldSet(this, _WebSDK_credentials, {
         accessToken: access_token,
         idToken: id_token !== null && id_token !== void 0 ? id_token : '',

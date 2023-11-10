@@ -540,7 +540,7 @@ class WebSDK {
             onrampLink: onrampLink,
           });
         } else {
-          throw new Error(`Error: ${error.code}: ${error.message}`);
+          throw new Error(`Error: ${error.message}`);
         }
       } else {
         return response.data as PayRouteEstimate;
@@ -672,31 +672,39 @@ class WebSDK {
     );
   };
 
-  pinCodeHandler = (callbacks?: HandleCallback) => {
+  #pinCodeListener = (event: MessageEvent<any>, callbacks?: HandleCallback) => {
     const refetchUserData = async () => {
       this.getUserInfo({ forceRefresh: true });
     };
-    window.addEventListener('message', (event) => {
-      console.log(`----->event from WebSDK origin: ${event.origin}`);
-      console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
-      if (event.origin === this.#pinCodeUrl) {
-        const data = event.data;
-        if (data.data.code === 'DEK') {
-          // update user share
-          console.log(`--->from WebSDK - DEK: ${data.data.share}`);
-          this.#wrappedDek = data.data.share;
-          // trigger callbac if it exists
-          callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
-        } else if (data.data.code === 'PIN') {
-          console.log(`--->from WebSDK - PIN: ${data.data.status}`);
-          callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
-          refetchUserData();
-        } else {
-          console.log(`--->from WebSDK - SHIT`);
-          callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
-        };
-      }
-    });
+
+    console.log(`----->event from WebSDK origin: ${event.origin}`);
+    console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
+
+    if (event.origin === this.#pinCodeUrl) {
+      const data = event.data;
+      if (data.data.code === 'DEK') {
+        // update user share
+        console.log(`--->from WebSDK - DEK: ${data.data.share}`);
+        this.#wrappedDek = data.data.share;
+        // trigger callbac if it exists
+        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+      } else if (data.data.code === 'PIN') {
+        console.log(`--->from WebSDK - PIN: ${data.data.status}`);
+        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+        refetchUserData();
+      } else {
+        console.log(`--->from WebSDK - SHIT`);
+        callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
+      };
+    }
+  };
+
+  pinCodeHandler = (callbacks?: HandleCallback) => {
+    window.addEventListener('message', (event) => this.#pinCodeListener(event, callbacks));
+  };
+
+  removePinCodeHandler = (callbacks?: HandleCallback) => {
+    window.removeEventListener('message', (event) => this.#pinCodeListener(event, callbacks));
   };
 }
 
