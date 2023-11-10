@@ -416,6 +416,7 @@ export interface PayRouteEstimate {
     txId: string;
     status: TxStatus;
     total: number;
+    totalUsd: number;
     estimation: PayRouteTotalEstimation;
     to: PayRouteDestinationEstimate;
     startTimestamp: number;

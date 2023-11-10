@@ -457,6 +457,7 @@ export interface PayRouteEstimate {
   txId: string; // transactionId
   status: TxStatus; // TxStatus - WAITING, PROCESSING, COMPLETED, CANCELED, FAILED (should be PENDING)
   total: number; // total amount initially received, not including other costs
+  totalUsd: number; // total amount initially received, in USD, not including other costs
   estimation: PayRouteTotalEstimation;
   to: PayRouteDestinationEstimate;
   startTimestamp: number; // timestamp when response is sent back to client-side
