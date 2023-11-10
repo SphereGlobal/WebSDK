@@ -34,10 +34,9 @@ import {
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
-export { Environments as SphereEnvironment } from './src/types';
-export { SupportedChains } from './src/types';
-export { LoginBehavior } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
+
+export * from './src/types';
 
 class WebSDK {
   public user: User | null = null;
