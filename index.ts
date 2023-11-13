@@ -551,7 +551,9 @@ class WebSDK {
         const data = response.data as PayRouteEstimate;
         const parsedRoute = JSON.parse(data.estimation.route) as RouteBatch[];
         const batches = parsedRoute.map((b: RouteBatch) => this.#formatBatch(b.description, b.actions));
+        console.log(`---->newData - batches is: ${JSON.stringify(batches)}`);
         const newData = { ...data, estimation: { ...data.estimation, routeParsed: batches } } as PayRouteEstimate;
+        console.log(`---->newData is: ${JSON.stringify(newData)}`);
         return newData;
       }
     } catch (e: any) {

@@ -489,7 +489,9 @@ class WebSDK {
                     const data = response.data;
                     const parsedRoute = JSON.parse(data.estimation.route);
                     const batches = parsedRoute.map((b) => __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_formatBatch).call(this, b.description, b.actions));
+                    console.log(`---->newData - batches is: ${JSON.stringify(batches)}`);
                     const newData = Object.assign(Object.assign({}, data), { estimation: Object.assign(Object.assign({}, data.estimation), { routeParsed: batches }) });
+                    console.log(`---->newData is: ${JSON.stringify(newData)}`);
                     return newData;
                 }
             }
