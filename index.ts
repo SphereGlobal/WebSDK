@@ -31,6 +31,10 @@ import {
   OnRampResponse,
   RouteEstimateError,
   HandleCallback,
+  RouteBatch,
+  RouteAction,
+  FormattedBatch,
+  BatchType,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -543,7 +547,12 @@ class WebSDK {
           throw new Error(`Error: ${error.message}`);
         }
       } else {
-        return response.data as PayRouteEstimate;
+        // parse the stringified route
+        const data = response.data as PayRouteEstimate;
+        const parsedRoute = JSON.parse(data.estimation.route) as RouteBatch[];
+        const batches = parsedRoute.map((b: RouteBatch) => this.#formatBatch(b.description, b.actions));
+        const newData = { ...data, estimation: { ...data.estimation, routeParsed: batches } } as PayRouteEstimate;
+        return newData;
       }
     } catch (e: any) {
       // returning internal server errors and catching response error handling
@@ -706,6 +715,67 @@ class WebSDK {
   removePinCodeHandler = (callbacks?: HandleCallback) => {
     window.removeEventListener('message', (event) => this.#pinCodeListener(event, callbacks));
   };
+
+  #formatBatch(title: string, actions: RouteAction[]): FormattedBatch {
+    const renderObj: FormattedBatch = {
+      type: BatchType.TRANSFER,
+      title,
+      operations: []
+    };
+
+    console.log(`---->formatBatch: ${title}`);
+  
+    const hexToNumber = (hex: string, decimals: number) =>
+      (parseInt(hex, 16) / Math.pow(10, decimals))
+        .toFixed(decimals)
+        .replace(/0+$/, "");
+  
+    actions.forEach(({ transferData, swapData, bridgeData }) => {
+      if (transferData) {
+        console.log(`---->formatBatch: transferData 1 -> ${transferData.fromChain}`);
+        renderObj.type = BatchType.TRANSFER;
+        renderObj.operations.push(
+          `- Transfer ${hexToNumber(
+            transferData.fromAmount.hex,
+            transferData.fromToken.decimals
+          )} ${transferData.fromToken.symbol} in ${transferData.fromChain}`
+        );
+        console.log(`---->formatBatch: transferData 2 -> ${transferData.fromChain}`);
+      } else if (swapData) {
+        console.log(`---->formatBatch: swapData 1 -> ${swapData.fromChain}`);
+        renderObj.type = BatchType.SWAP;
+        renderObj.operations.push(
+          `- Swap ${hexToNumber(
+            swapData.fromAmount.hex,
+            swapData.fromToken.decimals
+          )} ${swapData.fromToken.symbol} to ${hexToNumber(
+            swapData.toAmount.hex,
+            swapData.toToken.decimals
+          )} ${swapData.toToken.symbol} in ${swapData.fromChain}`
+        );
+        console.log(`---->formatBatch: swapData 2 -> ${swapData.fromChain}`);
+      } else if (bridgeData) {
+        console.log(`---->formatBatch: bridgeData 1 ->`);
+        renderObj.type = BatchType.BRIDGE;
+        renderObj.operations.push(
+          `- Bridge ${hexToNumber(
+            bridgeData.quote.fromAmount.hex,
+            bridgeData.quote.fromToken.decimals
+          )} ${bridgeData.quote.fromToken.symbol} in ${
+            bridgeData.quote.fromToken.chain
+          } to ${hexToNumber(
+            bridgeData.quote.toAmount.hex,
+            bridgeData.quote.toToken.decimals
+          )} ${bridgeData.quote.toToken.symbol} in ${
+            bridgeData.quote.toToken.chain
+          }`
+        );
+        console.log(`---->formatBatch: bridgeData 2 ->`);
+      }
+    });
+  
+    return renderObj;
+  }
 }
 
 export default WebSDK;

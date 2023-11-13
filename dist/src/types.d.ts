@@ -426,6 +426,7 @@ export interface PayRouteTotalEstimation {
     timeEstimate: number;
     gas: string;
     route: string;
+    routeParsed?: FormattedBatch[];
 }
 export interface PayRouteDestinationEstimate {
     toAmount: string;

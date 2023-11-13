@@ -33,7 +33,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _WebSDK_instances, _WebSDK_credentials, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_wrappedDekExpiration, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaProdUrl, _WebSDK_baseUrl, _WebSDK_pinCodeUrl, _WebSDK_loadCredentials, _WebSDK_handleAuth, _WebSDK_handlePersistence, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions, _WebSDK_estimateRoute, _WebSDK_refreshToken, _WebSDK_getData, _WebSDK_loadUserData, _WebSDK_pinCodeListener;
+var _WebSDK_instances, _WebSDK_credentials, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_wrappedDekExpiration, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaProdUrl, _WebSDK_baseUrl, _WebSDK_pinCodeUrl, _WebSDK_loadCredentials, _WebSDK_handleAuth, _WebSDK_handlePersistence, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions, _WebSDK_estimateRoute, _WebSDK_refreshToken, _WebSDK_getData, _WebSDK_loadUserData, _WebSDK_pinCodeListener, _WebSDK_formatBatch;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginButton = void 0;
 const types_1 = require("./src/types");
@@ -485,7 +485,12 @@ class WebSDK {
                     }
                 }
                 else {
-                    return response.data;
+                    // parse the stringified route
+                    const data = response.data;
+                    const parsedRoute = JSON.parse(data.estimation.route);
+                    const batches = parsedRoute.map((b) => __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_formatBatch).call(this, b.description, b.actions));
+                    const newData = Object.assign(Object.assign({}, data), { estimation: Object.assign(Object.assign({}, data.estimation), { routeParsed: batches }) });
+                    return newData;
                 }
             }
             catch (e) {
@@ -648,5 +653,36 @@ _WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebS
     this.getNfts();
     this.getBalances();
     this.getWallets();
+}, _WebSDK_formatBatch = function _WebSDK_formatBatch(title, actions) {
+    const renderObj = {
+        type: types_1.BatchType.TRANSFER,
+        title,
+        operations: []
+    };
+    console.log(`---->formatBatch: ${title}`);
+    const hexToNumber = (hex, decimals) => (parseInt(hex, 16) / Math.pow(10, decimals))
+        .toFixed(decimals)
+        .replace(/0+$/, "");
+    actions.forEach(({ transferData, swapData, bridgeData }) => {
+        if (transferData) {
+            console.log(`---->formatBatch: transferData 1 -> ${transferData.fromChain}`);
+            renderObj.type = types_1.BatchType.TRANSFER;
+            renderObj.operations.push(`- Transfer ${hexToNumber(transferData.fromAmount.hex, transferData.fromToken.decimals)} ${transferData.fromToken.symbol} in ${transferData.fromChain}`);
+            console.log(`---->formatBatch: transferData 2 -> ${transferData.fromChain}`);
+        }
+        else if (swapData) {
+            console.log(`---->formatBatch: swapData 1 -> ${swapData.fromChain}`);
+            renderObj.type = types_1.BatchType.SWAP;
+            renderObj.operations.push(`- Swap ${hexToNumber(swapData.fromAmount.hex, swapData.fromToken.decimals)} ${swapData.fromToken.symbol} to ${hexToNumber(swapData.toAmount.hex, swapData.toToken.decimals)} ${swapData.toToken.symbol} in ${swapData.fromChain}`);
+            console.log(`---->formatBatch: swapData 2 -> ${swapData.fromChain}`);
+        }
+        else if (bridgeData) {
+            console.log(`---->formatBatch: bridgeData 1 ->`);
+            renderObj.type = types_1.BatchType.BRIDGE;
+            renderObj.operations.push(`- Bridge ${hexToNumber(bridgeData.quote.fromAmount.hex, bridgeData.quote.fromToken.decimals)} ${bridgeData.quote.fromToken.symbol} in ${bridgeData.quote.fromToken.chain} to ${hexToNumber(bridgeData.quote.toAmount.hex, bridgeData.quote.toToken.decimals)} ${bridgeData.quote.toToken.symbol} in ${bridgeData.quote.toToken.chain}`);
+            console.log(`---->formatBatch: bridgeData 2 ->`);
+        }
+    });
+    return renderObj;
 };
 exports.default = WebSDK;

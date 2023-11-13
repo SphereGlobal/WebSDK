@@ -466,6 +466,7 @@ export interface PayRouteTotalEstimation {
   timeEstimate: number; // in minutes, rough estimate (for 60 seconds)
   gas: string; // gas for the transaction
   route: string; // the route batches that will be executed
+  routeParsed?: FormattedBatch[]; // the route batches that will be executed
 }
 
 export interface PayRouteDestinationEstimate {
