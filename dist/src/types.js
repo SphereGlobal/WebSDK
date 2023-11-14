@@ -20,6 +20,8 @@ var SupportedChains;
     SupportedChains["EOSEVM"] = "EOSEVM";
     SupportedChains["BASE"] = "BASE";
     SupportedChains["FLOW"] = "FLOW";
+    SupportedChains["KLAYTN"] = "KLAYTN";
+    SupportedChains["DFK"] = "DFK";
 })(SupportedChains || (exports.SupportedChains = SupportedChains = {}));
 var WalletTypes;
 (function (WalletTypes) {

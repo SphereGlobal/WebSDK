@@ -30,6 +30,8 @@ export enum SupportedChains {
   EOSEVM = 'EOSEVM',
   BASE = 'BASE',
   FLOW = 'FLOW',
+  KLAYTN = 'KLAYTN',
+  DFK = 'DFK',
 }
 
 export interface Token {
@@ -187,6 +189,8 @@ export interface Estimate {
   solGas: BigNumberObj;
   eosEvmGas: BigNumberObj;
   baseGas: BigNumberObj;
+  klaytnGas: BigNumberObj;
+  dfkGas: BigNumberObj;
 }
 export enum RouteActionType {
   BRIDGE = 'BRIDGE',

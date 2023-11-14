@@ -26,7 +26,9 @@ export declare enum SupportedChains {
     FANTOM = "FANTOM",
     EOSEVM = "EOSEVM",
     BASE = "BASE",
-    FLOW = "FLOW"
+    FLOW = "FLOW",
+    KLAYTN = "KLAYTN",
+    DFK = "DFK"
 }
 export interface Token {
     symbol: string;
@@ -168,6 +170,8 @@ export interface Estimate {
     solGas: BigNumberObj;
     eosEvmGas: BigNumberObj;
     baseGas: BigNumberObj;
+    klaytnGas: BigNumberObj;
+    dfkGas: BigNumberObj;
 }
 export declare enum RouteActionType {
     BRIDGE = "BRIDGE",
