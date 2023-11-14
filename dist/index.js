@@ -55,8 +55,7 @@ class WebSDK {
         _WebSDK_audience.set(this, 'https://auth.sphereone.xyz');
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
         _WebSDK_baseUrl.set(this, 'https://api-olgsdff53q-uc.a.run.app');
-        // #pinCodeUrl: string = 'https://pin.sphereone.xyz';
-        _WebSDK_pinCodeUrl.set(this, 'https://not-sphereone-pincode.web.app');
+        _WebSDK_pinCodeUrl.set(this, 'https://pin.sphereone.xyz');
         this.scope = 'openid email offline_access profile';
         this.pinCodeScreen = null;
         this.getAccessToken = () => {
@@ -489,9 +488,7 @@ class WebSDK {
                     const data = response.data;
                     const parsedRoute = JSON.parse(data.estimation.route);
                     const batches = parsedRoute.map((b) => __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_formatBatch).call(this, b.description, b.actions));
-                    console.log(`---->newData - batches is: ${JSON.stringify(batches)}`);
                     const newData = Object.assign(Object.assign({}, data), { estimation: Object.assign(Object.assign({}, data.estimation), { routeParsed: batches }) });
-                    console.log(`---->newData is: ${JSON.stringify(newData)}`);
                     return newData;
                 }
             }
@@ -582,30 +579,25 @@ class WebSDK {
             const left = (window.innerWidth - width) / 2 + window.screenX;
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
-            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'Sphereone Pin Code', options);
+            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'SphereOne Pin Code', options);
         };
         _WebSDK_pinCodeListener.set(this, (event, callbacks) => {
             const refetchUserData = () => __awaiter(this, void 0, void 0, function* () {
                 this.getUserInfo({ forceRefresh: true });
             });
-            console.log(`----->event from WebSDK origin: ${event.origin}`);
-            console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
             if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
                 const data = event.data;
                 if (data.data.code === 'DEK') {
                     // update user share
-                    console.log(`--->from WebSDK - DEK: ${data.data.share}`);
                     __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
                     // trigger callbac if it exists
                     callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
                 }
                 else if (data.data.code === 'PIN') {
-                    console.log(`--->from WebSDK - PIN: ${data.data.status}`);
                     callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
                     refetchUserData();
                 }
                 else {
-                    console.log(`--->from WebSDK - SHIT`);
                     callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
                 }
                 ;
@@ -661,28 +653,21 @@ _WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebS
         title,
         operations: []
     };
-    console.log(`---->formatBatch: ${title}`);
     const hexToNumber = (hex, decimals) => (parseInt(hex, 16) / Math.pow(10, decimals))
         .toFixed(decimals)
         .replace(/0+$/, "");
     actions.forEach(({ transferData, swapData, bridgeData }) => {
         if (transferData) {
-            console.log(`---->formatBatch: transferData 1 -> ${transferData.fromChain}`);
             renderObj.type = types_1.BatchType.TRANSFER;
             renderObj.operations.push(`- Transfer ${hexToNumber(transferData.fromAmount.hex, transferData.fromToken.decimals)} ${transferData.fromToken.symbol} in ${transferData.fromChain}`);
-            console.log(`---->formatBatch: transferData 2 -> ${transferData.fromChain}`);
         }
         else if (swapData) {
-            console.log(`---->formatBatch: swapData 1 -> ${swapData.fromChain}`);
             renderObj.type = types_1.BatchType.SWAP;
             renderObj.operations.push(`- Swap ${hexToNumber(swapData.fromAmount.hex, swapData.fromToken.decimals)} ${swapData.fromToken.symbol} to ${hexToNumber(swapData.toAmount.hex, swapData.toToken.decimals)} ${swapData.toToken.symbol} in ${swapData.fromChain}`);
-            console.log(`---->formatBatch: swapData 2 -> ${swapData.fromChain}`);
         }
         else if (bridgeData) {
-            console.log(`---->formatBatch: bridgeData 1 ->`);
             renderObj.type = types_1.BatchType.BRIDGE;
             renderObj.operations.push(`- Bridge ${hexToNumber(bridgeData.quote.fromAmount.hex, bridgeData.quote.fromToken.decimals)} ${bridgeData.quote.fromToken.symbol} in ${bridgeData.quote.fromToken.chain} to ${hexToNumber(bridgeData.quote.toAmount.hex, bridgeData.quote.toToken.decimals)} ${bridgeData.quote.toToken.symbol} in ${bridgeData.quote.toToken.chain}`);
-            console.log(`---->formatBatch: bridgeData 2 ->`);
         }
     });
     return renderObj;

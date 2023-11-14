@@ -57,8 +57,7 @@ class WebSDK {
   #audience: string = 'https://auth.sphereone.xyz';
   #pwaProdUrl = 'https://wallet.sphereone.xyz';
   #baseUrl: string = 'https://api-olgsdff53q-uc.a.run.app';
-  // #pinCodeUrl: string = 'https://pin.sphereone.xyz';
-  #pinCodeUrl: string = 'https://not-sphereone-pincode.web.app';
+  #pinCodeUrl: string = 'https://pin.sphereone.xyz';
   scope: string = 'openid email offline_access profile';
   pinCodeScreen: Window | null = null;
 
@@ -551,9 +550,7 @@ class WebSDK {
         const data = response.data as PayRouteEstimate;
         const parsedRoute = JSON.parse(data.estimation.route) as RouteBatch[];
         const batches = parsedRoute.map((b: RouteBatch) => this.#formatBatch(b.description, b.actions));
-        console.log(`---->newData - batches is: ${JSON.stringify(batches)}`);
         const newData = { ...data, estimation: { ...data.estimation, routeParsed: batches } } as PayRouteEstimate;
-        console.log(`---->newData is: ${JSON.stringify(newData)}`);
         return newData;
       }
     } catch (e: any) {
@@ -678,7 +675,7 @@ class WebSDK {
 
     this.pinCodeScreen = window.open(
       `${this.#pinCodeUrl}/?accessToken=${this.#credentials?.accessToken}&chargeId=${chargeId}`,
-      'Sphereone Pin Code',
+      'SphereOne Pin Code',
       options
     );
   };
@@ -688,23 +685,17 @@ class WebSDK {
       this.getUserInfo({ forceRefresh: true });
     };
 
-    console.log(`----->event from WebSDK origin: ${event.origin}`);
-    console.log(`----->event from WebSDK data: ${JSON.stringify(event.data)}`);
-
     if (event.origin === this.#pinCodeUrl) {
       const data = event.data;
       if (data.data.code === 'DEK') {
         // update user share
-        console.log(`--->from WebSDK - DEK: ${data.data.share}`);
         this.#wrappedDek = data.data.share;
         // trigger callbac if it exists
         callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
       } else if (data.data.code === 'PIN') {
-        console.log(`--->from WebSDK - PIN: ${data.data.status}`);
         callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
         refetchUserData();
       } else {
-        console.log(`--->from WebSDK - SHIT`);
         callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
       };
     }
@@ -724,8 +715,6 @@ class WebSDK {
       title,
       operations: []
     };
-
-    console.log(`---->formatBatch: ${title}`);
   
     const hexToNumber = (hex: string, decimals: number) =>
       (parseInt(hex, 16) / Math.pow(10, decimals))
@@ -734,7 +723,6 @@ class WebSDK {
   
     actions.forEach(({ transferData, swapData, bridgeData }) => {
       if (transferData) {
-        console.log(`---->formatBatch: transferData 1 -> ${transferData.fromChain}`);
         renderObj.type = BatchType.TRANSFER;
         renderObj.operations.push(
           `- Transfer ${hexToNumber(
@@ -742,9 +730,7 @@ class WebSDK {
             transferData.fromToken.decimals
           )} ${transferData.fromToken.symbol} in ${transferData.fromChain}`
         );
-        console.log(`---->formatBatch: transferData 2 -> ${transferData.fromChain}`);
       } else if (swapData) {
-        console.log(`---->formatBatch: swapData 1 -> ${swapData.fromChain}`);
         renderObj.type = BatchType.SWAP;
         renderObj.operations.push(
           `- Swap ${hexToNumber(
@@ -755,9 +741,7 @@ class WebSDK {
             swapData.toToken.decimals
           )} ${swapData.toToken.symbol} in ${swapData.fromChain}`
         );
-        console.log(`---->formatBatch: swapData 2 -> ${swapData.fromChain}`);
       } else if (bridgeData) {
-        console.log(`---->formatBatch: bridgeData 1 ->`);
         renderObj.type = BatchType.BRIDGE;
         renderObj.operations.push(
           `- Bridge ${hexToNumber(
@@ -772,7 +756,6 @@ class WebSDK {
             bridgeData.quote.toToken.chain
           }`
         );
-        console.log(`---->formatBatch: bridgeData 2 ->`);
       }
     });
   
