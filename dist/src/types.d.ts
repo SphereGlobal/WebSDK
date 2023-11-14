@@ -263,6 +263,8 @@ export interface BridgeQuote {
     estimatedOptGas: BigNumberObj;
     estimatedEosEvmGas: BigNumberObj;
     estimatedBaseGas: BigNumberObj;
+    estimatedKlaytnGas: BigNumberObj;
+    estimatedDfkGas: BigNumberObj;
     bridgeId?: string;
     depositAddress?: string;
 }

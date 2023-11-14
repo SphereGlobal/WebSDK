@@ -287,6 +287,8 @@ export interface BridgeQuote {
   estimatedOptGas: BigNumberObj;
   estimatedEosEvmGas: BigNumberObj;
   estimatedBaseGas: BigNumberObj;
+  estimatedKlaytnGas: BigNumberObj;
+  estimatedDfkGas: BigNumberObj;
 
   //  is only needed for StealthEX / SWFT bridge
   bridgeId?: string;
