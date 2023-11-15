@@ -422,6 +422,7 @@ class WebSDK {
                 const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', Object.assign(Object.assign({}, nftData), { wrappedDek: DEK }));
                 const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/transferNft`, requestOptions);
                 const res = yield response.json();
+                return res;
             }
             catch (error) {
                 console.error('There was an error sending NFT, error: ', error);
@@ -593,7 +594,7 @@ class WebSDK {
             const left = (window.innerWidth - width) / 2 + window.screenX;
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
-            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'SphereOne Pin Code', options);
+            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&target=${target}`, 'Sphereone Pin Code', options);
         };
         _WebSDK_pinCodeListener.set(this, (event, callbacks) => {
             const refetchUserData = () => __awaiter(this, void 0, void 0, function* () {
@@ -605,16 +606,15 @@ class WebSDK {
                     // update user share
                     __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
                     // trigger callbac if it exists
-                    callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+                    callbacks ? callbacks.successCallback && callbacks.successCallback() : null;
                 }
                 else if (data.data.code === 'PIN') {
-                    callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+                    callbacks ? callbacks.successCallback && callbacks.successCallback() : null;
                     refetchUserData();
                 }
                 else {
-                    callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
+                    callbacks ? callbacks.failCallback && callbacks.failCallback() : null;
                 }
-                ;
             }
         });
         this.pinCodeHandler = (callbacks) => {
@@ -665,11 +665,9 @@ _WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebS
     const renderObj = {
         type: types_1.BatchType.TRANSFER,
         title,
-        operations: []
+        operations: [],
     };
-    const hexToNumber = (hex, decimals) => (parseInt(hex, 16) / Math.pow(10, decimals))
-        .toFixed(decimals)
-        .replace(/0+$/, "");
+    const hexToNumber = (hex, decimals) => (parseInt(hex, 16) / Math.pow(10, decimals)).toFixed(decimals).replace(/0+$/, '');
     actions.forEach(({ transferData, swapData, bridgeData }) => {
         if (transferData) {
             renderObj.type = types_1.BatchType.TRANSFER;

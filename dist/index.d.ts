@@ -34,7 +34,7 @@ declare class WebSDK {
         nftTokenAddress: string;
         tokenId?: string;
         reason?: string;
-    }) => Promise<void>;
+    }) => Promise<any>;
     getTransactions: (props?: {
         quantity?: number;
         getReceived?: boolean;
@@ -53,7 +53,7 @@ declare class WebSDK {
         error: null;
     }>;
     addPinCode: () => void;
-    openPinCode: (chargeId: string) => void;
+    openPinCode: (target?: string) => void;
     pinCodeHandler: (callbacks?: HandleCallback) => void;
     removePinCodeHandler: (callbacks?: HandleCallback) => void;
 }

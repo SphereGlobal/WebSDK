@@ -75,7 +75,6 @@ exports.PayError = PayError;
 class RouteEstimateError extends PayError {
 }
 exports.RouteEstimateError = RouteEstimateError;
-;
 var BatchType;
 (function (BatchType) {
     BatchType["TRANSFER"] = "TRANSFER";
