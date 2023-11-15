@@ -587,7 +587,24 @@ class WebSDK {
             const options = `width=${width},height=${height},left=${left},top=${top}`;
             this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/add?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}`, 'Add Pin Code', options);
         };
-        this.openPinCode = (target = 'SEND_NFT') => {
+        /**
+         * Open PinCode
+         *
+         * This function is used to open the pincode window for specific actions.
+         *
+         * - If you want to open the pincode window to pay a charge, you must call this function
+         *   with the 'chargeId' as a parameter. Example: openPincode('tx123456')
+         *
+         * - If you want to open the pincode window to approve the sending of an NFT, you must call
+         *   this function without any parameter or with the 'SEND_NFT' parameter.
+         *   Example 1: openPincode()
+         *   Example 2: openPincode('SEND_NFT')
+         *
+         * @param {string} [target] - The action to perform or ID of the charge to pay (if applicable). Use 'SEND_NFT' to send an NFT.
+         *
+         *
+         */
+        this.openPinCode = (target = types_1.PincodeTarget.SEND_NFT) => {
             var _a;
             const width = 450;
             const height = 350;

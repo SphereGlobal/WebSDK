@@ -519,3 +519,10 @@ export interface BigNumberObj {
   type: string;
   hex: string;
 }
+
+export enum PincodeTarget {
+  ADD_WALLET = 'ADD_WALLET',
+  GET_PRIVATE_KEY = 'GET_PRIVATE_KEY',
+  CHECK_STARK_PRIVATE_KEY = 'CHECK_STARK_PRIVATE_KEY',
+  SEND_NFT = 'SEND_NFT',
+}

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BatchType = exports.RouteEstimateError = exports.PayError = exports.TransferType = exports.BridgeServices = exports.RouteActionType = exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
+exports.PincodeTarget = exports.BatchType = exports.RouteEstimateError = exports.PayError = exports.TransferType = exports.BridgeServices = exports.RouteActionType = exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
 var LoginBehavior;
 (function (LoginBehavior) {
     LoginBehavior["REDIRECT"] = "REDIRECT";
@@ -81,3 +81,10 @@ var BatchType;
     BatchType["SWAP"] = "SWAP";
     BatchType["BRIDGE"] = "BRIDGE";
 })(BatchType || (exports.BatchType = BatchType = {}));
+var PincodeTarget;
+(function (PincodeTarget) {
+    PincodeTarget["ADD_WALLET"] = "ADD_WALLET";
+    PincodeTarget["GET_PRIVATE_KEY"] = "GET_PRIVATE_KEY";
+    PincodeTarget["CHECK_STARK_PRIVATE_KEY"] = "CHECK_STARK_PRIVATE_KEY";
+    PincodeTarget["SEND_NFT"] = "SEND_NFT";
+})(PincodeTarget || (exports.PincodeTarget = PincodeTarget = {}));

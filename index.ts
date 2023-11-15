@@ -35,6 +35,7 @@ import {
   RouteAction,
   FormattedBatch,
   BatchType,
+  PincodeTarget,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -692,7 +693,24 @@ class WebSDK {
     );
   };
 
-  openPinCode = (target: string = 'SEND_NFT') => {
+  /**
+   * Open PinCode
+   *
+   * This function is used to open the pincode window for specific actions.
+   *
+   * - If you want to open the pincode window to pay a charge, you must call this function
+   *   with the 'chargeId' as a parameter. Example: openPincode('tx123456')
+   *
+   * - If you want to open the pincode window to approve the sending of an NFT, you must call
+   *   this function without any parameter or with the 'SEND_NFT' parameter.
+   *   Example 1: openPincode()
+   *   Example 2: openPincode('SEND_NFT')
+   *
+   * @param {string} [target] - The action to perform or ID of the charge to pay (if applicable). Use 'SEND_NFT' to send an NFT.
+   *
+   *
+   */
+  openPinCode = (target: string = PincodeTarget.SEND_NFT) => {
     const width = 450;
     const height = 350;
     const left = (window.innerWidth - width) / 2 + window.screenX;
