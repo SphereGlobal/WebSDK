@@ -108,6 +108,9 @@ export type NftsInfo = {
     name: string | undefined;
     address: string | undefined;
     tokenType?: string;
+    chain?: SupportedChains;
+    tokenId?: string;
+    walletAddress?: string;
 };
 export interface NftsInfoResponse {
     data: NftsInfo[] | null;
@@ -469,4 +472,10 @@ export interface FormattedBatch {
 export interface BigNumberObj {
     type: string;
     hex: string;
+}
+export declare enum PincodeTarget {
+    ADD_WALLET = "ADD_WALLET",
+    GET_PRIVATE_KEY = "GET_PRIVATE_KEY",
+    CHECK_STARK_PRIVATE_KEY = "CHECK_STARK_PRIVATE_KEY",
+    SEND_NFT = "SEND_NFT"
 }

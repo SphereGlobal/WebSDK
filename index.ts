@@ -35,6 +35,7 @@ import {
   RouteAction,
   FormattedBatch,
   BatchType,
+  PincodeTarget,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -469,6 +470,27 @@ class WebSDK {
   getNfts = async ({ forceRefresh }: ForceRefresh = { forceRefresh: false }): Promise<NftsInfo[]> =>
     this.#getData(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
 
+  transferNft = async (nftData: {
+    chain: SupportedChains;
+    fromAddress: string;
+    toAddress: string;
+    nftTokenAddress: string;
+    tokenId?: string;
+    reason?: string;
+  }) => {
+    try {
+      const DEK = this.#wrappedDek;
+      if (!DEK) throw new Error('There was an error getting the wrapped dek');
+      const requestOptions = await this.#createRequest('POST', { ...nftData, wrappedDek: DEK });
+      const response = await fetch(`${this.#baseUrl}/transferNft`, requestOptions);
+      const res = await response.json();
+      return res;
+    } catch (error: any) {
+      console.error('There was an error sending NFT, error: ', error);
+      throw new Error(error);
+    }
+  };
+
   getTransactions = async (
     props: {
       quantity?: number;
@@ -549,8 +571,13 @@ class WebSDK {
         // parse the stringified route
         const data = response.data as PayRouteEstimate;
         const parsedRoute = JSON.parse(data.estimation.route) as RouteBatch[];
-        const batches = parsedRoute.map((b: RouteBatch) => this.#formatBatch(b.description, b.actions));
-        const newData = { ...data, estimation: { ...data.estimation, routeParsed: batches } } as PayRouteEstimate;
+        const batches = parsedRoute.map((b: RouteBatch) =>
+          this.#formatBatch(b.description, b.actions)
+        );
+        const newData = {
+          ...data,
+          estimation: { ...data.estimation, routeParsed: batches },
+        } as PayRouteEstimate;
         return newData;
       }
     } catch (e: any) {
@@ -666,7 +693,24 @@ class WebSDK {
     );
   };
 
-  openPinCode = (chargeId: string) => {
+  /**
+   * Open PinCode
+   *
+   * This function is used to open the pincode window for specific actions.
+   *
+   * - If you want to open the pincode window to pay a charge, you must call this function
+   *   with the 'chargeId' as a parameter. Example: openPincode('tx123456')
+   *
+   * - If you want to open the pincode window to approve the sending of an NFT, you must call
+   *   this function without any parameter or with the 'SEND_NFT' parameter.
+   *   Example 1: openPincode()
+   *   Example 2: openPincode('SEND_NFT')
+   *
+   * @param {string} [target] - The action to perform or ID of the charge to pay (if applicable). Use 'SEND_NFT' to send an NFT.
+   *
+   *
+   */
+  openPinCode = (target: string = PincodeTarget.SEND_NFT) => {
     const width = 450;
     const height = 350;
     const left = (window.innerWidth - width) / 2 + window.screenX;
@@ -674,8 +718,8 @@ class WebSDK {
     const options = `width=${width},height=${height},left=${left},top=${top}`;
 
     this.pinCodeScreen = window.open(
-      `${this.#pinCodeUrl}/?accessToken=${this.#credentials?.accessToken}&chargeId=${chargeId}`,
-      'SphereOne Pin Code',
+      `${this.#pinCodeUrl}/?accessToken=${this.#credentials?.accessToken}&target=${target}`,
+      'Sphereone Pin Code',
       options
     );
   };
@@ -691,13 +735,13 @@ class WebSDK {
         // update user share
         this.#wrappedDek = data.data.share;
         // trigger callbac if it exists
-        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+        callbacks ? callbacks.successCallback && callbacks.successCallback() : null;
       } else if (data.data.code === 'PIN') {
-        callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+        callbacks ? callbacks.successCallback && callbacks.successCallback() : null;
         refetchUserData();
       } else {
-        callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
-      };
+        callbacks ? callbacks.failCallback && callbacks.failCallback() : null;
+      }
     }
   };
 
@@ -713,14 +757,12 @@ class WebSDK {
     const renderObj: FormattedBatch = {
       type: BatchType.TRANSFER,
       title,
-      operations: []
+      operations: [],
     };
-  
+
     const hexToNumber = (hex: string, decimals: number) =>
-      (parseInt(hex, 16) / Math.pow(10, decimals))
-        .toFixed(decimals)
-        .replace(/0+$/, "");
-  
+      (parseInt(hex, 16) / Math.pow(10, decimals)).toFixed(decimals).replace(/0+$/, '');
+
     actions.forEach(({ transferData, swapData, bridgeData }) => {
       if (transferData) {
         renderObj.type = BatchType.TRANSFER;
@@ -733,13 +775,11 @@ class WebSDK {
       } else if (swapData) {
         renderObj.type = BatchType.SWAP;
         renderObj.operations.push(
-          `- Swap ${hexToNumber(
-            swapData.fromAmount.hex,
-            swapData.fromToken.decimals
-          )} ${swapData.fromToken.symbol} to ${hexToNumber(
-            swapData.toAmount.hex,
-            swapData.toToken.decimals
-          )} ${swapData.toToken.symbol} in ${swapData.fromChain}`
+          `- Swap ${hexToNumber(swapData.fromAmount.hex, swapData.fromToken.decimals)} ${
+            swapData.fromToken.symbol
+          } to ${hexToNumber(swapData.toAmount.hex, swapData.toToken.decimals)} ${
+            swapData.toToken.symbol
+          } in ${swapData.fromChain}`
         );
       } else if (bridgeData) {
         renderObj.type = BatchType.BRIDGE;
@@ -749,16 +789,13 @@ class WebSDK {
             bridgeData.quote.fromToken.decimals
           )} ${bridgeData.quote.fromToken.symbol} in ${
             bridgeData.quote.fromToken.chain
-          } to ${hexToNumber(
-            bridgeData.quote.toAmount.hex,
-            bridgeData.quote.toToken.decimals
-          )} ${bridgeData.quote.toToken.symbol} in ${
-            bridgeData.quote.toToken.chain
-          }`
+          } to ${hexToNumber(bridgeData.quote.toAmount.hex, bridgeData.quote.toToken.decimals)} ${
+            bridgeData.quote.toToken.symbol
+          } in ${bridgeData.quote.toToken.chain}`
         );
       }
     });
-  
+
     return renderObj;
   }
 }

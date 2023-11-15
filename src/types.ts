@@ -119,6 +119,9 @@ export type NftsInfo = {
   name: string | undefined;
   address: string | undefined;
   tokenType?: string;
+  chain?: SupportedChains;
+  tokenId?: string;
+  walletAddress?: string;
 };
 
 export interface NftsInfoResponse {
@@ -498,12 +501,12 @@ export interface HandleCallback {
   successCallback?: (...args: any) => void;
   failCallback?: (...args: any) => void;
   cancelCallback?: (...args: any) => void;
-};
+}
 
 export enum BatchType {
-  TRANSFER = "TRANSFER",
-  SWAP = "SWAP",
-  BRIDGE = "BRIDGE"
+  TRANSFER = 'TRANSFER',
+  SWAP = 'SWAP',
+  BRIDGE = 'BRIDGE',
 }
 
 export interface FormattedBatch {
@@ -515,4 +518,11 @@ export interface FormattedBatch {
 export interface BigNumberObj {
   type: string;
   hex: string;
+}
+
+export enum PincodeTarget {
+  ADD_WALLET = 'ADD_WALLET',
+  GET_PRIVATE_KEY = 'GET_PRIVATE_KEY',
+  CHECK_STARK_PRIVATE_KEY = 'CHECK_STARK_PRIVATE_KEY',
+  SEND_NFT = 'SEND_NFT',
 }
