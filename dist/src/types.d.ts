@@ -1,4 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber';
 export interface WalletBalance {
     price: number;
     amount: number;
@@ -27,7 +26,9 @@ export declare enum SupportedChains {
     FANTOM = "FANTOM",
     EOSEVM = "EOSEVM",
     BASE = "BASE",
-    FLOW = "FLOW"
+    FLOW = "FLOW",
+    KLAYTN = "KLAYTN",
+    DFK = "DFK"
 }
 export interface Token {
     symbol: string;
@@ -75,6 +76,7 @@ export interface UserInfo {
     username?: string;
     isMerchant: boolean;
     profilePicture: string;
+    isPinCodeSetup?: boolean;
 }
 export interface UserInfoResponse {
     data: UserInfo | null;
@@ -106,6 +108,9 @@ export type NftsInfo = {
     name: string | undefined;
     address: string | undefined;
     tokenType?: string;
+    chain?: SupportedChains;
+    tokenId?: string;
+    walletAddress?: string;
 };
 export interface NftsInfoResponse {
     data: NftsInfo[] | null;
@@ -159,15 +164,17 @@ export declare enum TxStatus {
 export interface Estimate {
     time: number;
     costUsd: number;
-    ethGas: BigNumber;
-    maticGas: BigNumber;
-    optGas: BigNumber;
-    avaxGas: BigNumber;
-    arbGas: BigNumber;
-    bscGas: BigNumber;
-    solGas: BigNumber;
-    eosEvmGas: BigNumber;
-    baseGas: BigNumber;
+    ethGas: BigNumberObj;
+    maticGas: BigNumberObj;
+    optGas: BigNumberObj;
+    avaxGas: BigNumberObj;
+    arbGas: BigNumberObj;
+    bscGas: BigNumberObj;
+    solGas: BigNumberObj;
+    eosEvmGas: BigNumberObj;
+    baseGas: BigNumberObj;
+    klaytnGas: BigNumberObj;
+    dfkGas: BigNumberObj;
 }
 export declare enum RouteActionType {
     BRIDGE = "BRIDGE",
@@ -176,13 +183,13 @@ export declare enum RouteActionType {
 }
 export interface SwapData {
     fromChain: SupportedChains;
-    fromAmount: BigNumber;
+    fromAmount: BigNumberObj;
     fromToken: Token;
     fromAddress: string;
     fromPrivateKey: string;
-    toAmount: BigNumber;
+    toAmount: BigNumberObj;
     toToken: Token;
-    estimatedGas: BigNumber;
+    estimatedGas: BigNumberObj;
 }
 export interface SwapResponse {
     data: SwapResponseData | null;
@@ -194,8 +201,8 @@ export interface SwapResponseData {
     fromAddress: string;
     fromToken: Token;
     toToken: Token;
-    toAmount: BigNumber;
-    fromAmount: BigNumber;
+    toAmount: BigNumberObj;
+    fromAmount: BigNumberObj;
     userOperation?: {
         userOpHash: string;
         wait: () => Promise<any>;
@@ -210,7 +217,7 @@ export interface SwapResponseData {
 }
 export interface TransferData {
     fromChain: SupportedChains;
-    fromAmount: BigNumber;
+    fromAmount: BigNumberObj;
     fromAddress: string;
     fromPrivateKey: string;
     fromToken: Token;
@@ -241,24 +248,26 @@ export interface BridgeQuote {
     rawQuote: any;
     service: BridgeServices;
     fromChain: SupportedChains;
-    fromAmount: BigNumber;
+    fromAmount: BigNumberObj;
     fromAddress: string;
     fromToken: Token;
     toChain: SupportedChains;
-    toAmount: BigNumber;
+    toAmount: BigNumberObj;
     toAddress: string;
     toToken: Token;
     estimatedTime: number;
     estimatedCostUSD: number;
-    estimatedEthGas: BigNumber;
-    estimatedMatGas: BigNumber;
-    estimatedAvaxGas: BigNumber;
-    estimatedArbGas: BigNumber;
-    estimatedBscGas: BigNumber;
-    estimatedSolGas: BigNumber;
-    estimatedOptGas: BigNumber;
-    estimatedEosEvmGas: BigNumber;
-    estimatedBaseGas: BigNumber;
+    estimatedEthGas: BigNumberObj;
+    estimatedMatGas: BigNumberObj;
+    estimatedAvaxGas: BigNumberObj;
+    estimatedArbGas: BigNumberObj;
+    estimatedBscGas: BigNumberObj;
+    estimatedSolGas: BigNumberObj;
+    estimatedOptGas: BigNumberObj;
+    estimatedEosEvmGas: BigNumberObj;
+    estimatedBaseGas: BigNumberObj;
+    estimatedKlaytnGas: BigNumberObj;
+    estimatedDfkGas: BigNumberObj;
     bridgeId?: string;
     depositAddress?: string;
 }
@@ -301,7 +310,7 @@ export interface TransferResponse {
 }
 export interface TransferResponseData {
     fromChain: SupportedChains;
-    fromAmount: BigNumber;
+    fromAmount: BigNumberObj;
     fromAddress: string;
     fromTokenAddress: string;
     toAddress: string;
@@ -310,7 +319,7 @@ export interface TransferResponseData {
     fromPrivateKey: string;
     transferType: TransferType;
     status: TxStatus;
-    fee?: BigNumber;
+    fee?: BigNumberObj;
     rawRecipient?: any;
     sponsoredFee: boolean;
     userOperation?: {
@@ -415,6 +424,7 @@ export interface PayRouteEstimate {
     txId: string;
     status: TxStatus;
     total: number;
+    totalUsd: number;
     estimation: PayRouteTotalEstimation;
     to: PayRouteDestinationEstimate;
     startTimestamp: number;
@@ -425,10 +435,47 @@ export interface PayRouteTotalEstimation {
     timeEstimate: number;
     gas: string;
     route: string;
+    routeParsed?: FormattedBatch[];
 }
 export interface PayRouteDestinationEstimate {
     toAmount: string;
     toAddress: string;
     toChain: string;
     toToken: Token;
+}
+export interface ParsedRoute {
+    id: string;
+    batches: RouteBatch[];
+    status: string;
+    toToken: Token;
+    toAddress: string;
+    toChain: string;
+    toAmount: string;
+    estimate: Estimate;
+    fromUid: string;
+}
+export interface HandleCallback {
+    successCallback?: (...args: any) => void;
+    failCallback?: (...args: any) => void;
+    cancelCallback?: (...args: any) => void;
+}
+export declare enum BatchType {
+    TRANSFER = "TRANSFER",
+    SWAP = "SWAP",
+    BRIDGE = "BRIDGE"
+}
+export interface FormattedBatch {
+    type: BatchType;
+    title: string | null;
+    operations: string[];
+}
+export interface BigNumberObj {
+    type: string;
+    hex: string;
+}
+export declare enum PincodeTarget {
+    ADD_WALLET = "ADD_WALLET",
+    GET_PRIVATE_KEY = "GET_PRIVATE_KEY",
+    CHECK_STARK_PRIVATE_KEY = "CHECK_STARK_PRIVATE_KEY",
+    SEND_NFT = "SEND_NFT"
 }
