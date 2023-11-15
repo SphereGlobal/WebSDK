@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.RouteEstimateError = exports.PayError = exports.TransferType = exports.BridgeServices = exports.RouteActionType = exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
+exports.BatchType = exports.RouteEstimateError = exports.PayError = exports.TransferType = exports.BridgeServices = exports.RouteActionType = exports.TxStatus = exports.Environments = exports.WalletTypes = exports.SupportedChains = exports.LoginBehavior = void 0;
 var LoginBehavior;
 (function (LoginBehavior) {
     LoginBehavior["REDIRECT"] = "REDIRECT";
@@ -20,6 +20,8 @@ var SupportedChains;
     SupportedChains["EOSEVM"] = "EOSEVM";
     SupportedChains["BASE"] = "BASE";
     SupportedChains["FLOW"] = "FLOW";
+    SupportedChains["KLAYTN"] = "KLAYTN";
+    SupportedChains["DFK"] = "DFK";
 })(SupportedChains || (exports.SupportedChains = SupportedChains = {}));
 var WalletTypes;
 (function (WalletTypes) {
@@ -73,3 +75,10 @@ exports.PayError = PayError;
 class RouteEstimateError extends PayError {
 }
 exports.RouteEstimateError = RouteEstimateError;
+;
+var BatchType;
+(function (BatchType) {
+    BatchType["TRANSFER"] = "TRANSFER";
+    BatchType["SWAP"] = "SWAP";
+    BatchType["BRIDGE"] = "BRIDGE";
+})(BatchType || (exports.BatchType = BatchType = {}));

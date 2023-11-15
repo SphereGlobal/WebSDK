@@ -1,6 +1,3 @@
-import { BigNumber } from '@ethersproject/bignumber';
-import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
-
 export interface WalletBalance {
   price: number; // usdc amount bigint
   amount: number; // amount bigint
@@ -33,6 +30,8 @@ export enum SupportedChains {
   EOSEVM = 'EOSEVM',
   BASE = 'BASE',
   FLOW = 'FLOW',
+  KLAYTN = 'KLAYTN',
+  DFK = 'DFK',
 }
 
 export interface Token {
@@ -84,6 +83,7 @@ export interface UserInfo {
   username?: string;
   isMerchant: boolean;
   profilePicture: string;
+  isPinCodeSetup?: boolean;
 }
 export interface UserInfoResponse {
   data: UserInfo | null;
@@ -183,15 +183,17 @@ export enum TxStatus {
 export interface Estimate {
   time: number; // minutes
   costUsd: number;
-  ethGas: BigNumber;
-  maticGas: BigNumber;
-  optGas: BigNumber;
-  avaxGas: BigNumber;
-  arbGas: BigNumber;
-  bscGas: BigNumber;
-  solGas: BigNumber;
-  eosEvmGas: BigNumber;
-  baseGas: BigNumber;
+  ethGas: BigNumberObj;
+  maticGas: BigNumberObj;
+  optGas: BigNumberObj;
+  avaxGas: BigNumberObj;
+  arbGas: BigNumberObj;
+  bscGas: BigNumberObj;
+  solGas: BigNumberObj;
+  eosEvmGas: BigNumberObj;
+  baseGas: BigNumberObj;
+  klaytnGas: BigNumberObj;
+  dfkGas: BigNumberObj;
 }
 export enum RouteActionType {
   BRIDGE = 'BRIDGE',
@@ -200,13 +202,13 @@ export enum RouteActionType {
 }
 export interface SwapData {
   fromChain: SupportedChains;
-  fromAmount: BigNumber;
+  fromAmount: BigNumberObj;
   fromToken: Token;
   fromAddress: string;
   fromPrivateKey: string;
-  toAmount: BigNumber;
+  toAmount: BigNumberObj;
   toToken: Token;
-  estimatedGas: BigNumber;
+  estimatedGas: BigNumberObj;
 }
 
 export interface SwapResponse {
@@ -220,8 +222,8 @@ export interface SwapResponseData {
   fromAddress: string;
   fromToken: Token;
   toToken: Token;
-  toAmount: BigNumber;
-  fromAmount: BigNumber;
+  toAmount: BigNumberObj;
+  fromAmount: BigNumberObj;
   userOperation?: {
     userOpHash: string;
     wait: () => Promise<any>;
@@ -237,7 +239,7 @@ export interface SwapResponseData {
 
 export interface TransferData {
   fromChain: SupportedChains;
-  fromAmount: BigNumber;
+  fromAmount: BigNumberObj;
   fromAddress: string;
   fromPrivateKey: string;
   fromToken: Token;
@@ -270,24 +272,26 @@ export interface BridgeQuote {
   rawQuote: any; // Raw lifi quote or null
   service: BridgeServices;
   fromChain: SupportedChains;
-  fromAmount: BigNumber;
+  fromAmount: BigNumberObj;
   fromAddress: string;
   fromToken: Token;
   toChain: SupportedChains;
-  toAmount: BigNumber;
+  toAmount: BigNumberObj;
   toAddress: string;
   toToken: Token;
   estimatedTime: number;
   estimatedCostUSD: number;
-  estimatedEthGas: BigNumber;
-  estimatedMatGas: BigNumber;
-  estimatedAvaxGas: BigNumber;
-  estimatedArbGas: BigNumber;
-  estimatedBscGas: BigNumber;
-  estimatedSolGas: BigNumber;
-  estimatedOptGas: BigNumber;
-  estimatedEosEvmGas: BigNumber;
-  estimatedBaseGas: BigNumber;
+  estimatedEthGas: BigNumberObj;
+  estimatedMatGas: BigNumberObj;
+  estimatedAvaxGas: BigNumberObj;
+  estimatedArbGas: BigNumberObj;
+  estimatedBscGas: BigNumberObj;
+  estimatedSolGas: BigNumberObj;
+  estimatedOptGas: BigNumberObj;
+  estimatedEosEvmGas: BigNumberObj;
+  estimatedBaseGas: BigNumberObj;
+  estimatedKlaytnGas: BigNumberObj;
+  estimatedDfkGas: BigNumberObj;
 
   //  is only needed for StealthEX / SWFT bridge
   bridgeId?: string;
@@ -337,7 +341,7 @@ export interface TransferResponse {
 }
 export interface TransferResponseData {
   fromChain: SupportedChains;
-  fromAmount: BigNumber;
+  fromAmount: BigNumberObj;
   fromAddress: string;
   fromTokenAddress: string;
   toAddress: string;
@@ -346,7 +350,7 @@ export interface TransferResponseData {
   fromPrivateKey: string;
   transferType: TransferType;
   status: TxStatus;
-  fee?: BigNumber;
+  fee?: BigNumberObj;
   rawRecipient?: any;
   sponsoredFee: boolean;
   userOperation?: {
@@ -459,6 +463,7 @@ export interface PayRouteEstimate {
   txId: string; // transactionId
   status: TxStatus; // TxStatus - WAITING, PROCESSING, COMPLETED, CANCELED, FAILED (should be PENDING)
   total: number; // total amount initially received, not including other costs
+  totalUsd: number; // total amount initially received, in USD, not including other costs
   estimation: PayRouteTotalEstimation;
   to: PayRouteDestinationEstimate;
   startTimestamp: number; // timestamp when response is sent back to client-side
@@ -470,6 +475,7 @@ export interface PayRouteTotalEstimation {
   timeEstimate: number; // in minutes, rough estimate (for 60 seconds)
   gas: string; // gas for the transaction
   route: string; // the route batches that will be executed
+  routeParsed?: FormattedBatch[]; // the route batches that will be executed
 }
 
 export interface PayRouteDestinationEstimate {
@@ -477,4 +483,39 @@ export interface PayRouteDestinationEstimate {
   toAddress: string; // receiver address
   toChain: string; // destination chain
   toToken: Token; // extra token metadata
+}
+
+export interface ParsedRoute {
+  id: string;
+  batches: RouteBatch[];
+  status: string;
+  toToken: Token;
+  toAddress: string;
+  toChain: string;
+  toAmount: string;
+  estimate: Estimate;
+  fromUid: string;
+}
+
+export interface HandleCallback {
+  successCallback?: (...args: any) => void;
+  failCallback?: (...args: any) => void;
+  cancelCallback?: (...args: any) => void;
+}
+
+export enum BatchType {
+  TRANSFER = 'TRANSFER',
+  SWAP = 'SWAP',
+  BRIDGE = 'BRIDGE',
+}
+
+export interface FormattedBatch {
+  type: BatchType;
+  title: string | null;
+  operations: string[];
+}
+
+export interface BigNumberObj {
+  type: string;
+  hex: string;
 }

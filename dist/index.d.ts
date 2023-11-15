@@ -1,8 +1,6 @@
-import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse, GetRouteEstimationParams, PayRouteEstimate } from './src/types';
-export { Environments as SphereEnvironment } from './src/types';
-export { SupportedChains } from './src/types';
-export { LoginBehavior } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse, GetRouteEstimationParams, PayRouteEstimate, HandleCallback } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
+export * from './src/types';
 declare class WebSDK {
     #private;
     user: User | null;
@@ -55,7 +53,8 @@ declare class WebSDK {
         error: null;
     }>;
     addPinCode: () => void;
-    openPinCode: (target?: string) => void;
-    pinCodeHandler: () => void;
+    openPinCode: (chargeId: string) => void;
+    pinCodeHandler: (callbacks?: HandleCallback) => void;
+    removePinCodeHandler: (callbacks?: HandleCallback) => void;
 }
 export default WebSDK;

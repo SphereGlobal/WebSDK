@@ -1,4 +1,18 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -19,20 +33,15 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
     return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
 };
-var _WebSDK_instances, _WebSDK_credentials, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_wrappedDekExpiration, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaProdUrl, _WebSDK_baseUrl, _WebSDK_pinCodeUrl, _WebSDK_loadCredentials, _WebSDK_handleAuth, _WebSDK_handlePersistence, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions, _WebSDK_estimateRoute, _WebSDK_refreshToken, _WebSDK_getData, _WebSDK_loadUserData;
+var _WebSDK_instances, _WebSDK_credentials, _WebSDK_oauth2Client, _WebSDK_wrappedDek, _WebSDK_wrappedDekExpiration, _WebSDK_domain, _WebSDK_audience, _WebSDK_pwaProdUrl, _WebSDK_baseUrl, _WebSDK_pinCodeUrl, _WebSDK_loadCredentials, _WebSDK_handleAuth, _WebSDK_handlePersistence, _WebSDK_createRequest, _WebSDK_fetchUserBalances, _WebSDK_fetchUserWallets, _WebSDK_fetchUserInfo, _WebSDK_fetchUserNfts, _WebSDK_getWrappedDek, _WebSDK_fetchTransactions, _WebSDK_estimateRoute, _WebSDK_refreshToken, _WebSDK_getData, _WebSDK_loadUserData, _WebSDK_pinCodeListener, _WebSDK_formatBatch;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LoginButton = exports.LoginBehavior = exports.SupportedChains = exports.SphereEnvironment = void 0;
+exports.LoginButton = void 0;
 const types_1 = require("./src/types");
 const oidc_client_ts_1 = require("oidc-client-ts");
 const utils_1 = require("./src/utils");
-var types_2 = require("./src/types");
-Object.defineProperty(exports, "SphereEnvironment", { enumerable: true, get: function () { return types_2.Environments; } });
-var types_3 = require("./src/types");
-Object.defineProperty(exports, "SupportedChains", { enumerable: true, get: function () { return types_3.SupportedChains; } });
-var types_4 = require("./src/types");
-Object.defineProperty(exports, "LoginBehavior", { enumerable: true, get: function () { return types_4.LoginBehavior; } });
 var LoginButton_1 = require("./src/components/LoginButton");
 Object.defineProperty(exports, "LoginButton", { enumerable: true, get: function () { return LoginButton_1.LoginButton; } });
+__exportStar(require("./src/types"), exports);
 class WebSDK {
     constructor(clientId, redirectUri, apiKey, loginType = types_1.LoginBehavior.REDIRECT) {
         _WebSDK_instances.add(this);
@@ -46,7 +55,7 @@ class WebSDK {
         _WebSDK_audience.set(this, 'https://auth.sphereone.xyz');
         _WebSDK_pwaProdUrl.set(this, 'https://wallet.sphereone.xyz');
         _WebSDK_baseUrl.set(this, 'https://api-olgsdff53q-uc.a.run.app');
-        _WebSDK_pinCodeUrl.set(this, 'https://sphereone-pincode-verify.web.app');
+        _WebSDK_pinCodeUrl.set(this, 'https://pin.sphereone.xyz');
         this.scope = 'openid email offline_access profile';
         this.pinCodeScreen = null;
         this.getAccessToken = () => {
@@ -485,11 +494,16 @@ class WebSDK {
                         });
                     }
                     else {
-                        throw new Error(`Error: ${error.code}: ${error.message}`);
+                        throw new Error(`Error: ${error.message}`);
                     }
                 }
                 else {
-                    return response.data;
+                    // parse the stringified route
+                    const data = response.data;
+                    const parsedRoute = JSON.parse(data.estimation.route);
+                    const batches = parsedRoute.map((b) => __classPrivateFieldGet(this, _WebSDK_instances, "m", _WebSDK_formatBatch).call(this, b.description, b.actions));
+                    const newData = Object.assign(Object.assign({}, data), { estimation: Object.assign(Object.assign({}, data.estimation), { routeParsed: batches }) });
+                    return newData;
                 }
             }
             catch (e) {
@@ -579,16 +593,35 @@ class WebSDK {
             const left = (window.innerWidth - width) / 2 + window.screenX;
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
-            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&target=${target}`, 'Sphereone Pin Code', options);
+            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'SphereOne Pin Code', options);
         };
-        this.pinCodeHandler = () => {
-            window.addEventListener('message', (event) => {
-                if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
-                    const data = event.data;
-                    if (data.data.code === 'DEK')
-                        __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
-                }
+        _WebSDK_pinCodeListener.set(this, (event, callbacks) => {
+            const refetchUserData = () => __awaiter(this, void 0, void 0, function* () {
+                this.getUserInfo({ forceRefresh: true });
             });
+            if (event.origin === __classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")) {
+                const data = event.data;
+                if (data.data.code === 'DEK') {
+                    // update user share
+                    __classPrivateFieldSet(this, _WebSDK_wrappedDek, data.data.share, "f");
+                    // trigger callbac if it exists
+                    callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+                }
+                else if (data.data.code === 'PIN') {
+                    callbacks ? (callbacks.successCallback && callbacks.successCallback()) : null;
+                    refetchUserData();
+                }
+                else {
+                    callbacks ? (callbacks.failCallback && callbacks.failCallback()) : null;
+                }
+                ;
+            }
+        });
+        this.pinCodeHandler = (callbacks) => {
+            window.addEventListener('message', (event) => __classPrivateFieldGet(this, _WebSDK_pinCodeListener, "f").call(this, event, callbacks));
+        };
+        this.removePinCodeHandler = (callbacks) => {
+            window.removeEventListener('message', (event) => __classPrivateFieldGet(this, _WebSDK_pinCodeListener, "f").call(this, event, callbacks));
         };
         this.clientId = clientId;
         this.redirectUri = redirectUri;
@@ -615,7 +648,7 @@ class WebSDK {
         return iframe;
     }
 }
-_WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_wrappedDekExpiration = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_pinCodeUrl = new WeakMap(), _WebSDK_handleAuth = new WeakMap(), _WebSDK_handlePersistence = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap(), _WebSDK_estimateRoute = new WeakMap(), _WebSDK_refreshToken = new WeakMap(), _WebSDK_getData = new WeakMap(), _WebSDK_instances = new WeakSet(), _WebSDK_loadCredentials = function _WebSDK_loadCredentials({ access_token, id_token, refresh_token, expires_at }) {
+_WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebSDK_wrappedDek = new WeakMap(), _WebSDK_wrappedDekExpiration = new WeakMap(), _WebSDK_domain = new WeakMap(), _WebSDK_audience = new WeakMap(), _WebSDK_pwaProdUrl = new WeakMap(), _WebSDK_baseUrl = new WeakMap(), _WebSDK_pinCodeUrl = new WeakMap(), _WebSDK_handleAuth = new WeakMap(), _WebSDK_handlePersistence = new WeakMap(), _WebSDK_createRequest = new WeakMap(), _WebSDK_fetchUserBalances = new WeakMap(), _WebSDK_fetchUserWallets = new WeakMap(), _WebSDK_fetchUserInfo = new WeakMap(), _WebSDK_fetchUserNfts = new WeakMap(), _WebSDK_getWrappedDek = new WeakMap(), _WebSDK_fetchTransactions = new WeakMap(), _WebSDK_estimateRoute = new WeakMap(), _WebSDK_refreshToken = new WeakMap(), _WebSDK_getData = new WeakMap(), _WebSDK_pinCodeListener = new WeakMap(), _WebSDK_instances = new WeakSet(), _WebSDK_loadCredentials = function _WebSDK_loadCredentials({ access_token, id_token, refresh_token, expires_at }) {
     __classPrivateFieldSet(this, _WebSDK_credentials, {
         accessToken: access_token,
         idToken: id_token !== null && id_token !== void 0 ? id_token : '',
@@ -628,5 +661,29 @@ _WebSDK_credentials = new WeakMap(), _WebSDK_oauth2Client = new WeakMap(), _WebS
     this.getNfts();
     this.getBalances();
     this.getWallets();
+}, _WebSDK_formatBatch = function _WebSDK_formatBatch(title, actions) {
+    const renderObj = {
+        type: types_1.BatchType.TRANSFER,
+        title,
+        operations: []
+    };
+    const hexToNumber = (hex, decimals) => (parseInt(hex, 16) / Math.pow(10, decimals))
+        .toFixed(decimals)
+        .replace(/0+$/, "");
+    actions.forEach(({ transferData, swapData, bridgeData }) => {
+        if (transferData) {
+            renderObj.type = types_1.BatchType.TRANSFER;
+            renderObj.operations.push(`- Transfer ${hexToNumber(transferData.fromAmount.hex, transferData.fromToken.decimals)} ${transferData.fromToken.symbol} in ${transferData.fromChain}`);
+        }
+        else if (swapData) {
+            renderObj.type = types_1.BatchType.SWAP;
+            renderObj.operations.push(`- Swap ${hexToNumber(swapData.fromAmount.hex, swapData.fromToken.decimals)} ${swapData.fromToken.symbol} to ${hexToNumber(swapData.toAmount.hex, swapData.toToken.decimals)} ${swapData.toToken.symbol} in ${swapData.fromChain}`);
+        }
+        else if (bridgeData) {
+            renderObj.type = types_1.BatchType.BRIDGE;
+            renderObj.operations.push(`- Bridge ${hexToNumber(bridgeData.quote.fromAmount.hex, bridgeData.quote.fromToken.decimals)} ${bridgeData.quote.fromToken.symbol} in ${bridgeData.quote.fromToken.chain} to ${hexToNumber(bridgeData.quote.toAmount.hex, bridgeData.quote.toToken.decimals)} ${bridgeData.quote.toToken.symbol} in ${bridgeData.quote.toToken.chain}`);
+        }
+    });
+    return renderObj;
 };
 exports.default = WebSDK;
