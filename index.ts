@@ -465,6 +465,26 @@ class WebSDK {
   getNfts = async ({ forceRefresh }: ForceRefresh = { forceRefresh: false }): Promise<NftsInfo[]> =>
     this.#getData(this.#fetchUserNfts, this.user?.nfts, forceRefresh);
 
+  transferNft = async (nftData: {
+    chain: SupportedChains;
+    fromAddress: string;
+    toAddress: string;
+    nftTokenAddress: string;
+    tokenId?: string;
+    reason?: string;
+  }) => {
+    try {
+      const DEK = this.#wrappedDek;
+      if (!DEK) throw new Error('There was an error getting the wrapped dek');
+      const requestOptions = await this.#createRequest('POST', { ...nftData, wrappedDek: DEK });
+      const response = await fetch(`${this.#baseUrl}/transferNft`, requestOptions);
+      const res = await response.json();
+    } catch (error: any) {
+      console.error('There was an error sending NFT, error: ', error);
+      throw new Error(error);
+    }
+  };
+
   getTransactions = async (
     props: {
       quantity?: number;
@@ -657,7 +677,7 @@ class WebSDK {
     );
   };
 
-  openPinCode = (chargeId: string) => {
+  openPinCode = (target: string = 'SEND_NFT') => {
     const width = 450;
     const height = 350;
     const left = (window.innerWidth - width) / 2 + window.screenX;
@@ -665,7 +685,7 @@ class WebSDK {
     const options = `width=${width},height=${height},left=${left},top=${top}`;
 
     this.pinCodeScreen = window.open(
-      `${this.#pinCodeUrl}/?accessToken=${this.#credentials?.accessToken}&chargeId=${chargeId}`,
+      `${this.#pinCodeUrl}/?accessToken=${this.#credentials?.accessToken}&target=${target}`,
       'Sphereone Pin Code',
       options
     );

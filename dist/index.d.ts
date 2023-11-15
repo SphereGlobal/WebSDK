@@ -29,6 +29,14 @@ declare class WebSDK {
     getUserInfo: ({ forceRefresh }?: ForceRefresh) => Promise<UserInfo>;
     getBalances: ({ forceRefresh }?: ForceRefresh) => Promise<UserBalance>;
     getNfts: ({ forceRefresh }?: ForceRefresh) => Promise<NftsInfo[]>;
+    transferNft: (nftData: {
+        chain: SupportedChains;
+        fromAddress: string;
+        toAddress: string;
+        nftTokenAddress: string;
+        tokenId?: string;
+        reason?: string;
+    }) => Promise<void>;
     getTransactions: (props?: {
         quantity?: number;
         getReceived?: boolean;
@@ -47,7 +55,7 @@ declare class WebSDK {
         error: null;
     }>;
     addPinCode: () => void;
-    openPinCode: (chargeId: string) => void;
+    openPinCode: (target?: string) => void;
     pinCodeHandler: () => void;
 }
 export default WebSDK;

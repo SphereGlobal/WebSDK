@@ -106,6 +106,9 @@ export type NftsInfo = {
     name: string | undefined;
     address: string | undefined;
     tokenType?: string;
+    chain?: SupportedChains;
+    tokenId?: string;
+    walletAddress?: string;
 };
 export interface NftsInfoResponse {
     data: NftsInfo[] | null;

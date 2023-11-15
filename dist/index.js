@@ -405,6 +405,20 @@ class WebSDK {
         this.getUserInfo = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _r; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserInfo, "f"), (_r = this.user) === null || _r === void 0 ? void 0 : _r.info, forceRefresh); });
         this.getBalances = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _s; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserBalances, "f"), (_s = this.user) === null || _s === void 0 ? void 0 : _s.balances, forceRefresh); });
         this.getNfts = ({ forceRefresh } = { forceRefresh: false }) => __awaiter(this, void 0, void 0, function* () { var _t; return __classPrivateFieldGet(this, _WebSDK_getData, "f").call(this, __classPrivateFieldGet(this, _WebSDK_fetchUserNfts, "f"), (_t = this.user) === null || _t === void 0 ? void 0 : _t.nfts, forceRefresh); });
+        this.transferNft = (nftData) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const DEK = __classPrivateFieldGet(this, _WebSDK_wrappedDek, "f");
+                if (!DEK)
+                    throw new Error('There was an error getting the wrapped dek');
+                const requestOptions = yield __classPrivateFieldGet(this, _WebSDK_createRequest, "f").call(this, 'POST', Object.assign(Object.assign({}, nftData), { wrappedDek: DEK }));
+                const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/transferNft`, requestOptions);
+                const res = yield response.json();
+            }
+            catch (error) {
+                console.error('There was an error sending NFT, error: ', error);
+                throw new Error(error);
+            }
+        });
         this.getTransactions = (props = {
             quantity: 0,
             getReceived: true,
@@ -558,14 +572,14 @@ class WebSDK {
             const options = `width=${width},height=${height},left=${left},top=${top}`;
             this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/add?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}`, 'Add Pin Code', options);
         };
-        this.openPinCode = (chargeId) => {
+        this.openPinCode = (target = 'SEND_NFT') => {
             var _a;
             const width = 450;
             const height = 350;
             const left = (window.innerWidth - width) / 2 + window.screenX;
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
-            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&chargeId=${chargeId}`, 'Sphereone Pin Code', options);
+            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&target=${target}`, 'Sphereone Pin Code', options);
         };
         this.pinCodeHandler = () => {
             window.addEventListener('message', (event) => {
