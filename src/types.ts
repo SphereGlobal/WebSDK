@@ -462,8 +462,8 @@ export interface PayRouteEstimateResponse {
 export interface PayRouteEstimate {
   txId: string; // transactionId
   status: TxStatus; // TxStatus - WAITING, PROCESSING, COMPLETED, CANCELED, FAILED (should be PENDING)
-  total: number; // total amount initially received, not including other costs
-  totalUsd: number; // total amount initially received, in USD, not including other costs
+  totalUsdc: string; // The total in usdc, includes sphereone fees, surplus and gas fees
+  totalFeesUsdc: string; // The total in usdc, includes sphereone fees, surplus and gas fees
   estimation: PayRouteTotalEstimation;
   to: PayRouteDestinationEstimate;
   startTimestamp: number; // timestamp when response is sent back to client-side
@@ -471,9 +471,12 @@ export interface PayRouteEstimate {
 }
 
 export interface PayRouteTotalEstimation {
-  costUsd: number; // cost (in usd) to make the transaction
   timeEstimate: number; // in minutes, rough estimate (for 60 seconds)
-  gas: string; // gas for the transaction
+  amountUsdc: string; // The equivalent amount of the token to be transfered in usdc
+  sphereOneFeesUsdc: string; // The sphereone fees in usdc
+  servicesFeesUsdc: string; // The fees of services we use in usdc
+  gasFeesUsdc: string; // The gas fees in usdc
+  surplusUsdc: string; // The surplus we estimate
   route: string; // the route batches that will be executed
   routeParsed?: FormattedBatch[]; // the route batches that will be executed
 }
