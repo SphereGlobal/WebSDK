@@ -423,17 +423,20 @@ export interface PayRouteEstimateResponse {
 export interface PayRouteEstimate {
     txId: string;
     status: TxStatus;
-    total: number;
-    totalUsd: number;
+    totalUsdc: string;
+    totalFeesUsdc: string;
     estimation: PayRouteTotalEstimation;
     to: PayRouteDestinationEstimate;
     startTimestamp: number;
     limitTimestamp: number;
 }
 export interface PayRouteTotalEstimation {
-    costUsd: number;
     timeEstimate: number;
-    gas: string;
+    amountUsdc: string;
+    sphereOneFeesUsdc: string;
+    servicesFeesUsdc: string;
+    gasFeesUsdc: string;
+    surplusUsdc: string;
     route: string;
     routeParsed?: FormattedBatch[];
 }
