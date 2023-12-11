@@ -268,7 +268,7 @@ class WebSDK {
       const requestOptions = await this.#createRequest();
 
       const response = await fetch(
-        `${this.#baseUrl}/getFundsAvailable?refreshCache=true`,
+        `${this.#baseUrl}/balances/tokens?refreshCache=true`,
         requestOptions
       );
 
@@ -315,7 +315,7 @@ class WebSDK {
   #fetchUserNfts = async (): Promise<NftsInfo[]> => {
     try {
       const requestOptions = await this.#createRequest();
-      const response = await fetch(`${this.#baseUrl}/getNftsAvailable`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/balances/nfts`, requestOptions);
 
       const data = (await response.json()) as NftsInfoResponse;
       if (data.error) throw new Error(data.error);
@@ -332,7 +332,7 @@ class WebSDK {
     try {
       const requestOptions = await this.#createRequest('POST');
 
-      const response = await fetch(`${this.#baseUrl}/createOrRecoverAccount`, requestOptions);
+      const response = await fetch(`${this.#baseUrl}/user/session`, requestOptions);
 
       const data = (await response.json()) as WrappedDekResponse;
       if (data.error) throw new Error(data.error);
