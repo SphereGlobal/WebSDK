@@ -578,15 +578,20 @@ class WebSDK {
                 throw new Error(error.message || error);
             }
         });
-        this.addPinCode = () => {
-            var _a;
+        this.addPinCode = () => __awaiter(this, void 0, void 0, function* () {
+            var _3;
+            if (yield this.isTokenExpired()) {
+                const refreshToken = yield __classPrivateFieldGet(this, _WebSDK_refreshToken, "f").call(this);
+                if (!refreshToken)
+                    throw new Error('The user is not login or the session is expired, please login again');
+            }
             const width = 450;
             const height = 350;
             const left = (window.innerWidth - width) / 2 + window.screenX;
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
-            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/add?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}`, 'Add Pin Code', options);
-        };
+            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/add?accessToken=${(_3 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _3 === void 0 ? void 0 : _3.accessToken}`, 'Add Pin Code', options);
+        });
         /**
          * Open PinCode
          *
@@ -604,15 +609,20 @@ class WebSDK {
          *
          *
          */
-        this.openPinCode = (target = types_1.PincodeTarget.SEND_NFT) => {
-            var _a;
+        this.openPinCode = (target = types_1.PincodeTarget.SEND_NFT) => __awaiter(this, void 0, void 0, function* () {
+            var _4;
+            if (yield this.isTokenExpired()) {
+                const refreshToken = yield __classPrivateFieldGet(this, _WebSDK_refreshToken, "f").call(this);
+                if (!refreshToken)
+                    throw new Error('The user is not login or the session is expired, please login again');
+            }
             const width = 450;
             const height = 350;
             const left = (window.innerWidth - width) / 2 + window.screenX;
             const top = (window.innerHeight - height) / 2 + window.screenY;
             const options = `width=${width},height=${height},left=${left},top=${top}`;
-            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_a = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _a === void 0 ? void 0 : _a.accessToken}&target=${target}`, 'Sphereone Pin Code', options);
-        };
+            this.pinCodeScreen = window.open(`${__classPrivateFieldGet(this, _WebSDK_pinCodeUrl, "f")}/?accessToken=${(_4 = __classPrivateFieldGet(this, _WebSDK_credentials, "f")) === null || _4 === void 0 ? void 0 : _4.accessToken}&target=${target}`, 'Sphereone Pin Code', options);
+        });
         _WebSDK_pinCodeListener.set(this, (event, callbacks) => {
             const refetchUserData = () => __awaiter(this, void 0, void 0, function* () {
                 this.getUserInfo({ forceRefresh: true });

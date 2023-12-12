@@ -679,7 +679,13 @@ class WebSDK {
     }
   };
 
-  addPinCode = () => {
+  addPinCode = async () => {
+    if (await this.isTokenExpired()) {
+      const refreshToken = await this.#refreshToken();
+      if (!refreshToken)
+        throw new Error('The user is not login or the session is expired, please login again');
+    }
+
     const width = 450;
     const height = 350;
     const left = (window.innerWidth - width) / 2 + window.screenX;
@@ -710,7 +716,13 @@ class WebSDK {
    *
    *
    */
-  openPinCode = (target: string = PincodeTarget.SEND_NFT) => {
+  openPinCode = async (target: string = PincodeTarget.SEND_NFT) => {
+    if (await this.isTokenExpired()) {
+      const refreshToken = await this.#refreshToken();
+      if (!refreshToken)
+        throw new Error('The user is not login or the session is expired, please login again');
+    }
+
     const width = 450;
     const height = 350;
     const left = (window.innerWidth - width) / 2 + window.screenX;
