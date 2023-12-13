@@ -52,7 +52,7 @@ declare class WebSDK {
         data: string;
         error: null;
     }>;
-    addPinCode: () => void;
+    addPinCode: () => Promise<void>;
     /**
      * Open PinCode
      *
@@ -70,7 +70,7 @@ declare class WebSDK {
      *
      *
      */
-    openPinCode: (target?: string) => void;
+    openPinCode: (target?: string) => Promise<void>;
     pinCodeHandler: (callbacks?: HandleCallback) => void;
     removePinCodeHandler: (callbacks?: HandleCallback) => void;
 }
