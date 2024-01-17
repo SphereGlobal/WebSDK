@@ -156,6 +156,13 @@ export type ChargeReqBody = {
   toAddress?: string;
 };
 
+// for calling on smart contract functions that are whitelisted in Merchant Dashboard
+export interface CallSmartContractProps {
+  alias: string;
+  nativeValue?: string; // must be a string convertable to number
+  functionParams?: string[];
+}
+
 export interface ChargeUrlAndId {
   paymentUrl: string;
   chargeId: string;

@@ -140,6 +140,11 @@ export type ChargeReqBody = {
     amount?: number;
     toAddress?: string;
 };
+export interface CallSmartContractProps {
+    alias: string;
+    nativeValue?: string;
+    functionParams?: string[];
+}
 export interface ChargeUrlAndId {
     paymentUrl: string;
     chargeId: string;
