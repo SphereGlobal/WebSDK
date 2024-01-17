@@ -36,6 +36,7 @@ import {
   FormattedBatch,
   BatchType,
   PincodeTarget,
+  CallSmartContractProps,
 } from './src/types';
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 import { decodeJWT } from './src/utils';
@@ -385,10 +386,12 @@ class WebSDK {
     chargeData,
     isDirectTransfer = false,
     isTest = false,
+    callSmartContractProps,
   }: {
     chargeData: ChargeReqBody;
     isDirectTransfer?: boolean;
     isTest?: boolean;
+    callSmartContractProps?: CallSmartContractProps;
   }): Promise<ChargeUrlAndId> => {
     try {
       // this endpoint doesn't need to have an a valid access token as header
@@ -399,6 +402,7 @@ class WebSDK {
           chargeData,
           isDirectTransfer,
           isTest,
+          callSmartContractProps,
         }),
       });
 

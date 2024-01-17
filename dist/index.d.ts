@@ -1,4 +1,4 @@
-import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse, GetRouteEstimationParams, PayRouteEstimate, HandleCallback } from './src/types';
+import { ChargeReqBody, UserInfo, LoginBehavior, NftsInfo, Transaction, User, Wallet, UserBalance, ChargeUrlAndId, ForceRefresh, SupportedChains, PayResponse, GetRouteEstimationParams, PayRouteEstimate, HandleCallback, CallSmartContractProps } from './src/types';
 export { LoginButton } from './src/components/LoginButton';
 export * from './src/types';
 declare class WebSDK {
@@ -17,10 +17,11 @@ declare class WebSDK {
     handleCallback: (url?: string) => Promise<any>;
     login: () => Promise<any>;
     logout: (withPageReload?: boolean) => Promise<void>;
-    createCharge: ({ chargeData, isDirectTransfer, isTest, }: {
+    createCharge: ({ chargeData, isDirectTransfer, isTest, callSmartContractProps, }: {
         chargeData: ChargeReqBody;
         isDirectTransfer?: boolean | undefined;
         isTest?: boolean | undefined;
+        callSmartContractProps?: CallSmartContractProps | undefined;
     }) => Promise<ChargeUrlAndId>;
     payCharge: (transactionId: string) => Promise<PayResponse>;
     getWallets: ({ forceRefresh }?: ForceRefresh) => Promise<Wallet[]>;
