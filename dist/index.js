@@ -344,7 +344,7 @@ class WebSDK {
                 throw new Error(e.message || e);
             }
         }));
-        this.createCharge = ({ chargeData, isDirectTransfer = false, isTest = false, }) => __awaiter(this, void 0, void 0, function* () {
+        this.createCharge = ({ chargeData, isDirectTransfer = false, isTest = false, callSmartContractProps, }) => __awaiter(this, void 0, void 0, function* () {
             try {
                 // this endpoint doesn't need to have an a valid access token as header
                 const response = yield fetch(`${__classPrivateFieldGet(this, _WebSDK_baseUrl, "f")}/createCharge`, {
@@ -354,6 +354,7 @@ class WebSDK {
                         chargeData,
                         isDirectTransfer,
                         isTest,
+                        callSmartContractProps,
                     }),
                 });
                 const data = (yield response.json());

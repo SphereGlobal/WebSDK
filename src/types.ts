@@ -154,14 +154,13 @@ export type ChargeReqBody = {
   cancelUrl: string;
   amount?: number;
   toAddress?: string;
-  // for calling on smart contract functions that are whitelisted in Merchant Dashboard
-  callSmartContractProps?: CallSmartContractProps;
 };
 
+// for calling on smart contract functions that are whitelisted in Merchant Dashboard
 export interface CallSmartContractProps {
   alias: string;
-  nativeValue: string; // must be a string convertable to number
-  functionParams: string[];
+  nativeValue?: string; // must be a string convertable to number
+  functionParams?: string[];
 }
 
 export interface ChargeUrlAndId {
