@@ -10,7 +10,6 @@ Please contact [SphereOne Support](mailto:support@sphereone.xyz?subject=Request%
 
 Once that is done, please follow the steps below.
 
-
 ## Build the Project for Local Development
 
 1. Download the repository from Github:
@@ -33,20 +32,22 @@ npm install
 
 And that's it, for you to start working.
 
-
 ## Installation into Another Project
 
 1. Install the repository from GitHub via Https:
 
 ```bash
-npm install https://github.com/SphereGlobal/WebSDK.git
+npm install @sphereone/sdk
 ```
+
 or with `yarn`:
+
 ```bash
-yarn add https://github.com/SphereGlobal/WebSDK.git
+yarn add @sphereone/sdk
 ```
 
 It should look something like this:
+
 ```JSON
 {
   "name": "test-project",
@@ -59,22 +60,25 @@ It should look something like this:
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "websdk": "github:SphereGlobal/WebSDK"
+    "@sphereone/sdk": "^1.0.0"
   }
 }
 ```
+
 And that's all you need to do, in order to install the SphereOne WebSDK into your project.
 
 ## Login
 
 `TBD`
 
-
 # Further Assistance
+
 If there's missing information not present in the SDK, please reach out to [Official SphereOne Documentation](https://docs.sphereone.xyz/).
 
 # Troubleshooting
+
 If you encounter any issues during the installation or usage of the SphereOne Web SDK, please refer to the troubleshooting section in the documentation or open an issue on GitHub.
 
 # License
+
 This project is licensed under the GNU AGPLv3 License.

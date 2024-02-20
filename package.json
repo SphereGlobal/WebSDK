@@ -3,16 +3,20 @@
   "version": "1.0.0",
   "description": "sdk with services offered by sphereone",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepare": "npm run build",
-    "build": "tsc",
+    "prepare": "husky install",
+    "build": "tsup index.ts --format cjs,esm --dts",
+    "lint": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@commitlint/cli": "^18.6.1",
+    "@commitlint/config-conventional": "^18.6.2",
     "@types/node": "^16.18.46",
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "eslint": "^8.47.0",
@@ -22,7 +26,9 @@
     "eslint-plugin-n": "^16.0.2",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-promise": "^6.1.1",
+    "husky": "^9.0.11",
     "prettier": "^3.0.2",
+    "tsup": "^8.0.2",
     "typescript": "^5.2.2"
   },
   "dependencies": {
